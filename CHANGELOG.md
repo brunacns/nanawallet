@@ -12,6 +12,14 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.1.0] - 2026-07-19
+
+Simplificação do projeto: o app volta a ser exclusivamente desktop (Windows, via Tauri).
+
+- **Removido por completo**: sincronização com a nuvem (Supabase), autenticação de conta, fila offline de sincronização, e a PWA para iPhone/Safari (pasta `pwa/`). Nenhum vestígio de código, dependência, configuração ou UI relacionado a isso permanece no projeto — ver `CLAUDE.md` para o histórico de por que essas etapas existiram.
+- **Novo**: botão "Apagar todos os dados" (Exportação), com dupla confirmação e backup automático completo antes de apagar.
+- **Armazenamento local**: cada coleção particionada por mês (gastos/ganhos/lembretes) ganhou um arquivo de índice (`indice.json`) que evita varrer pastas de ano para descobrir quais meses existem, e a leitura de múltiplos meses passou a ser paralela — pensado para manter a inicialização rápida mesmo depois de muitos anos de uso. Migração automática e retrocompatível para instalações sem o índice ainda.
+
 ## [1.0.0] - 2026-07-19
 
 Primeira versão "estável" do NanaWallet, reunindo tudo desenvolvido até aqui:

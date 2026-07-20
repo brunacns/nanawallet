@@ -1,9 +1,9 @@
 // Contrato que qualquer camada de armazenamento precisa cumprir — hoje
-// implementado por ArmazenamentoLocalService (arquivos JSON locais); no
-// futuro, uma sincronização (ex: Supabase) poderá implementar o mesmo
-// contrato sem exigir nenhuma mudança nos serviços de domínio
-// (TransactionService, ReminderService, GoalService) nem nas telas — só a
-// linha em servicos/index.js que decide qual StorageService está ativo.
+// implementado por ArmazenamentoLocalService (arquivos JSON locais). Manter
+// esse contrato separado dos serviços de domínio (TransactionService,
+// ReminderService, GoalService) e das telas é o que permite trocar como os
+// dados são persistidos sem tocar no resto do app — só a linha em
+// servicos/index.js que decide qual StorageService está ativo.
 //
 // JavaScript puro não tem "interface" nativa (e o projeto não usa
 // TypeScript). Por isso esse contrato é uma classe-base cujos métodos

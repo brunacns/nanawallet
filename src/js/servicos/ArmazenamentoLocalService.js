@@ -13,11 +13,11 @@ const COLECOES_ARQUIVO_UNICO = new Set(["metas"]);
 // listar/salvar/remover.
 const CONFIGS_CONHECIDAS = new Set(["configuracoes"]);
 
-// Implementação de StorageService usando os arquivos JSON locais
-// (dados/armazenamento.js continua sendo o "motor" de leitura/escrita em
-// disco; esta classe só adapta esse motor ao contrato genérico de
-// StorageService, escondendo da camada de cima tanto o particionamento por
-// mês quanto a distinção "arquivo único x particionado").
+// Única implementação de StorageService do app (armazenamento 100% local em
+// arquivos JSON — dados/armazenamento.js continua sendo o "motor" de
+// leitura/escrita em disco; esta classe só adapta esse motor ao contrato
+// genérico de StorageService, escondendo da camada de cima tanto o
+// particionamento por mês quanto a distinção "arquivo único x particionado").
 //
 // O particionamento por mês precisa saber, ao editar/remover um item, em
 // qual arquivo (mês) ele estava ANTES da mudança (ver `resolverAnoMes` em

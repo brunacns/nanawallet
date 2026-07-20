@@ -3,13 +3,10 @@ import { criarBackup } from "./backup.js";
 import { mesDeData } from "../utils/datas.js";
 
 // Acesso preguiçoso (via Proxy) em vez de `const { fs, path } = window.__TAURI__`
-// direto: este módulo só é importado quando o app roda dentro do Tauri (ver
-// servicos/index.js), mas um `import` sempre executa o topo do arquivo — se
-// destructurasse `window.__TAURI__` aqui, o simples ATO DE IMPORTAR este
-// arquivo quebraria em qualquer contexto sem Tauri (ex: ao rodar os testes,
-// ou na PWA, mesmo que ninguém chame nenhuma função daqui). Com o Proxy,
-// `window.__TAURI__` só é acessado de verdade quando alguma função abaixo é
-// efetivamente CHAMADA — e isso só acontece dentro do Tauri.
+// direto: um `import` sempre executa o topo do arquivo, então destructurar
+// `window.__TAURI__` aqui quebraria em qualquer contexto sem Tauri (ex: ao
+// rodar os testes). Com o Proxy, `window.__TAURI__` só é acessado de verdade
+// quando alguma função abaixo é efetivamente CHAMADA.
 const fs = new Proxy({}, { get: (_alvo, propriedade) => window.__TAURI__.fs[propriedade] });
 const path = new Proxy({}, { get: (_alvo, propriedade) => window.__TAURI__.path[propriedade] });
 
@@ -61,9 +58,9 @@ async function lerShard(colecao, anoMes) {
   return conteudo[colecao] || [];
 }
 
-// Grava o arquivo de um mês inteiro, criando backup do conteúdo anterior
-// (mesmo mecanismo de backup automático que já existia por arquivo).
-export async function salvarMes(colecao, anoMes, itens) {
+// Grava só o conteúdo do arquivo do mês (sem mexer no índice — ver
+// `salvarMes`, que é a função pública e mantém as duas coisas em sincronia).
+async function gravarShard(colecao, anoMes, itens) {
   const caminho = await caminhoShard(colecao, anoMes);
   if (await fs.exists(caminho)) {
     await criarBackup(`${colecao}-${anoMes}`, caminho);
@@ -71,35 +68,97 @@ export async function salvarMes(colecao, anoMes, itens) {
   await fs.writeTextFile(caminho, JSON.stringify({ versao: CONFIG.versaoSchema, [colecao]: itens }, null, 2));
 }
 
-// Lista os meses ("AAAA-MM") que já têm arquivo gravado para uma coleção,
-// sem precisar ler o conteúdo de nenhum deles.
+// ---------- Índice de meses (dados/<colecao>/indice.json) ----------
+// Guarda a lista de meses ("AAAA-MM") que têm arquivo gravado, para não
+// precisar varrer as pastas de ano toda vez que o app precisa saber quais
+// meses existem — o custo de "listar meses" (`listarMesesExistentes`,
+// chamada em todo carregamento de coleção) não deve crescer conforme os anos
+// de uso se acumulam. Sem esse índice, cada carregamento faria 1 leitura de
+// diretório por ano já usado (ex: 10 anos de uso = 10 leituras de diretório
+// só para descobrir "quais meses existem", antes mesmo de ler os dados).
+async function caminhoIndice(colecao) {
+  return path.join(await pastaColecao(colecao), "indice.json");
+}
+
+async function lerIndice(colecao) {
+  const caminho = await caminhoIndice(colecao);
+  if (!(await fs.exists(caminho))) return null;
+  try {
+    const conteudo = JSON.parse(await fs.readTextFile(caminho));
+    return Array.isArray(conteudo.meses) ? conteudo.meses : null;
+  } catch {
+    // Índice corrompido (ex: interrupção no meio de uma gravação) — trata
+    // como se não existisse. `listarMesesExistentes` reconstrói sozinho a
+    // partir das pastas de ano, sem perder nenhum dado real (o índice é só
+    // um cache do que já está em disco, nunca a fonte de verdade).
+    return null;
+  }
+}
+
+async function salvarIndice(colecao, meses) {
+  const caminho = await caminhoIndice(colecao);
+  await fs.writeTextFile(caminho, JSON.stringify({ meses: [...meses].sort() }, null, 2));
+}
+
+// Atualiza o índice para refletir se `anoMes` tem dados (`presente`) ou não,
+// sem reescrever o índice quando nada mudou. Usado pelas operações que
+// gravam UM mês por vez (`salvarMes`) — para gravações em lote de vários
+// meses de uma vez (`salvarItensEmLote`, `salvarColecaoCompleta`), o índice é
+// recalculado e escrito uma única vez no final, para não arriscar duas
+// gravações concorrentes do mesmo arquivo de índice se as escritas dos
+// shards forem paralelizadas.
+async function atualizarIndice(colecao, anoMes, presente) {
+  const atual = new Set(await listarMesesExistentes(colecao));
+  const tinha = atual.has(anoMes);
+  if (presente === tinha) return;
+  if (presente) atual.add(anoMes);
+  else atual.delete(anoMes);
+  await salvarIndice(colecao, [...atual]);
+}
+
+// Lista os meses ("AAAA-MM") que já têm arquivo gravado para uma coleção.
+// Usa o índice quando ele existe (rápido: uma leitura só); se não existir
+// ainda (instalação de antes desta otimização, ou primeira vez), varre as
+// pastas de ano (mais lento, acontece só uma vez) e já grava o índice para
+// as próximas chamadas serem rápidas.
 export async function listarMesesExistentes(colecao) {
+  const doIndice = await lerIndice(colecao);
+  if (doIndice) return doIndice;
+
   const pasta = await pastaColecao(colecao);
   if (!(await fs.exists(pasta))) return [];
 
-  const resultado = [];
-  for (const entradaAno of await fs.readDir(pasta)) {
-    if (!entradaAno.isDirectory) continue;
-    const pastaAno = await path.join(pasta, entradaAno.name);
-    for (const entradaMes of await fs.readDir(pastaAno)) {
-      if (entradaMes.name && entradaMes.name.endsWith(".json")) {
-        resultado.push(`${entradaAno.name}-${entradaMes.name.replace(".json", "")}`);
-      }
-    }
-  }
-  return resultado;
+  const entradasAno = (await fs.readDir(pasta)).filter((e) => e.isDirectory);
+  const mesesPorAno = await Promise.all(
+    entradasAno.map(async (entradaAno) => {
+      const pastaAno = await path.join(pasta, entradaAno.name);
+      const entradasMes = await fs.readDir(pastaAno);
+      return entradasMes.filter((e) => e.name && e.name.endsWith(".json")).map((e) => `${entradaAno.name}-${e.name.replace(".json", "")}`);
+    })
+  );
+  const meses = mesesPorAno.flat();
+  await salvarIndice(colecao, meses);
+  return meses;
 }
 
 // Lê todos os meses de uma coleção e devolve um único array combinado —
 // usado onde o app realmente precisa do histórico completo (telas que
-// mostram tudo, exportação, etc). Prefira `salvarItem`/`removerItem` para
-// escrita: eles tocam só o arquivo do mês afetado, não a coleção inteira.
+// mostram tudo, exportação, etc). As leituras dos meses são paralelas (não
+// uma de cada vez): com muitos anos de uso, isso é o que evita que o tempo
+// de carregamento cresça linearmente com a quantidade de arquivos. Prefira
+// `salvarItem`/`removerItem` para escrita: eles tocam só o arquivo do mês
+// afetado, não a coleção inteira.
 export async function carregarColecao(colecao) {
-  const itens = [];
-  for (const anoMes of await listarMesesExistentes(colecao)) {
-    itens.push(...(await lerShard(colecao, anoMes)));
-  }
-  return itens;
+  const meses = await listarMesesExistentes(colecao);
+  const porMes = await Promise.all(meses.map((anoMes) => lerShard(colecao, anoMes)));
+  return porMes.flat();
+}
+
+// Grava o arquivo de um mês inteiro (criando backup do conteúdo anterior,
+// como antes) e mantém o índice de meses em dia.
+export async function salvarMes(colecao, anoMes, itens) {
+  await gravarShard(colecao, anoMes, itens);
+  await atualizarIndice(colecao, anoMes, itens.length > 0);
 }
 
 // Adiciona ou atualiza um único item, gravando apenas o arquivo do mês dele.
@@ -130,7 +189,10 @@ export async function removerItem(colecao, id, anoMes) {
 
 // Adiciona vários itens novos de uma vez (ex: parcelas de um parcelamento,
 // ocorrências de itens fixos geradas automaticamente). Agrupa por mês e grava
-// só os arquivos realmente afetados, mesclando com o que já existia neles.
+// só os arquivos realmente afetados, mesclando com o que já existia neles —
+// as leituras e as escritas dos meses afetados são paralelas entre si (o
+// índice, no entanto, é lido e gravado uma única vez no final, não por mês,
+// para não arriscar duas escritas concorrentes do mesmo arquivo de índice).
 export async function salvarItensEmLote(colecao, novosItens) {
   const grupos = new Map();
   for (const item of novosItens) {
@@ -139,12 +201,20 @@ export async function salvarItensEmLote(colecao, novosItens) {
     grupos.get(anoMes).push(item);
   }
 
-  for (const [anoMes, itensDoGrupo] of grupos) {
-    const existentes = await lerShard(colecao, anoMes);
-    const porId = new Map(existentes.map((i) => [i.id, i]));
-    for (const item of itensDoGrupo) porId.set(item.id, item);
-    await salvarMes(colecao, anoMes, [...porId.values()]);
-  }
+  const mesesAfetados = [...grupos.keys()];
+  const existentesPorMes = await Promise.all(mesesAfetados.map((anoMes) => lerShard(colecao, anoMes)));
+
+  await Promise.all(
+    mesesAfetados.map((anoMes, i) => {
+      const porId = new Map(existentesPorMes[i].map((item) => [item.id, item]));
+      for (const item of grupos.get(anoMes)) porId.set(item.id, item);
+      return gravarShard(colecao, anoMes, [...porId.values()]);
+    })
+  );
+
+  const indiceAtual = new Set(await listarMesesExistentes(colecao));
+  for (const anoMes of mesesAfetados) indiceAtual.add(anoMes);
+  await salvarIndice(colecao, [...indiceAtual]);
 }
 
 // Substitui a coleção inteira (todos os meses) pelo conjunto de itens dado.
@@ -160,13 +230,18 @@ export async function salvarColecaoCompleta(colecao, itens) {
 
   // Meses que existiam antes mas não aparecem mais nos itens novos precisam
   // ser esvaziados (ex: restaurar um backup mais antigo, com menos dados).
-  for (const anoMes of await listarMesesExistentes(colecao)) {
-    if (!grupos.has(anoMes)) await salvarMes(colecao, anoMes, []);
+  const mesesExistentes = await listarMesesExistentes(colecao);
+  const escritas = [];
+  for (const anoMes of mesesExistentes) {
+    if (!grupos.has(anoMes)) escritas.push(gravarShard(colecao, anoMes, []));
   }
-
   for (const [anoMes, itensDoGrupo] of grupos) {
-    await salvarMes(colecao, anoMes, itensDoGrupo);
+    escritas.push(gravarShard(colecao, anoMes, itensDoGrupo));
   }
+  await Promise.all(escritas);
+
+  // Índice final = só os meses que ficaram com itens de verdade.
+  await salvarIndice(colecao, [...grupos.keys()]);
 }
 
 // ---------- Coleções de arquivo único (não particionadas por mês) ----------
@@ -212,6 +287,17 @@ export async function lerMetas() {
 
 export async function salvarMetas(conteudo) {
   await salvarArquivoUnico("metas", conteudo);
+}
+
+// ---------- Apagar todos os dados ----------
+// Zera gastos, ganhos, lembretes (todos os meses) e metas — usado pelo botão
+// "Apagar todos os dados" (Exportação). "configuracoes" nunca é apagado por
+// essa função de propósito (não é dado financeiro do usuário).
+export async function apagarTodosOsDados() {
+  for (const colecao of COLECOES_PARTICIONADAS) {
+    await salvarColecaoCompleta(colecao, []);
+  }
+  await salvarMetas({ versao: CONFIG.versaoSchema, metas: [] });
 }
 
 // ---------- Migração automática do formato antigo (um JSON só por coleção) ----------

@@ -47,6 +47,22 @@
   transform: scale(0.97);
 }
 
+.botao--perigo {
+  background-color: var(--cor-negativo-fraco);
+  color: var(--cor-negativo);
+  border: 1px solid var(--cor-negativo);
+}
+
+.botao--perigo:hover {
+  background-color: var(--cor-negativo);
+  color: var(--cor-superficie);
+  transform: translateY(-1px);
+}
+
+.botao--perigo:active {
+  transform: scale(0.97);
+}
+
 /* Cartões */
 .cartao {
   background-color: var(--cor-superficie);

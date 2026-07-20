@@ -1,4 +1,4 @@
-import { lerConfiguracoes, salvarConfiguracoes, salvarMetas, salvarMes, salvarColecaoCompleta } from "../dados/armazenamento.js";
+import { lerConfiguracoes, salvarConfiguracoes, salvarMetas, salvarMes, salvarColecaoCompleta, apagarTodosOsDados } from "../dados/armazenamento.js";
 import { obterGanhos, recarregarGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, recarregarGastos, aoAtualizarGastos } from "./gastos.js";
 import { obterLembretes, recarregarLembretes, aoAtualizarLembretes } from "./lembretes.js";
@@ -12,6 +12,7 @@ export async function iniciarExportacao() {
   document.getElementById("botao-backup-manual").addEventListener("click", criarBackupManual);
   document.getElementById("botao-restaurar-arquivo").addEventListener("click", restaurarDeArquivo);
   document.getElementById("exportacao-backups-conteudo").addEventListener("click", tratarCliqueBackups);
+  document.getElementById("botao-apagar-tudo").addEventListener("click", tratarApagarTudo);
 
   // Toda gravação em ganhos/gastos/lembretes cria um backup automático novo
   // (Etapa 3) — mantém esta lista sempre em dia, mesmo gravado a partir de outra página.
@@ -334,6 +335,28 @@ async function restaurarDeArquivo() {
   await recarregarMetas();
 
   mostrarStatus("Restauração concluída com sucesso.");
+}
+
+// ==================== 5. Apagar todos os dados ====================
+
+async function tratarApagarTudo() {
+  const primeiraConfirmacao = confirm(
+    "Isso vai apagar PERMANENTEMENTE todos os ganhos, gastos, lembretes e metas cadastrados (de todos os meses). As configurações não são afetadas.\n\nUm backup completo é criado automaticamente antes, mas essa ação não pode ser desfeita pela interface. Deseja continuar?"
+  );
+  if (!primeiraConfirmacao) return;
+
+  const segundaConfirmacao = confirm('Tem certeza mesmo? Digite mentalmente "sim" e confirme para apagar todos os dados agora.');
+  if (!segundaConfirmacao) return;
+
+  await apagarTodosOsDados();
+
+  await recarregarGanhos();
+  await recarregarGastos();
+  await recarregarLembretes();
+  await recarregarMetas();
+  await listarBackupsAutomaticos();
+
+  mostrarStatus("Todos os dados foram apagados. Um backup do estado anterior está disponível em \"Backups automáticos recentes\".");
 }
 
 async function recarregarModulo(chave) {

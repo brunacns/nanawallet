@@ -10,17 +10,23 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
 
 ```
 %LOCALAPPDATA%\com.financeiro.desktop\dados\
+  gastos\indice.json           <- lista os meses que existem, sem precisar varrer pastas
   gastos\2026\07.json
   gastos\2026\08.json
+  ganhos\indice.json
   ganhos\2026\07.json
+  lembretes\indice.json
   lembretes\2026\08.json
-  configuracoes.json          <- continua um arquivo único
+  metas.json                   <- arquivo único (não particionado)
+  configuracoes.json           <- arquivo único (não particionado)
 ```
 
 - **Chave do mês de cada coleção**: gastos usam `mesReferencia`; ganhos e lembretes usam o mês da própria `data`. Ver [src/js/dados/armazenamento.js](src/js/dados/armazenamento.js).
-- **`configuracoes.json` não é particionado**: é uma coleção pequena e sem crescimento ao longo do tempo (preferências do usuário), então um arquivo único continua sendo a escolha certa — não seguimos a estrutura de pastas por mês aqui de propósito.
+- **`configuracoes.json` e `metas.json` não são particionados**: são coleções pequenas e sem crescimento ao longo do tempo (preferências e wishlist), então um arquivo único continua sendo a escolha certa — não seguimos a estrutura de pastas por mês aqui de propósito.
 - **Migração automática**: se o app encontrar `ganhos.json`/`gastos.json`/`lembretes.json` no formato antigo (um arquivo só com tudo, de antes desta etapa), ele converte sozinho para o novo formato particionado na primeira vez que abrir, sem nenhuma ação manual. O arquivo antigo é copiado para os backups automáticos antes de ser removido, então nada se perde. Esse processo é idempotente (rodar de novo não duplica nada).
-- **Leitura/escrita reutilizáveis**: `carregarColecao(colecao)` lê todos os meses e devolve um array só (usado onde o app precisa do histórico completo); `salvarItem`/`removerItem`/`salvarItensEmLote` leem e gravam **só o(s) arquivo(s) do mês afetado**, não a coleção inteira — é isso que evita reescrever anos de dados a cada pequena edição.
+- **Índice de meses** (`indice.json`, dentro da pasta de cada coleção particionada): lista os meses ("AAAA-MM") que têm dados, para o app não precisar abrir uma pasta de ano por vez só para descobrir quais meses existem — isso faria a inicialização ficar linearmente mais lenta conforme os anos de uso se acumulam. Se o índice não existir ainda (instalação anterior a esta otimização), o app reconstrói sozinho na primeira leitura, varrendo as pastas de ano uma única vez, e passa a usar o índice dali em diante. Se o índice se perder ou corromper, o app também reconstrói sozinho — ele é só um cache do que já está em disco, nunca a fonte de verdade dos dados.
+- **Leitura/escrita reutilizáveis**: `carregarColecao(colecao)` lê todos os meses **em paralelo** (não um de cada vez) e devolve um array só (usado onde o app precisa do histórico completo, ex: Histórico, Exportação, geração de recorrências); `salvarItem`/`removerItem`/`salvarItensEmLote` leem e gravam **só o(s) arquivo(s) do mês afetado**, não a coleção inteira — é isso que evita reescrever anos de dados a cada pequena edição.
+- **Por que não "carregamento sob demanda só do mês visível"**: Dashboard/Gastos/Ganhos mostram um mês por vez, mas Histórico (todas as transações, de qualquer mês) e a geração automática de recorrências de itens fixos (precisa achar a última ocorrência de cada série, que pode ter sido gerada há vários meses) precisam do histórico completo de qualquer forma — carregar só o mês visível economizaria a leitura de disco na tela de Gastos/Ganhos, mas a mesma leitura completa aconteceria de novo (ou teria que ser antecipada) assim que Histórico ou a geração de recorrências rodassem, o que acontece toda vez que o app abre. Por isso a otimização desta etapa focou em tornar a leitura completa mais rápida (índice + paralelismo) em vez de evitá-la — para o volume realista de um app financeiro pessoal (milhares de itens ao longo de muitos anos), isso já é suficiente; paginar/ler sob demanda por tela é uma mudança maior, possível no futuro se o volume de dados um dia justificar.
 
 ## Decisões de modelagem (e por quê)
 
@@ -45,7 +51,6 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
 | `recebido` | boolean | se já caiu na conta (Etapa 13) |
 | `fixo` | boolean | se é recorrente, gerado todo mês (Etapa 13) |
 | `fixoId` | `null` ou string (uuid) | agrupa as ocorrências de um mesmo ganho fixo (Etapa 13) |
-| `atualizadoEm` | string (ISO com hora) | data/hora da última edição — usado pela sincronização (ver seção no fim deste documento) |
 
 ```json
 {
@@ -87,7 +92,6 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
 | `fixo` | boolean | se é um gasto fixo/recorrente |
 | `fixoId` | `null` ou string (uuid) | agrupa as ocorrências de um mesmo gasto fixo (Etapa 13) |
 | `parcela` | `null` ou objeto | preenchido só se for parte de um parcelamento |
-| `atualizadoEm` | string (ISO com hora) | data/hora da última edição — usado pela sincronização (ver seção no fim deste documento) |
 
 ```json
 {
@@ -150,7 +154,6 @@ Campos de cada lembrete, conforme especificado na Etapa 11:
 | `data` | string (`AAAA-MM-DD`) | data prevista |
 | `valor` | number | quanto dinheiro isso deve custar (valor previsto) |
 | `concluido` | boolean | se o lembrete já foi resolvido |
-| `atualizadoEm` | string (ISO com hora) | data/hora da última edição — usado pela sincronização (ver seção no fim deste documento) |
 
 ```json
 {
@@ -188,7 +191,6 @@ Campos de cada lembrete, conforme especificado na Etapa 11:
 | `valorGuardado` | number | quanto já foi guardado até agora |
 | `prioridade` | `"alta"` \| `"media"` \| `"baixa"` | usada para ordenar os cartões na tela |
 | `observacoes` | string | texto livre, opcional |
-| `atualizadoEm` | string (ISO com hora) | data/hora da última edição — usado pela sincronização (ver seção no fim deste documento) |
 
 ```json
 {
@@ -219,20 +221,6 @@ Você não pediu nenhuma configuração específica ainda, então mantive vazio 
 }
 ```
 
-## Sincronização com o Supabase
+## Apagar todos os dados
 
-Desde a etapa de sincronização, ganhos/gastos/lembretes/metas também existem como linhas em tabelas no projeto Supabase "NanaWallet" (Postgres), para poder acessar os mesmos dados de outro aparelho. O armazenamento **local continua sendo a fonte de verdade do dia a dia** — o app lê/escreve localmente sempre, mesmo sem internet; a sincronização é um processo à parte que reconcilia local com nuvem em segundo plano (ver [src/js/sincronizacao/](src/js/sincronizacao/)).
-
-- **`atualizadoEm`**: carimbado automaticamente (por `ColecaoService.salvar`/`salvarEmLote`, em `src/js/servicos/ColecaoService.js`) toda vez que a usuária cria ou edita um item — nenhuma tela precisa se preocupar com isso. É o campo usado para decidir, num conflito, qual versão é mais recente.
-- **Tabelas no Supabase**: uma por coleção (`gastos`, `ganhos`, `lembretes`, `metas`), com as mesmas colunas em `snake_case` (`mes_referencia`, `fixo_id`, `valor_desejado`, etc. — ver o mapeamento em [src/js/sincronizacao/mapeamentoColunas.js](src/js/sincronizacao/mapeamentoColunas.js)), mais `user_id` (dono da linha, protegido por Row Level Security) e `excluido_em` (tombstone: marca que o item foi excluído, sem apagar a linha de verdade — necessário para uma exclusão feita num aparelho chegar ao outro numa sincronização incremental).
-- **Prevenção de conflitos**: "last-write-wins" por item (não por coleção inteira), comparando `atualizadoEm`. A cada sincronização, mudanças locais ainda não enviadas (fila) sempre têm prioridade sobre o que vier do servidor para aquele mesmo item — evita que uma sincronização em segundo plano sobrescreva uma edição que a usuária acabou de fazer.
-- **Fila offline**: guardada em `dados/sincronizacao.json` (local, fora das pastas de gastos/ganhos/etc.), junto com a sessão de login e a data da última sincronização. Sobrevive a fechar o app — mudanças feitas offline continuam na fila até a próxima sincronização conseguir enviá-las. Ver detalhes de implementação em [CLAUDE.md](CLAUDE.md).
-
-## A PWA (pasta `pwa/`)
-
-Uma segunda forma de usar o app, pelo navegador (pensada para o Safari do iPhone — "Compartilhar → Adicionar à Tela de Início"), sem depender do Tauri. Reaproveita quase 100% do JavaScript de `src/js/` (as telas, os gráficos, o histórico, os serviços de domínio) — a ÚNICA coisa que muda é de onde os dados vêm:
-
-- **App Tauri**: lê/escreve arquivos JSON locais (`ArmazenamentoLocalService`), com sincronização em segundo plano para o Supabase.
-- **PWA**: não tem acesso a arquivo nenhum (roda só no navegador), então lê/escreve **direto no Supabase** (`ArmazenamentoSupabaseService`) — sem fila, sem cache local de dados. Exige estar logada; se não houver internet, uma operação de salvar/excluir simplesmente falha (diferente do app Tauri, que nunca depende de internet para nada).
-
-Quem decide qual dos dois usar é [src/js/servicos/index.js](src/js/servicos/index.js), detectando se `window.__TAURI__` existe. Por isso os módulos de tela (`gastos.js`, `dashboard.js`, etc.) não precisam saber em qual dos dois ambientes estão rodando.
+Página Exportação → "Apagar todos os dados": zera gastos, ganhos, lembretes e metas (todos os meses), mantendo `configuracoes.json` intacto. Pede confirmação dupla e cria um backup automático completo antes de apagar (mesmo mecanismo de `dados/backup.js`), então é reversível pela tela de Exportação → "Backups automáticos recentes" logo em seguida.

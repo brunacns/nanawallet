@@ -492,12 +492,26 @@
             </button>
           </div>
 
-          <div class="cartao">
+          <div class="cartao" style="margin-bottom: var(--espaco-md);">
             <div class="cartao__titulo">Backups automáticos recentes</div>
             <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
               Criados sozinhos pelo app a cada alteração (últimos 15 por arquivo). Clique em "Restaurar" para voltar um arquivo específico a essa versão.
             </p>
             <ul class="lista-simples" id="exportacao-backups-conteudo"></ul>
+          </div>
+
+          <div class="cartao" style="border-color: var(--cor-negativo);">
+            <div class="cartao__titulo">Apagar todos os dados</div>
+            <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
+              Apaga permanentemente todos os ganhos, gastos, lembretes e metas cadastrados (de todos os meses). As configurações não são afetadas. Um
+              backup completo é criado automaticamente antes de apagar.
+            </p>
+            <button class="botao botao--perigo" id="botao-apagar-tudo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              </svg>
+              Apagar todos os dados
+            </button>
           </div>
         </section>
 
@@ -547,61 +561,6 @@
                   <div class="linha-config__descricao">Cópia de segurança criada a cada alteração</div>
                 </div>
                 <span class="linha-config__valor">últimos 15 por arquivo</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="grupo-config">
-            <div class="grupo-config__titulo">Sincronização com a nuvem</div>
-            <div class="cartao">
-              <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
-                Mantém uma cópia dos seus dados na nuvem (Supabase) para acessar de outros aparelhos. O app continua funcionando normalmente
-                sem internet — mudanças feitas offline entram numa fila e são enviadas na próxima sincronização.
-              </p>
-
-              <p class="estado-vazio" id="sincronizacao-status" hidden style="padding: var(--espaco-sm) 0; text-align: left;"></p>
-
-              <form id="formulario-login-sincronizacao">
-                <div class="campo">
-                  <label for="campo-email-sincronizacao">E-mail</label>
-                  <input type="email" id="campo-email-sincronizacao" placeholder="voce@exemplo.com" required />
-                </div>
-                <div class="campo">
-                  <label for="campo-senha-sincronizacao">Senha</label>
-                  <input type="password" id="campo-senha-sincronizacao" minlength="6" placeholder="Mínimo 6 caracteres" required />
-                </div>
-                <div class="modal__acoes" style="justify-content: flex-start; margin-top: 0;">
-                  <button type="submit" class="botao botao--primario" id="botao-entrar-sincronizacao">Entrar</button>
-                  <button type="button" class="botao botao--secundario" id="botao-cadastrar-sincronizacao">Criar conta</button>
-                </div>
-              </form>
-
-              <div id="painel-sincronizacao-conectada" hidden>
-                <div class="linha-config">
-                  <span class="linha-config__rotulo">Conta</span>
-                  <span class="linha-config__valor" id="sincronizacao-email">—</span>
-                </div>
-                <div class="linha-config">
-                  <span class="linha-config__rotulo">Última sincronização</span>
-                  <span class="linha-config__valor" id="sincronizacao-ultima">Nunca</span>
-                </div>
-                <div class="linha-config">
-                  <div>
-                    <div class="linha-config__rotulo">Mudanças pendentes de envio</div>
-                    <div class="linha-config__descricao">Enviadas na próxima sincronização (funciona offline)</div>
-                  </div>
-                  <span class="linha-config__valor" id="sincronizacao-fila">0</span>
-                </div>
-
-                <label class="alternar-historico" style="margin-top: var(--espaco-md);">
-                  <input type="checkbox" id="campo-automatica-sincronizacao" />
-                  Sincronizar automaticamente a cada poucos minutos
-                </label>
-
-                <div class="modal__acoes" style="justify-content: flex-start; margin-top: var(--espaco-md);">
-                  <button type="button" class="botao botao--primario" id="botao-sincronizar-agora">Sincronizar agora</button>
-                  <button type="button" class="botao botao--secundario" id="botao-sair-sincronizacao">Sair da conta</button>
-                </div>
               </div>
             </div>
           </div>

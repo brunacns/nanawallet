@@ -1,4 +1,4 @@
-import { armazenamentoAtivo, sincronizacaoService } from "./servicos/index.js";
+import { armazenamentoAtivo } from "./servicos/index.js";
 import { configurarNavegacao } from "./navegacao.js";
 import { iniciarPaginaGanhos } from "./modulos/ganhos.js";
 import { iniciarPaginaGastos } from "./modulos/gastos.js";
@@ -25,15 +25,10 @@ async function iniciarApp() {
   try {
     // Passa pelo StorageService ativo (hoje: armazenamento local em
     // arquivos JSON) em vez de chamar dados/armazenamento.js direto — é
-    // essa indireção que permite trocar por sincronização no futuro só
-    // mudando servicos/index.js, sem tocar em main.js.
+    // essa indireção que mantém as telas desacopladas da implementação
+    // concreta de armazenamento.
     await armazenamentoAtivo.inicializar();
     mostrarStatusArmazenamento("Armazenamento OK");
-    // Carrega sessão/fila salvas e liga o motor de sincronização às
-    // mutações dos 4 serviços de domínio. Não bloqueia o app: se a usuária
-    // nunca fez login, isso só fica esperando (sincronizarAgora() não faz
-    // nada sem sessão) — o app funciona 100% offline normalmente.
-    await sincronizacaoService.iniciar();
     await iniciarPaginaGanhos();
     await iniciarPaginaGastos();
     iniciarParcelamentos();
