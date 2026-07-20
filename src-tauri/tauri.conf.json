@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "NanaWallet",
+  "version": "1.0.0",
+  "identifier": "com.financeiro.desktop",
+  "build": {
+    "frontendDist": "../src",
+    "beforeDevCommand": {
+      "script": "node scripts/preparar-build.js",
+      "cwd": "..",
+      "wait": true
+    },
+    "beforeBuildCommand": {
+      "script": "node scripts/preparar-build.js",
+      "cwd": ".."
+    }
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "NanaWallet",
+        "width": 1200,
+        "height": 800
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.ico"]
+  }
+}

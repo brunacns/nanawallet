@@ -1,0 +1,14 @@
+{
+  "name": "financeiro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri",
+    "preparar-build": "node scripts/preparar-build.js",
+    "gerar-icones": "node scripts/gerar-icones-pwa.js"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.0.0"
+  }
+}

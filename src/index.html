@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>NanaWallet</title>
+    <link rel="stylesheet" href="./css/variaveis.css" />
+    <link rel="stylesheet" href="./css/base.css" />
+    <link rel="stylesheet" href="./css/layout.css" />
+    <link rel="stylesheet" href="./css/componentes.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- Menu lateral -->
+      <aside class="sidebar">
+        <div class="sidebar__marca">
+          <div class="sidebar__logo"></div>
+          <span class="sidebar__nome">NanaWallet</span>
+        </div>
+
+        <nav>
+          <ul class="sidebar__nav">
+            <li>
+              <button class="sidebar__item ativo" data-pagina="dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                </svg>
+                <span>Dashboard</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar__item" data-pagina="ganhos">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 17 9 11 13 15 21 7" />
+                  <polyline points="15 7 21 7 21 13" />
+                </svg>
+                <span>Ganhos</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar__item" data-pagina="gastos">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3 7 9 13 13 9 21 17" />
+                  <polyline points="21 11 21 17 15 17" />
+                </svg>
+                <span>Gastos</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar__item" data-pagina="lembretes">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 4a4.5 4.5 0 0 0-4.5 4.5c0 5-2 6.5-2 6.5h13s-2-1.5-2-6.5A4.5 4.5 0 0 0 12 4z" />
+                  <path d="M10 18a2 2 0 0 0 4 0" />
+                </svg>
+                <span>Lembretes</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar__item" data-pagina="historico">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="13" r="8" />
+                  <polyline points="12 9 12 13 15 15" />
+                  <path d="M5 3 3 5" />
+                  <path d="M19 3l2 2" />
+                </svg>
+                <span>Histórico</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar__item" data-pagina="metas">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="8" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="12" cy="12" r="0.6" fill="currentColor" />
+                </svg>
+                <span>Metas</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar__item" data-pagina="exportacao">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v11" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <path d="M4 18h16" />
+                </svg>
+                <span>Exportação</span>
+              </button>
+            </li>
+            <li>
+              <button class="sidebar__item" data-pagina="configuracoes">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="4" y1="7" x2="20" y2="7" />
+                  <circle cx="9" cy="7" r="2" />
+                  <line x1="4" y1="17" x2="20" y2="17" />
+                  <circle cx="15" cy="17" r="2" />
+                </svg>
+                <span>Configurações</span>
+              </button>
+            </li>
+          </ul>
+        </nav>
+
+        <div class="sidebar__rodape">
+          <div>NanaWallet v0.1.0</div>
+          <div id="status-armazenamento">Iniciando armazenamento…</div>
+        </div>
+      </aside>
+
+      <!-- Conteúdo principal -->
+      <main class="conteudo">
+        <!-- Dashboard -->
+        <section class="pagina ativa" id="pagina-dashboard">
+          <div class="pagina__cabecalho">
+            <div>
+              <h1 class="pagina__titulo">Dashboard</h1>
+              <p class="pagina__subtitulo">Visão geral do mês selecionado</p>
+            </div>
+          </div>
+
+          <div class="seletor-mes">
+            <button type="button" class="botao-icone" id="dash-mes-anterior" title="Mês anterior">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+            <span class="seletor-mes__rotulo" id="dash-mes-rotulo">—</span>
+            <button type="button" class="botao-icone" id="dash-mes-seguinte" title="Próximo mês">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
+          </div>
+
+          <div class="grade-estatisticas">
+            <div class="cartao-estatistica">
+              <div class="cartao-estatistica__rotulo">Total recebido</div>
+              <div class="cartao-estatistica__valor cartao-estatistica__valor--positivo" id="dash-total-recebido">R$ 0,00</div>
+            </div>
+            <div class="cartao-estatistica">
+              <div class="cartao-estatistica__rotulo">Total gasto</div>
+              <div class="cartao-estatistica__valor cartao-estatistica__valor--negativo" id="dash-total-gasto">R$ 0,00</div>
+            </div>
+            <div class="cartao-estatistica" id="dash-cartao-saldo-restante">
+              <div class="cartao-estatistica__rotulo">Saldo restante</div>
+              <div class="cartao-estatistica__valor" id="dash-saldo-restante">R$ 0,00</div>
+              <div class="cartao-estatistica__alerta" id="dash-saldo-restante-alerta" hidden></div>
+            </div>
+            <div class="cartao-estatistica" id="dash-cartao-saldo-dia10" title="Ganhos recebidos no dia 10 menos gastos pagos com salário responsável = Dia 10">
+              <div class="cartao-estatistica__rotulo">Saldo do salário (dia 10)</div>
+              <div class="cartao-estatistica__valor" id="dash-saldo-dia10">R$ 0,00</div>
+              <div class="cartao-estatistica__alerta" id="dash-saldo-dia10-alerta" hidden></div>
+            </div>
+            <div class="cartao-estatistica" id="dash-cartao-saldo-dia25" title="Ganhos recebidos no dia 25 menos gastos pagos com salário responsável = Dia 25">
+              <div class="cartao-estatistica__rotulo">Saldo do salário (dia 25)</div>
+              <div class="cartao-estatistica__valor" id="dash-saldo-dia25">R$ 0,00</div>
+              <div class="cartao-estatistica__alerta" id="dash-saldo-dia25-alerta" hidden></div>
+            </div>
+            <div class="cartao-estatistica" id="dash-cartao-saldo-previsto" title="Saldo restante menos os gastos pendentes e os lembretes com valor previsto ainda não concluídos">
+              <div class="cartao-estatistica__rotulo">Previsão futura</div>
+              <div class="cartao-estatistica__valor" id="dash-saldo-previsto">R$ 0,00</div>
+              <div class="cartao-estatistica__alerta" id="dash-saldo-previsto-alerta" hidden></div>
+            </div>
+            <div class="cartao-estatistica" title="Soma do valor previsto dos lembretes ainda não concluídos — dinheiro a reservar, não é um gasto pago">
+              <div class="cartao-estatistica__rotulo">Reservado para lembretes</div>
+              <div class="cartao-estatistica__valor" id="dash-reservado-lembretes">R$ 0,00</div>
+            </div>
+          </div>
+
+          <div class="grade-graficos">
+            <div class="cartao-grafico">
+              <div class="cartao-grafico__titulo">Evolução dos gastos</div>
+              <div class="cartao-grafico__subtitulo">Total gasto por mês</div>
+              <div class="grafico-container" id="grafico-evolucao-gastos"></div>
+            </div>
+
+            <div class="cartao-grafico">
+              <div class="cartao-grafico__titulo">Evolução do saldo</div>
+              <div class="cartao-grafico__subtitulo">Saldo acumulado ao longo do tempo</div>
+              <div class="grafico-container" id="grafico-evolucao-saldo"></div>
+            </div>
+
+            <div class="cartao-grafico">
+              <div class="cartao-grafico__titulo">Comparação entre salários</div>
+              <div class="cartao-grafico__subtitulo">Recebido x gasto pago, por dia de pagamento</div>
+              <div class="grafico-container" id="grafico-comparacao-salarios"></div>
+              <div class="grafico-legenda" id="legenda-comparacao-salarios"></div>
+            </div>
+
+            <div class="cartao-grafico">
+              <div class="cartao-grafico__titulo">Previsões futuras</div>
+              <div class="cartao-grafico__subtitulo">Gastos pendentes por mês, a partir de hoje</div>
+              <div class="grafico-container" id="grafico-previsoes-futuras"></div>
+            </div>
+
+            <div class="cartao-grafico cartao-grafico--largo">
+              <div class="cartao-grafico__titulo">Dinheiro comprometido</div>
+              <div class="cartao-grafico__subtitulo">Como a sua renda total está distribuída</div>
+              <div class="grafico-container" id="grafico-dinheiro-comprometido"></div>
+              <div class="grafico-legenda" id="legenda-dinheiro-comprometido"></div>
+            </div>
+          </div>
+
+          <div class="cartao" style="margin-bottom: var(--espaco-lg);">
+            <div class="cartao__titulo">Diagnósticos</div>
+            <ul class="lista-diagnosticos" id="dashboard-diagnosticos-conteudo"></ul>
+          </div>
+
+          <div class="grade-duas-colunas">
+            <div class="cartao">
+              <div class="cartao__titulo">Próximos lembretes</div>
+              <ul class="lista-simples" id="dashboard-proximos-lembretes"></ul>
+            </div>
+
+            <div class="cartao">
+              <div class="cartao__titulo">Próximos gastos pendentes</div>
+              <ul class="lista-simples" id="dashboard-proximos-gastos"></ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Ganhos -->
+        <section class="pagina" id="pagina-ganhos">
+          <div class="pagina__cabecalho">
+            <div>
+              <h1 class="pagina__titulo">Ganhos</h1>
+              <p class="pagina__subtitulo" id="ganhos-total">Total: R$ 0,00</p>
+            </div>
+            <button class="botao botao--primario" id="botao-novo-ganho">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Novo ganho
+            </button>
+          </div>
+
+          <div class="seletor-mes">
+            <button type="button" class="botao-icone" id="ganhos-mes-anterior" title="Mês anterior">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+            <span class="seletor-mes__rotulo" id="ganhos-mes-rotulo">—</span>
+            <button type="button" class="botao-icone" id="ganhos-mes-seguinte" title="Próximo mês">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
+          </div>
+
+          <label class="alternar-historico">
+            <input type="checkbox" id="ganhos-mostrar-historico" />
+            Mostrar itens já recebidos de datas passadas (histórico)
+          </label>
+
+          <div id="ganhos-conteudo"></div>
+        </section>
+
+        <!-- Gastos -->
+        <section class="pagina" id="pagina-gastos">
+          <div class="pagina__cabecalho">
+            <div>
+              <h1 class="pagina__titulo">Gastos</h1>
+              <p class="pagina__subtitulo" id="gastos-total">Total: R$ 0,00</p>
+            </div>
+            <div style="display: flex; gap: var(--espaco-sm);">
+              <button class="botao botao--secundario" id="botao-novo-parcelamento">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Novo parcelamento
+              </button>
+              <button class="botao botao--primario" id="botao-novo-gasto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Novo gasto
+              </button>
+            </div>
+          </div>
+
+          <div class="seletor-mes">
+            <button type="button" class="botao-icone" id="gastos-mes-anterior" title="Mês anterior">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+            <span class="seletor-mes__rotulo" id="gastos-mes-rotulo">—</span>
+            <button type="button" class="botao-icone" id="gastos-mes-seguinte" title="Próximo mês">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
+          </div>
+
+          <div class="abas">
+            <button class="aba ativa">Todos</button>
+            <button class="aba">Fixos</button>
+            <button class="aba">Parcelados</button>
+          </div>
+
+          <div class="cartao" id="parcelamentos-resumo-cartao" hidden style="margin-bottom: var(--espaco-md);">
+            <div class="cartao__titulo">Parcelamentos ativos</div>
+            <ul class="lista-parcelamentos" id="parcelamentos-conteudo"></ul>
+          </div>
+
+          <label class="alternar-historico">
+            <input type="checkbox" id="gastos-mostrar-historico" />
+            Mostrar itens já pagos de datas passadas (histórico)
+          </label>
+
+          <div class="cartao">
+            <table class="tabela">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Título</th>
+                  <th>Data</th>
+                  <th>Valor</th>
+                  <th>Salário responsável</th>
+                  <th>Status</th>
+                  <th>Tipo</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="gastos-corpo-tabela"></tbody>
+            </table>
+            <p class="estado-vazio" id="gastos-estado-vazio" hidden>Nenhum gasto cadastrado ainda.</p>
+          </div>
+        </section>
+
+        <!-- Lembretes -->
+        <section class="pagina" id="pagina-lembretes">
+          <div class="pagina__cabecalho">
+            <div>
+              <h1 class="pagina__titulo">Lembretes</h1>
+              <p class="pagina__subtitulo" id="lembretes-total">R$ 0,00 previstos</p>
+            </div>
+            <button class="botao botao--primario" id="botao-novo-lembrete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Novo lembrete
+            </button>
+          </div>
+
+          <div class="cartao">
+            <ul class="lista-lembretes" id="lembretes-conteudo"></ul>
+          </div>
+        </section>
+
+        <!-- Histórico -->
+        <section class="pagina" id="pagina-historico">
+          <div class="pagina__cabecalho">
+            <div>
+              <h1 class="pagina__titulo">Histórico</h1>
+              <p class="pagina__subtitulo">Todas as transações já cadastradas, de qualquer mês</p>
+            </div>
+          </div>
+
+          <div class="grade-estatisticas" style="margin-bottom: var(--espaco-md);">
+            <div class="cartao-estatistica">
+              <div class="cartao-estatistica__rotulo">Total recebido</div>
+              <div class="cartao-estatistica__valor cartao-estatistica__valor--positivo" id="historico-total-recebido">R$ 0,00</div>
+            </div>
+            <div class="cartao-estatistica">
+              <div class="cartao-estatistica__rotulo">Total gasto</div>
+              <div class="cartao-estatistica__valor cartao-estatistica__valor--negativo" id="historico-total-gasto">R$ 0,00</div>
+            </div>
+            <div class="cartao-estatistica">
+              <div class="cartao-estatistica__rotulo">Saldo</div>
+              <div class="cartao-estatistica__valor" id="historico-saldo">R$ 0,00</div>
+            </div>
+            <div class="cartao-estatistica">
+              <div class="cartao-estatistica__rotulo">Transações</div>
+              <div class="cartao-estatistica__valor" id="historico-contagem">0</div>
+            </div>
+          </div>
+
+          <div class="barra-filtros">
+            <input type="text" id="historico-busca" placeholder="Buscar por título..." />
+            <select id="historico-filtro-tipo">
+              <option value="todos">Todos os tipos</option>
+              <option value="ganho">Só ganhos</option>
+              <option value="gasto">Só gastos</option>
+            </select>
+            <select id="historico-filtro-status">
+              <option value="todos">Todos os status</option>
+              <option value="feito">Pago/recebido</option>
+              <option value="pendente">Pendente</option>
+            </select>
+            <select id="historico-ordenar">
+              <option value="data-desc">Mais recentes primeiro</option>
+              <option value="data-asc">Mais antigos primeiro</option>
+              <option value="valor-desc">Maior valor</option>
+              <option value="valor-asc">Menor valor</option>
+            </select>
+          </div>
+
+          <div class="cartao">
+            <table class="tabela">
+              <thead>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Título</th>
+                  <th>Data</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="historico-corpo-tabela"></tbody>
+            </table>
+            <p class="estado-vazio" id="historico-estado-vazio" hidden>Nenhuma transação encontrada.</p>
+          </div>
+        </section>
+
+        <!-- Metas -->
+        <section class="pagina" id="pagina-metas">
+          <div class="pagina__cabecalho">
+            <div>
+              <h1 class="pagina__titulo">Metas</h1>
+              <p class="pagina__subtitulo" id="metas-subtitulo">Nenhuma meta cadastrada ainda</p>
+            </div>
+            <button class="botao botao--primario" id="botao-nova-meta">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              Nova meta
+            </button>
+          </div>
+
+          <div class="grade-metas" id="metas-conteudo"></div>
+          <p class="estado-vazio" id="metas-estado-vazio" hidden>Nenhuma meta cadastrada ainda. Crie uma meta para começar a guardar dinheiro para ela.</p>
+        </section>
+
+        <!-- Exportação -->
+        <section class="pagina" id="pagina-exportacao">
+          <div class="pagina__cabecalho">
+            <div>
+              <h1 class="pagina__titulo">Exportação</h1>
+              <p class="pagina__subtitulo">Copie, exporte, faça backup e restaure seus dados</p>
+            </div>
+          </div>
+
+          <p class="estado-vazio" id="exportacao-status" hidden style="padding: var(--espaco-sm) 0; text-align: left;"></p>
+
+          <div class="grade-duas-colunas" style="margin-bottom: var(--espaco-md);">
+            <div class="cartao">
+              <div class="cartao__titulo">Exportar em JSON</div>
+              <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
+                Gera um único arquivo <code>.json</code> com todos os seus dados (ganhos, gastos, lembretes, metas e configurações). Útil para guardar ou para restaurar depois.
+              </p>
+              <button class="botao botao--primario" id="botao-exportar-json">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v11" /><polyline points="7 10 12 15 17 10" /><path d="M4 18h16" />
+                </svg>
+                Exportar em JSON
+              </button>
+            </div>
+
+            <div class="cartao">
+              <div class="cartao__titulo">Exportar em texto (para IA)</div>
+              <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
+                Gera um arquivo <code>.txt</code> com um resumo legível dos seus dados, pronto para colar em uma IA e pedir análise ou conselhos.
+              </p>
+              <button class="botao botao--primario" id="botao-exportar-texto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 3v11" /><polyline points="7 10 12 15 17 10" /><path d="M4 18h16" />
+                </svg>
+                Exportar em texto
+              </button>
+            </div>
+          </div>
+
+          <div class="cartao" style="margin-bottom: var(--espaco-md);">
+            <div class="cartao__titulo">Backup manual</div>
+            <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
+              Cria uma pasta com uma cópia completa e separada de cada arquivo de dados, em um local à sua escolha (ex: pendrive, OneDrive).
+            </p>
+            <button class="botao botao--secundario" id="botao-backup-manual">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v11" /><polyline points="7 10 12 15 17 10" /><path d="M4 18h16" />
+              </svg>
+              Criar backup manual agora
+            </button>
+          </div>
+
+          <div class="cartao" style="margin-bottom: var(--espaco-md);">
+            <div class="cartao__titulo">Restaurar de um arquivo exportado</div>
+            <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
+              Escolha um arquivo <code>.json</code> gerado por "Exportar em JSON" para substituir todos os dados atuais por ele.
+            </p>
+            <button class="botao botao--secundario" id="botao-restaurar-arquivo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 21V10" /><polyline points="7 14 12 9 17 14" /><path d="M4 4h16" />
+              </svg>
+              Restaurar de um arquivo
+            </button>
+          </div>
+
+          <div class="cartao">
+            <div class="cartao__titulo">Backups automáticos recentes</div>
+            <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
+              Criados sozinhos pelo app a cada alteração (últimos 15 por arquivo). Clique em "Restaurar" para voltar um arquivo específico a essa versão.
+            </p>
+            <ul class="lista-simples" id="exportacao-backups-conteudo"></ul>
+          </div>
+        </section>
+
+        <!-- Configurações -->
+        <section class="pagina" id="pagina-configuracoes">
+          <div class="pagina__cabecalho">
+            <div>
+              <h1 class="pagina__titulo">Configurações</h1>
+            </div>
+          </div>
+
+          <div class="grupo-config">
+            <div class="grupo-config__titulo">Sobre o aplicativo</div>
+            <div class="cartao">
+              <div class="linha-config">
+                <span class="linha-config__rotulo">Nome</span>
+                <span class="linha-config__valor">NanaWallet</span>
+              </div>
+              <div class="linha-config">
+                <span class="linha-config__rotulo">Versão</span>
+                <span class="linha-config__valor" id="config-versao">—</span>
+              </div>
+              <div class="linha-config">
+                <span class="linha-config__rotulo">Data da build</span>
+                <span class="linha-config__valor" id="config-data-build">—</span>
+              </div>
+              <div class="linha-config">
+                <span class="linha-config__rotulo">Última atualização</span>
+                <span class="linha-config__valor" id="config-ultima-atualizacao">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grupo-config">
+            <div class="grupo-config__titulo">Armazenamento</div>
+            <div class="cartao">
+              <div class="linha-config">
+                <div>
+                  <div class="linha-config__rotulo">Local dos dados</div>
+                  <div class="linha-config__descricao">Pasta onde ganhos, gastos e lembretes são salvos</div>
+                </div>
+                <span class="linha-config__valor">%LOCALAPPDATA%\com.financeiro.desktop\dados</span>
+              </div>
+              <div class="linha-config">
+                <div>
+                  <div class="linha-config__rotulo">Backups automáticos</div>
+                  <div class="linha-config__descricao">Cópia de segurança criada a cada alteração</div>
+                </div>
+                <span class="linha-config__valor">últimos 15 por arquivo</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grupo-config">
+            <div class="grupo-config__titulo">Sincronização com a nuvem</div>
+            <div class="cartao">
+              <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
+                Mantém uma cópia dos seus dados na nuvem (Supabase) para acessar de outros aparelhos. O app continua funcionando normalmente
+                sem internet — mudanças feitas offline entram numa fila e são enviadas na próxima sincronização.
+              </p>
+
+              <p class="estado-vazio" id="sincronizacao-status" hidden style="padding: var(--espaco-sm) 0; text-align: left;"></p>
+
+              <form id="formulario-login-sincronizacao">
+                <div class="campo">
+                  <label for="campo-email-sincronizacao">E-mail</label>
+                  <input type="email" id="campo-email-sincronizacao" placeholder="voce@exemplo.com" required />
+                </div>
+                <div class="campo">
+                  <label for="campo-senha-sincronizacao">Senha</label>
+                  <input type="password" id="campo-senha-sincronizacao" minlength="6" placeholder="Mínimo 6 caracteres" required />
+                </div>
+                <div class="modal__acoes" style="justify-content: flex-start; margin-top: 0;">
+                  <button type="submit" class="botao botao--primario" id="botao-entrar-sincronizacao">Entrar</button>
+                  <button type="button" class="botao botao--secundario" id="botao-cadastrar-sincronizacao">Criar conta</button>
+                </div>
+              </form>
+
+              <div id="painel-sincronizacao-conectada" hidden>
+                <div class="linha-config">
+                  <span class="linha-config__rotulo">Conta</span>
+                  <span class="linha-config__valor" id="sincronizacao-email">—</span>
+                </div>
+                <div class="linha-config">
+                  <span class="linha-config__rotulo">Última sincronização</span>
+                  <span class="linha-config__valor" id="sincronizacao-ultima">Nunca</span>
+                </div>
+                <div class="linha-config">
+                  <div>
+                    <div class="linha-config__rotulo">Mudanças pendentes de envio</div>
+                    <div class="linha-config__descricao">Enviadas na próxima sincronização (funciona offline)</div>
+                  </div>
+                  <span class="linha-config__valor" id="sincronizacao-fila">0</span>
+                </div>
+
+                <label class="alternar-historico" style="margin-top: var(--espaco-md);">
+                  <input type="checkbox" id="campo-automatica-sincronizacao" />
+                  Sincronizar automaticamente a cada poucos minutos
+                </label>
+
+                <div class="modal__acoes" style="justify-content: flex-start; margin-top: var(--espaco-md);">
+                  <button type="button" class="botao botao--primario" id="botao-sincronizar-agora">Sincronizar agora</button>
+                  <button type="button" class="botao botao--secundario" id="botao-sair-sincronizacao">Sair da conta</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="estado-vazio">Mais opções de configuração aparecerão aqui conforme forem definidas.</p>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal de cadastro/edição de ganho -->
+    <div class="sobreposicao" id="sobreposicao-ganho" hidden>
+      <div class="modal">
+        <div class="modal__cabecalho">
+          <h2 id="modal-ganho-titulo">Novo ganho</h2>
+          <button type="button" class="modal__fechar" id="botao-fechar-modal-ganho" aria-label="Fechar">&times;</button>
+        </div>
+        <form id="formulario-ganho">
+          <div class="campo">
+            <label for="campo-titulo-ganho">Título</label>
+            <input type="text" id="campo-titulo-ganho" placeholder="Ex: Salário, Freela..." required />
+          </div>
+          <div class="campo">
+            <label for="campo-valor-ganho">Valor (R$)</label>
+            <input type="number" id="campo-valor-ganho" step="0.01" min="0.01" placeholder="0,00" required />
+          </div>
+          <div class="campo">
+            <label for="campo-data-ganho">Data de recebimento</label>
+            <input type="date" id="campo-data-ganho" required />
+          </div>
+          <div class="campo-checkbox">
+            <input type="checkbox" id="campo-fixo-ganho" />
+            <label for="campo-fixo-ganho">Ganho fixo (gerado automaticamente todo mês)</label>
+          </div>
+          <div class="campo-checkbox">
+            <input type="checkbox" id="campo-recebido-ganho" />
+            <label for="campo-recebido-ganho">Já recebido</label>
+          </div>
+          <div class="modal__acoes">
+            <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-ganho">Cancelar</button>
+            <button type="submit" class="botao botao--primario">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de cadastro/edição de gasto -->
+    <div class="sobreposicao" id="sobreposicao-gasto" hidden>
+      <div class="modal">
+        <div class="modal__cabecalho">
+          <h2 id="modal-gasto-titulo">Novo gasto</h2>
+          <button type="button" class="modal__fechar" id="botao-fechar-modal-gasto" aria-label="Fechar">&times;</button>
+        </div>
+        <form id="formulario-gasto">
+          <div class="campo">
+            <label for="campo-titulo-gasto">Título</label>
+            <input type="text" id="campo-titulo-gasto" placeholder="Ex: Aluguel, Mercado..." required />
+          </div>
+          <div class="campo">
+            <label for="campo-valor-gasto">Valor (R$)</label>
+            <input type="number" id="campo-valor-gasto" step="0.01" min="0.01" placeholder="0,00" required />
+          </div>
+          <div class="campo">
+            <label for="campo-data-gasto">Data</label>
+            <input type="date" id="campo-data-gasto" required />
+          </div>
+          <div class="campo">
+            <label for="campo-salario-gasto">Salário responsável pelo pagamento</label>
+            <select id="campo-salario-gasto">
+              <option value="dia10">Dia 10</option>
+              <option value="dia25">Dia 25</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="campo-mes-referencia-gasto">Mês do salário que paga esse gasto</label>
+            <input type="month" id="campo-mes-referencia-gasto" required />
+          </div>
+          <div class="campo-checkbox">
+            <input type="checkbox" id="campo-fixo-gasto" />
+            <label for="campo-fixo-gasto">Gasto fixo (gerado automaticamente todo mês)</label>
+          </div>
+          <div class="campo-checkbox">
+            <input type="checkbox" id="campo-pago-gasto" />
+            <label for="campo-pago-gasto">Já pago</label>
+          </div>
+          <div class="modal__acoes">
+            <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-gasto">Cancelar</button>
+            <button type="submit" class="botao botao--primario">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de novo parcelamento -->
+    <div class="sobreposicao" id="sobreposicao-parcelamento" hidden>
+      <div class="modal">
+        <div class="modal__cabecalho">
+          <h2>Novo parcelamento</h2>
+          <button type="button" class="modal__fechar" id="botao-fechar-modal-parcelamento" aria-label="Fechar">&times;</button>
+        </div>
+        <form id="formulario-parcelamento">
+          <div class="campo">
+            <label for="campo-titulo-parcelamento">Título</label>
+            <input type="text" id="campo-titulo-parcelamento" placeholder="Ex: Notebook novo" required />
+          </div>
+          <div class="campo">
+            <label for="campo-quantidade-parcelamento">Quantidade de parcelas</label>
+            <input type="number" id="campo-quantidade-parcelamento" min="2" step="1" placeholder="Ex: 12" required />
+          </div>
+          <div class="campo">
+            <label for="campo-valor-parcelamento">Valor de cada parcela (R$)</label>
+            <input type="number" id="campo-valor-parcelamento" step="0.01" min="0.01" placeholder="0,00" required />
+          </div>
+          <div class="campo">
+            <label for="campo-data-parcelamento">Data da primeira parcela</label>
+            <input type="date" id="campo-data-parcelamento" required />
+          </div>
+          <div class="campo">
+            <label for="campo-salario-parcelamento">Salário responsável pelo pagamento</label>
+            <select id="campo-salario-parcelamento">
+              <option value="dia10">Dia 10</option>
+              <option value="dia25">Dia 25</option>
+            </select>
+          </div>
+          <div class="modal__acoes">
+            <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-parcelamento">Cancelar</button>
+            <button type="submit" class="botao botao--primario">Gerar parcelas</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de cadastro/edição de lembrete -->
+    <div class="sobreposicao" id="sobreposicao-lembrete" hidden>
+      <div class="modal">
+        <div class="modal__cabecalho">
+          <h2 id="modal-lembrete-titulo">Novo lembrete</h2>
+          <button type="button" class="modal__fechar" id="botao-fechar-modal-lembrete" aria-label="Fechar">&times;</button>
+        </div>
+        <form id="formulario-lembrete">
+          <div class="campo">
+            <label for="campo-titulo-lembrete">Título</label>
+            <input type="text" id="campo-titulo-lembrete" placeholder="Ex: Marcar psiquiatra" required />
+          </div>
+          <div class="campo">
+            <label for="campo-valor-lembrete">Valor previsto (R$)</label>
+            <input type="number" id="campo-valor-lembrete" step="0.01" min="0.01" placeholder="0,00" required />
+          </div>
+          <div class="campo">
+            <label for="campo-data-lembrete">Data prevista</label>
+            <input type="date" id="campo-data-lembrete" required />
+          </div>
+          <div class="modal__acoes">
+            <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-lembrete">Cancelar</button>
+            <button type="submit" class="botao botao--primario">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal de cadastro/edição de meta -->
+    <div class="sobreposicao" id="sobreposicao-meta" hidden>
+      <div class="modal">
+        <div class="modal__cabecalho">
+          <h2 id="modal-meta-titulo">Nova meta</h2>
+          <button type="button" class="modal__fechar" id="botao-fechar-modal-meta" aria-label="Fechar">&times;</button>
+        </div>
+        <form id="formulario-meta">
+          <div class="campo">
+            <label for="campo-nome-meta">Nome</label>
+            <input type="text" id="campo-nome-meta" placeholder="Ex: Viagem para a praia" required />
+          </div>
+          <div class="campo">
+            <label for="campo-valor-desejado-meta">Valor desejado (R$)</label>
+            <input type="number" id="campo-valor-desejado-meta" step="0.01" min="0.01" placeholder="0,00" required />
+          </div>
+          <div class="campo">
+            <label for="campo-valor-guardado-meta">Valor já guardado (R$)</label>
+            <input type="number" id="campo-valor-guardado-meta" step="0.01" min="0" placeholder="0,00" required />
+          </div>
+          <div class="campo">
+            <label for="campo-prioridade-meta">Prioridade</label>
+            <select id="campo-prioridade-meta">
+              <option value="alta">Alta</option>
+              <option value="media">Média</option>
+              <option value="baixa">Baixa</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label for="campo-observacoes-meta">Observações</label>
+            <textarea id="campo-observacoes-meta" rows="3" placeholder="Opcional"></textarea>
+          </div>
+          <div class="modal__acoes">
+            <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-meta">Cancelar</button>
+            <button type="submit" class="botao botao--primario">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tooltip compartilhado pelos gráficos do dashboard -->
+    <div class="grafico-tooltip" id="grafico-tooltip"></div>
+
+    <script type="module" src="./js/main.js"></script>
+  </body>
+</html>

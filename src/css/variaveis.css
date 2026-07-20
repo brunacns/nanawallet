@@ -1,0 +1,73 @@
+:root {
+  /* Cores de fundo — preto arroxeado (base "pastel goth"), não cinza neutro */
+  --cor-fundo: #14101d;
+  --cor-superficie: #1e1728;
+  --cor-superficie-alta: #291f36;
+  --cor-borda: #3c2f4d;
+
+  /* Texto com leve tom lilás, mantendo contraste alto sobre o fundo escuro */
+  --cor-texto: #f6f1fb;
+  --cor-texto-secundario: #b6a8cc;
+  --cor-texto-fraco: #7c6f92;
+
+  /* Acento principal: lilás pastel. --cor-rosa é o acento de apoio (gradientes,
+     detalhes decorativos), dando o toque "girly" sem depender de uma cor só. */
+  --cor-acento: #c9a3f5;
+  --cor-acento-fraco: rgba(201, 163, 245, 0.16);
+  --cor-acento-texto: #1c1024;
+  --cor-rosa: #f0a8d8;
+  --cor-rosa-fraco: rgba(240, 168, 216, 0.16);
+  --gradiente-acento: linear-gradient(135deg, var(--cor-acento), var(--cor-rosa));
+
+  /* Estados financeiros — tons pastel, preservando a semântica
+     verde=positivo / vermelho-rosado=negativo (não usei roxo aqui de propósito,
+     para não confundir com --cor-acento/--cor-rosa, que são só decorativos) */
+  --cor-positivo: #8ee6c4;
+  --cor-positivo-fraco: rgba(142, 230, 196, 0.14);
+  --cor-negativo: #f2879f;
+  --cor-negativo-fraco: rgba(242, 135, 159, 0.14);
+  --cor-alerta: #f0c987;
+  --cor-alerta-fraco: rgba(240, 201, 135, 0.14);
+  --cor-laranja: #f0ab7c;
+  --cor-laranja-fraco: rgba(240, 171, 124, 0.14);
+
+  /* Cores de gráficos: tons mais escuros/saturados que --cor-positivo/--cor-negativo
+     porque, lado a lado em barras/linhas, o par verde-claro + rosa-claro falha no
+     teste de daltonismo (verificado com o validador do skill de visualização de
+     dados). Este trio (verde/laranja/verde-azulado) passa em todos os critérios.
+     Mantidas de propósito no redesign visual — já validadas, não mexer. */
+  --cor-grafico-positivo: #16a34a;
+  --cor-grafico-negativo: #ea580c;
+  --cor-grafico-neutro: #0d9488;
+
+  /* Espaçamento */
+  --espaco-xs: 4px;
+  --espaco-sm: 8px;
+  --espaco-md: 16px;
+  --espaco-lg: 24px;
+  --espaco-xl: 32px;
+
+  /* Raio de borda — mais arredondado, para o clima aconchegante ("cozy") */
+  --raio-sm: 8px;
+  --raio-md: 14px;
+  --raio-lg: 20px;
+
+  /* Sombras — com um leve brilho lilás/rosa em vez de preto puro */
+  --sombra-suave: 0 2px 12px rgba(10, 8, 15, 0.4), 0 0 0 1px rgba(201, 163, 245, 0.05);
+  --sombra-media: 0 12px 32px rgba(10, 8, 15, 0.5), 0 0 24px rgba(201, 163, 245, 0.12);
+  --sombra-brilho-acento: 0 0 0 3px var(--cor-acento-fraco);
+  --sombra-brilho-rosa: 0 0 24px rgba(240, 168, 216, 0.28);
+
+  /* Tipografia */
+  --fonte: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Sidebar */
+  --largura-sidebar: 240px;
+  --largura-sidebar-recolhida: 72px;
+
+  /* Transições — curva separada da duração para poder reaproveitar só a
+     curva em `animation` (que já tem sua própria duração no shorthand) */
+  --curva-suave: cubic-bezier(0.4, 0, 0.2, 1);
+  --transicao-rapida: 150ms ease;
+  --transicao-suave: 250ms var(--curva-suave);
+}

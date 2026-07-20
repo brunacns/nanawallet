@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm -v)",
+      "Bash(cargo -v)",
+      "Bash(rustc -V)",
+      "PowerShell(cargo -V)",
+      "PowerShell(rustc -V)"
+    ]
+  }
+}
