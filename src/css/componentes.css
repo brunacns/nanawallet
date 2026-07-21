@@ -898,6 +898,13 @@
   color: var(--cor-texto);
 }
 
+.cartao-meta__aporte {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cor-acento);
+  margin-bottom: var(--espaco-sm);
+}
+
 .cartao-meta__observacoes {
   font-size: 13px;
   color: var(--cor-texto-secundario);

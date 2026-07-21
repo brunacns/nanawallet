@@ -285,10 +285,10 @@
             </button>
           </div>
 
-          <div class="abas">
-            <button class="aba ativa">Todos</button>
-            <button class="aba">Fixos</button>
-            <button class="aba">Parcelados</button>
+          <div class="abas" id="gastos-abas">
+            <button type="button" class="aba ativa" data-filtro="todos">Todos</button>
+            <button type="button" class="aba" data-filtro="fixos">Fixos</button>
+            <button type="button" class="aba" data-filtro="parcelados">Parcelados</button>
           </div>
 
           <div class="cartao" id="parcelamentos-resumo-cartao" hidden style="margin-bottom: var(--espaco-md);">
@@ -598,6 +598,10 @@
             <input type="checkbox" id="campo-recebido-ganho" />
             <label for="campo-recebido-ganho">Já recebido</label>
           </div>
+          <div class="campo-checkbox" id="linha-aplicar-proximas-ganho" hidden>
+            <input type="checkbox" id="campo-aplicar-proximas-ganho" />
+            <label for="campo-aplicar-proximas-ganho">Aplicar título e valor às próximas ocorrências desta série (as já passadas não mudam)</label>
+          </div>
           <div class="modal__acoes">
             <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-ganho">Cancelar</button>
             <button type="submit" class="botao botao--primario">Salvar</button>
@@ -644,6 +648,10 @@
           <div class="campo-checkbox">
             <input type="checkbox" id="campo-pago-gasto" />
             <label for="campo-pago-gasto">Já pago</label>
+          </div>
+          <div class="campo-checkbox" id="linha-aplicar-proximas-gasto" hidden>
+            <input type="checkbox" id="campo-aplicar-proximas-gasto" />
+            <label for="campo-aplicar-proximas-gasto">Aplicar título, valor e salário responsável às próximas ocorrências desta série (as já passadas não mudam)</label>
           </div>
           <div class="modal__acoes">
             <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-gasto">Cancelar</button>
@@ -739,6 +747,10 @@
           <div class="campo">
             <label for="campo-valor-guardado-meta">Valor já guardado (R$)</label>
             <input type="number" id="campo-valor-guardado-meta" step="0.01" min="0" placeholder="0,00" required />
+          </div>
+          <div class="campo">
+            <label for="campo-aporte-mensal-meta">Aporte mensal automático (R$) — opcional</label>
+            <input type="number" id="campo-aporte-mensal-meta" step="0.01" min="0" placeholder="0,00 (deixe em branco para não ter aporte automático)" />
           </div>
           <div class="campo">
             <label for="campo-prioridade-meta">Prioridade</label>

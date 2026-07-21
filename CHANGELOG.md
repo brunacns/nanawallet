@@ -12,6 +12,14 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.2.0] - 2026-07-20
+
+Três funcionalidades novas, a pedido explícito, todas sugeridas como melhoria futura na auditoria da versão anterior.
+
+- **Novo**: as abas "Todos/Fixos/Parcelados" da página Gastos agora filtram de verdade a lista (antes eram só visuais).
+- **Novo**: ao editar um gasto ou ganho que já faz parte de uma série fixa, o modal ganhou a opção "Aplicar às próximas ocorrências" — propaga título/valor (e salário responsável, no caso de gastos) para as ocorrências futuras da mesma série e para as que ainda serão geradas automaticamente, sem alterar as já passadas nem o status pago/recebido de cada uma.
+- **Novo**: metas podem ter um "aporte mensal automático" — um valor creditado sozinho em `valorGuardado` a cada mês que o app for aberto (inclusive de forma retroativa aos meses em que o app ficou fechado, mas nunca antes do mês em que o aporte foi ativado). Para de creditar automaticamente assim que a meta é batida.
+
 ## [1.1.1] - 2026-07-20
 
 Auditoria completa do projeto (funcionalidades, cálculos, persistência, migração, edge cases), com testes automatizados reais sobre a camada de armazenamento. Só correções de bugs — nenhuma funcionalidade nova.

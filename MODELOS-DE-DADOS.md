@@ -34,7 +34,7 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
 - **`data`**: sempre no formato `"AAAA-MM-DD"` (ISO 8601). Esse formato ordena corretamente como texto e evita ambiguidade entre DD/MM e MM/DD.
 - **`valor`**: número decimal simples (ex: `342.75`), representando reais. Ponto de atenção técnico: números decimais podem ter pequenos erros de arredondamento em operações repetidas de soma. Se isso incomodar no futuro, a alternativa é guardar valores em centavos (inteiro, ex: `34275`). Por ora mantive decimal por ser mais legível no JSON — me avise se preferir centavos.
 - **"Gastos fixos" e "parcelamentos" não são arquivos separados.** Eles são representados dentro do próprio modelo de `gasto`, usando os campos `fixo`/`fixoId` e `parcela`:
-  - Um **gasto fixo** (ex: aluguel) é um gasto com `"fixo": true` e um `fixoId` (uuid) compartilhado por toda a série. A partir da Etapa 13, o app **gera sozinho** uma nova ocorrência todo mês (mesmo dia, ajustado para meses mais curtos), sempre que o mês atual ou o mês que você está visualizando ainda não tiver uma. Editar uma ocorrência não afeta as outras já geradas; desmarcar "fixo" só impede novas gerações futuras, não apaga as existentes.
+  - Um **gasto fixo** (ex: aluguel) é um gasto com `"fixo": true` e um `fixoId` (uuid) compartilhado por toda a série. A partir da Etapa 13, o app **gera sozinho** uma nova ocorrência todo mês (mesmo dia, ajustado para meses mais curtos), sempre que o mês atual ou o mês que você está visualizando ainda não tiver uma. Por padrão, editar uma ocorrência afeta só ela; desmarcar "fixo" só impede novas gerações futuras, não apaga as existentes. Ao editar um gasto ou ganho que já faz parte de uma série fixa, o modal oferece a opção **"Aplicar às próximas ocorrências"**: título, valor (e, no caso de gastos, o salário responsável) passam a valer para todas as ocorrências FUTURAS da mesma série (data depois da que está sendo editada) e para as novas que ainda serão geradas — as ocorrências já passadas, e o status pago/recebido de cada uma, nunca são alterados por essa opção.
   - Um **parcelamento** (ex: uma compra em 3x) vira várias entradas em `gastos.json`, uma por parcela, todas compartilhando o mesmo `parcelamentoId` dentro do campo `parcela`. Isso permite identificar quais gastos pertencem à mesma compra parcelada. Diferente de "fixo", parcelamentos têm quantidade definida e não geram novas parcelas além das criadas na hora.
 - **`mesReferencia`** (Etapa 13, só em `gasto`): a data (`data`) de um gasto é quando ele foi feito/vence; `mesReferencia` (`"AAAA-MM"`) é **qual mês do salário** (dia 10 ou dia 25, indicado por `salarioResponsavel`) vai pagar essa conta — podem ser meses diferentes (ex: comprou dia 28/07 mas escolheu pagar com o salário de 10/08). Numa parcela, `mesReferencia` é sempre automaticamente igual ao mês da própria parcela.
 - **Mês de exibição (Dashboard/Gastos/Ganhos)**: as três páginas mostram um mês por vez (controlado por `src/js/estadoMes.js`, compartilhado entre elas). Gastos são filtrados por `mesReferencia`; ganhos são filtrados pelo mês da própria `data`.
@@ -191,6 +191,8 @@ Campos de cada lembrete, conforme especificado na Etapa 11:
 | `valorGuardado` | number | quanto já foi guardado até agora |
 | `prioridade` | `"alta"` \| `"media"` \| `"baixa"` | usada para ordenar os cartões na tela |
 | `observacoes` | string | texto livre, opcional |
+| `aporteMensal` | number | valor creditado automaticamente em `valorGuardado` a cada mês; `0` = sem aporte automático |
+| `ultimoAporteAplicado` | `null` ou string (`"AAAA-MM"`) | último mês em que o aporte automático já foi aplicado |
 
 ```json
 {
@@ -202,13 +204,19 @@ Campos de cada lembrete, conforme especificado na Etapa 11:
       "valorDesejado": 2000.00,
       "valorGuardado": 500.00,
       "prioridade": "baixa",
-      "observacoes": "Ir em janeiro"
+      "observacoes": "Ir em janeiro",
+      "aporteMensal": 200.00,
+      "ultimoAporteAplicado": "2026-07"
     }
   ]
 }
 ```
 
 **Não é particionado por mês** (diferente de ganhos/gastos/lembretes): uma meta não tem uma data/ocorrência mensal, é um item que o usuário edita diretamente ao longo do tempo — continua sendo um arquivo único, como `configuracoes.json`. Porcentagem (`valorGuardado / valorDesejado`) e o selo "Concluída" são **calculados na tela**, não gravados no arquivo, para nunca ficarem desatualizados.
+
+**Aporte mensal automático** (opcional): se `aporteMensal` for maior que zero, toda vez que a página Metas é aberta o app credita esse valor em `valorGuardado`, uma vez para cada mês real que se passou desde `ultimoAporteAplicado` (ex: app fechado por 3 meses = credita os 3 de uma vez na próxima abertura). Ativar o aporte automático (criar a meta com ele já preenchido, ou ligá-lo numa edição) **não credita nada retroativamente** — `ultimoAporteAplicado` começa no mês em que foi ativado, e o primeiro crédito automático só acontece a partir do mês seguinte. Para de creditar assim que `valorGuardado` atinge `valorDesejado` (a meta não continua crescendo indefinidamente depois de concluída). Desligar o aporte (deixar o campo em branco) zera `aporteMensal` e `ultimoAporteAplicado`; religar depois recomeça a contagem do zero, sem lembrar de quando estava ligado antes.
+
+**Compatibilidade com dados antigos**: metas salvas antes desta funcionalidade não têm `aporteMensal`/`ultimoAporteAplicado`. Ao carregar, o app preenche automaticamente `aporteMensal: 0` e `ultimoAporteAplicado: null` (sem aporte automático, comportamento idêntico ao de antes).
 
 ## `configuracoes.json`
 

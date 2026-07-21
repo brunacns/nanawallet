@@ -1,6 +1,7 @@
 import { metasService } from "../servicos/index.js";
 import { formatarMoeda, escaparHtml } from "../utils/formatadores.js";
 import { svgEditar, svgExcluir } from "../utils/icones.js";
+import { chaveMesAtual, mesSeguinte } from "../utils/datas.js";
 
 const ROTULOS_PRIORIDADE = { alta: "Alta prioridade", media: "Média prioridade", baixa: "Baixa prioridade" };
 const SELOS_PRIORIDADE = { alta: "selo--negativo", media: "selo--alerta", baixa: "selo--neutro" };
@@ -35,6 +36,44 @@ export async function iniciarPaginaMetas() {
 
   metasService.aoAtualizar(renderizar);
   await metasService.listar();
+  await sincronizarAportes();
+}
+
+// Credita o aporte mensal automático de cada meta que tiver um configurado,
+// para todos os meses reais que se passaram desde a última vez que o app
+// verificou (ex: app fechado por 3 meses -> credita os 3 aportes de uma vez
+// na próxima abertura). Nunca credita retroativamente antes do mês em que o
+// aporte foi ativado (ver GoalService.js) — mesmo espírito da geração
+// automática de ocorrências de gastos/ganhos fixos (Etapa 13).
+async function sincronizarAportes() {
+  const mesAtual = chaveMesAtual();
+  const atualizacoes = [];
+
+  for (const meta of metasService.obterTodos()) {
+    if (!(meta.aporteMensal > 0)) continue;
+
+    if (!meta.ultimoAporteAplicado) {
+      atualizacoes.push({ ...meta, ultimoAporteAplicado: mesAtual });
+      continue;
+    }
+    if (meta.ultimoAporteAplicado >= mesAtual) continue;
+
+    let valorGuardado = meta.valorGuardado;
+    let mes = meta.ultimoAporteAplicado;
+    let protecao = 0;
+    while (mes < mesAtual && protecao < 240) {
+      mes = mesSeguinte(mes);
+      // Para de creditar assim que a meta é batida — evita um valor guardado
+      // crescendo indefinidamente numa meta já concluída.
+      if (valorGuardado < meta.valorDesejado) valorGuardado += meta.aporteMensal;
+      protecao++;
+    }
+    atualizacoes.push({ ...meta, valorGuardado, ultimoAporteAplicado: mesAtual });
+  }
+
+  if (atualizacoes.length > 0) {
+    await metasService.salvarEmLote(atualizacoes);
+  }
 }
 
 // Quanto falta para bater a meta, em porcentagem (limitada a 100 na barra visual).
@@ -92,6 +131,7 @@ function cartaoMeta(meta) {
         <span class="cartao-meta__porcentagem">${Math.round(pct)}%</span>
         <span>de ${formatarMoeda(meta.valorDesejado)}</span>
       </div>
+      ${meta.aporteMensal > 0 ? `<p class="cartao-meta__aporte">+ ${formatarMoeda(meta.aporteMensal)}/mês automático</p>` : ""}
       ${meta.observacoes ? `<p class="cartao-meta__observacoes">${escaparHtml(meta.observacoes)}</p>` : ""}
       <div class="cartao-meta__acoes">
         <button type="button" class="botao-icone" data-acao="editar" title="Editar">${svgEditar}</button>
@@ -128,6 +168,7 @@ function abrirModalEdicao(id) {
   document.getElementById("campo-nome-meta").value = meta.nome;
   document.getElementById("campo-valor-desejado-meta").value = meta.valorDesejado;
   document.getElementById("campo-valor-guardado-meta").value = meta.valorGuardado;
+  document.getElementById("campo-aporte-mensal-meta").value = meta.aporteMensal > 0 ? meta.aporteMensal : "";
   document.getElementById("campo-prioridade-meta").value = meta.prioridade;
   document.getElementById("campo-observacoes-meta").value = meta.observacoes || "";
   abrirModal();
@@ -149,10 +190,11 @@ async function salvarFormulario(evento) {
   const nome = document.getElementById("campo-nome-meta").value.trim();
   const valorDesejado = Number(document.getElementById("campo-valor-desejado-meta").value);
   const valorGuardado = Number(document.getElementById("campo-valor-guardado-meta").value);
+  const aporteMensal = Number(document.getElementById("campo-aporte-mensal-meta").value) || 0;
   const prioridade = document.getElementById("campo-prioridade-meta").value;
   const observacoes = document.getElementById("campo-observacoes-meta").value.trim();
 
-  if (!nome || !(valorDesejado > 0) || !(valorGuardado >= 0)) return;
+  if (!nome || !(valorDesejado > 0) || !(valorGuardado >= 0) || !(aporteMensal >= 0)) return;
 
   let metaSalva;
 
@@ -163,8 +205,24 @@ async function salvarFormulario(evento) {
     metaSalva.valorGuardado = valorGuardado;
     metaSalva.prioridade = prioridade;
     metaSalva.observacoes = observacoes;
+    // Ativar o aporte automático agora (não existia ou estava desligado)
+    // começa a contar a partir deste mês, sem creditar retroativamente;
+    // desligar (deixar em branco/0) reseta o marcador, para recomeçar do
+    // zero se for ligado de novo depois.
+    if (aporteMensal > 0 && !(metaSalva.aporteMensal > 0)) metaSalva.ultimoAporteAplicado = chaveMesAtual();
+    if (!(aporteMensal > 0)) metaSalva.ultimoAporteAplicado = null;
+    metaSalva.aporteMensal = aporteMensal;
   } else {
-    metaSalva = { id: crypto.randomUUID(), nome, valorDesejado, valorGuardado, prioridade, observacoes };
+    metaSalva = {
+      id: crypto.randomUUID(),
+      nome,
+      valorDesejado,
+      valorGuardado,
+      prioridade,
+      observacoes,
+      aporteMensal,
+      ultimoAporteAplicado: aporteMensal > 0 ? chaveMesAtual() : null,
+    };
   }
 
   await metasService.salvar(metaSalva);

@@ -6,6 +6,7 @@ import { obterMesSelecionado, avancarMes, retrocederMes, aoAtualizarMes } from "
 
 let idEmEdicao = null;
 let mostrarHistorico = false;
+let fixoIdOriginalEmEdicao = null; // fixoId que o item já tinha ANTES desta edição (null se não fazia parte de uma série)
 
 // Permite que outros módulos (ex: dashboard.js, graficos.js) sejam avisados
 // sempre que a lista de ganhos mudar, sem duplicar o estado. Repassa direto
@@ -165,8 +166,10 @@ async function alternarRecebido(id) {
 
 function abrirModalNovo() {
   idEmEdicao = null;
+  fixoIdOriginalEmEdicao = null;
   document.getElementById("modal-ganho-titulo").textContent = "Novo ganho";
   document.getElementById("formulario-ganho").reset();
+  document.getElementById("linha-aplicar-proximas-ganho").hidden = true;
   abrirModal();
 }
 
@@ -175,12 +178,17 @@ function abrirModalEdicao(id) {
   if (!ganho) return;
 
   idEmEdicao = id;
+  fixoIdOriginalEmEdicao = ganho.fixoId;
   document.getElementById("modal-ganho-titulo").textContent = "Editar ganho";
   document.getElementById("campo-titulo-ganho").value = ganho.titulo;
   document.getElementById("campo-valor-ganho").value = ganho.valor;
   document.getElementById("campo-data-ganho").value = ganho.data;
   document.getElementById("campo-recebido-ganho").checked = ganho.recebido;
   document.getElementById("campo-fixo-ganho").checked = ganho.fixo;
+  // Só faz sentido oferecer "aplicar às próximas" se este ganho já fazia
+  // parte de uma série fixa antes desta edição (senão não há "próximas" ainda).
+  document.getElementById("linha-aplicar-proximas-ganho").hidden = !ganho.fixoId;
+  document.getElementById("campo-aplicar-proximas-ganho").checked = false;
   abrirModal();
 }
 
@@ -202,6 +210,7 @@ async function salvarFormulario(evento) {
   const data = document.getElementById("campo-data-ganho").value;
   const recebido = document.getElementById("campo-recebido-ganho").checked;
   const fixo = document.getElementById("campo-fixo-ganho").checked;
+  const aplicarProximas = document.getElementById("campo-aplicar-proximas-ganho").checked;
 
   if (!titulo || !data || !(valor > 0)) return;
 
@@ -228,7 +237,22 @@ async function salvarFormulario(evento) {
     };
   }
 
-  await transacoesGanhos.salvar(ganhoSalvo);
+  // "Aplicar às próximas ocorrências": só propaga título/valor para
+  // ocorrências FUTURAS (mesma série, data depois desta) — nunca mexe nas já
+  // passadas nem no status recebido/data de cada uma.
+  const futurasAtualizadas =
+    aplicarProximas && fixoIdOriginalEmEdicao && ganhoSalvo.fixo && ganhoSalvo.fixoId
+      ? transacoesGanhos
+          .obterTodos()
+          .filter((g) => g.fixoId === fixoIdOriginalEmEdicao && g.id !== ganhoSalvo.id && g.data > ganhoSalvo.data)
+          .map((g) => ({ ...g, titulo, valor }))
+      : [];
+
+  if (futurasAtualizadas.length > 0) {
+    await transacoesGanhos.salvarEmLote([ganhoSalvo, ...futurasAtualizadas]);
+  } else {
+    await transacoesGanhos.salvar(ganhoSalvo);
+  }
   fecharModal();
 }
 

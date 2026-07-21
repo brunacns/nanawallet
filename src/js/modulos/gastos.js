@@ -6,6 +6,8 @@ import { obterMesSelecionado, avancarMes, retrocederMes, aoAtualizarMes } from "
 
 let idEmEdicao = null;
 let mostrarHistorico = false;
+let filtroTipo = "todos"; // "todos" | "fixos" | "parcelados" — abas da página
+let fixoIdOriginalEmEdicao = null; // fixoId que o item já tinha ANTES desta edição (null se não fazia parte de uma série)
 
 // Permite que outros módulos (ex: parcelamentos.js, dashboard.js, graficos.js)
 // sejam avisados sempre que a lista de gastos mudar, sem duplicar o estado.
@@ -43,6 +45,13 @@ export async function iniciarPaginaGastos() {
     mostrarHistorico = evento.target.checked;
     renderizar();
   });
+  document.getElementById("gastos-abas").addEventListener("click", (evento) => {
+    const botao = evento.target.closest(".aba");
+    if (!botao) return;
+    filtroTipo = botao.dataset.filtro;
+    document.querySelectorAll("#gastos-abas .aba").forEach((b) => b.classList.toggle("ativa", b === botao));
+    renderizar();
+  });
 
   // O serviço avisa sozinho sempre que os dados mudarem (carregar, salvar,
   // remover, lote) — não precisa mais chamar renderizar() manualmente depois
@@ -68,7 +77,7 @@ function renderizar() {
   const mesSelecionado = obterMesSelecionado();
   document.getElementById("gastos-mes-rotulo").textContent = rotuloMesLongo(mesSelecionado);
 
-  const doMes = gastos.filter((g) => g.mesReferencia === mesSelecionado);
+  const doMes = aplicarFiltroTipo(gastos.filter((g) => g.mesReferencia === mesSelecionado));
   const total = doMes.reduce((soma, g) => soma + g.valor, 0);
   document.getElementById("gastos-total").textContent = `Total: ${formatarMoeda(total)}`;
 
@@ -81,12 +90,25 @@ function renderizar() {
   if (visiveis.length === 0) {
     corpo.innerHTML = "";
     estadoVazio.hidden = false;
-    estadoVazio.textContent =
-      doMes.length === 0 ? "Nenhum gasto neste mês." : "Todos os gastos deste mês já foram pagos (marque \"mostrar histórico\" para vê-los).";
+    estadoVazio.textContent = doMes.length === 0 ? mensagemVaziaPorFiltro() : "Todos os gastos deste mês já foram pagos (marque \"mostrar histórico\" para vê-los).";
   } else {
     estadoVazio.hidden = true;
     corpo.innerHTML = ordenarGastos(visiveis).map(linhaGasto).join("");
   }
+}
+
+// Filtro das abas "Todos/Fixos/Parcelados" — aplicado antes do total e da
+// lista, para os dois sempre refletirem o mesmo conjunto de gastos.
+function aplicarFiltroTipo(lista) {
+  if (filtroTipo === "fixos") return lista.filter((g) => g.fixo);
+  if (filtroTipo === "parcelados") return lista.filter((g) => g.parcela);
+  return lista;
+}
+
+function mensagemVaziaPorFiltro() {
+  if (filtroTipo === "fixos") return "Nenhum gasto fixo neste mês.";
+  if (filtroTipo === "parcelados") return "Nenhuma parcela neste mês.";
+  return "Nenhum gasto neste mês.";
 }
 
 // Gastos fixos sempre no topo; dentro de cada grupo, do mais antigo para o mais recente.
@@ -146,9 +168,11 @@ async function alternarPago(id) {
 
 function abrirModalNovo() {
   idEmEdicao = null;
+  fixoIdOriginalEmEdicao = null;
   document.getElementById("modal-gasto-titulo").textContent = "Novo gasto";
   document.getElementById("formulario-gasto").reset();
   document.getElementById("campo-mes-referencia-gasto").value = obterMesSelecionado();
+  document.getElementById("linha-aplicar-proximas-gasto").hidden = true;
   abrirModal();
 }
 
@@ -157,6 +181,7 @@ function abrirModalEdicao(id) {
   if (!gasto) return;
 
   idEmEdicao = id;
+  fixoIdOriginalEmEdicao = gasto.fixoId;
   document.getElementById("modal-gasto-titulo").textContent = "Editar gasto";
   document.getElementById("campo-titulo-gasto").value = gasto.titulo;
   document.getElementById("campo-valor-gasto").value = gasto.valor;
@@ -165,6 +190,10 @@ function abrirModalEdicao(id) {
   document.getElementById("campo-salario-gasto").value = gasto.salarioResponsavel;
   document.getElementById("campo-fixo-gasto").checked = gasto.fixo;
   document.getElementById("campo-pago-gasto").checked = gasto.pago;
+  // Só faz sentido oferecer "aplicar às próximas" se este gasto já fazia
+  // parte de uma série fixa antes desta edição (senão não há "próximas" ainda).
+  document.getElementById("linha-aplicar-proximas-gasto").hidden = !gasto.fixoId;
+  document.getElementById("campo-aplicar-proximas-gasto").checked = false;
   abrirModal();
 }
 
@@ -188,6 +217,7 @@ async function salvarFormulario(evento) {
   const salarioResponsavel = document.getElementById("campo-salario-gasto").value;
   const fixo = document.getElementById("campo-fixo-gasto").checked;
   const pago = document.getElementById("campo-pago-gasto").checked;
+  const aplicarProximas = document.getElementById("campo-aplicar-proximas-gasto").checked;
 
   if (!titulo || !data || !mesReferencia || !(valor > 0)) return;
 
@@ -221,7 +251,23 @@ async function salvarFormulario(evento) {
     };
   }
 
-  await transacoesGastos.salvar(gastoSalvo);
+  // "Aplicar às próximas ocorrências": só propaga título/valor/salário
+  // responsável para ocorrências FUTURAS (mesma série, data depois desta) —
+  // nunca mexe nas já passadas nem no status pago/data/mesReferencia de cada
+  // uma (cada ocorrência continua dona da própria data e do próprio status).
+  const futurasAtualizadas =
+    aplicarProximas && fixoIdOriginalEmEdicao && gastoSalvo.fixo && gastoSalvo.fixoId
+      ? transacoesGastos
+          .obterTodos()
+          .filter((g) => g.fixoId === fixoIdOriginalEmEdicao && g.id !== gastoSalvo.id && g.data > gastoSalvo.data)
+          .map((g) => ({ ...g, titulo, valor, salarioResponsavel }))
+      : [];
+
+  if (futurasAtualizadas.length > 0) {
+    await transacoesGastos.salvarEmLote([gastoSalvo, ...futurasAtualizadas]);
+  } else {
+    await transacoesGastos.salvar(gastoSalvo);
+  }
   fecharModal();
 }
 
