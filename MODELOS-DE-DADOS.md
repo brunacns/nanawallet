@@ -38,7 +38,7 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
   - Um **parcelamento** (ex: uma compra em 3x) vira várias entradas em `gastos.json`, uma por parcela, todas compartilhando o mesmo `parcelamentoId` dentro do campo `parcela`. Isso permite identificar quais gastos pertencem à mesma compra parcelada. Diferente de "fixo", parcelamentos têm quantidade definida e não geram novas parcelas além das criadas na hora.
 - **`mesReferencia`** (Etapa 13, só em `gasto`): a data (`data`) de um gasto é quando ele foi feito/vence; `mesReferencia` (`"AAAA-MM"`) é **qual mês do salário** (dia 10 ou dia 25, indicado por `salarioResponsavel`) vai pagar essa conta — podem ser meses diferentes (ex: comprou dia 28/07 mas escolheu pagar com o salário de 10/08). Numa parcela, `mesReferencia` é sempre automaticamente igual ao mês da própria parcela.
 - **Mês de exibição (Dashboard/Gastos/Ganhos)**: as três páginas mostram um mês por vez (controlado por `src/js/estadoMes.js`, compartilhado entre elas). Gastos são filtrados por `mesReferencia`; ganhos são filtrados pelo mês da própria `data`.
-- **"Sumir quando pago/recebido"**: um gasto/ganho já marcado como pago/recebido, com data anterior a hoje, some da lista por padrão (mas continua no arquivo — nada é apagado). Uma caixinha "Mostrar histórico" no topo da página revela esses itens de novo.
+- **"Sumir quando pago/recebido"**: um gasto/ganho já marcado como pago/recebido, com data anterior a hoje, some da lista das páginas Gastos/Ganhos (mas continua no arquivo — nada é apagado). Não há como revelá-los de volta nessas duas páginas; a página Histórico mostra todas as transações de qualquer mês/status, incluindo essas.
 
 ## `ganhos.json`
 

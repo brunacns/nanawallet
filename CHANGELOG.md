@@ -12,6 +12,10 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.2.1] - 2026-07-20
+
+- **Removido**: a caixinha "Mostrar histórico" das páginas Gastos e Ganhos. Itens já pagos/recebidos de datas passadas continuam saindo da lista do mês por padrão (nada muda nisso) — só não há mais como revelá-los ali; a página Histórico já mostra todas as transações de qualquer mês/status.
+
 ## [1.2.0] - 2026-07-20
 
 Três funcionalidades novas, a pedido explícito, todas sugeridas como melhoria futura na auditoria da versão anterior.

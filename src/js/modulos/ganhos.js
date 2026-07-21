@@ -5,7 +5,6 @@ import { diaDoMes, mesDeData, chaveMesAtual, hojeISO, rotuloMesLongo } from "../
 import { obterMesSelecionado, avancarMes, retrocederMes, aoAtualizarMes } from "../estadoMes.js";
 
 let idEmEdicao = null;
-let mostrarHistorico = false;
 let fixoIdOriginalEmEdicao = null; // fixoId que o item já tinha ANTES desta edição (null se não fazia parte de uma série)
 
 // Permite que outros módulos (ex: dashboard.js, graficos.js) sejam avisados
@@ -35,10 +34,6 @@ export async function iniciarPaginaGanhos() {
   document.getElementById("ganhos-conteudo").addEventListener("click", tratarCliqueLista);
   document.getElementById("ganhos-mes-anterior").addEventListener("click", retrocederMes);
   document.getElementById("ganhos-mes-seguinte").addEventListener("click", avancarMes);
-  document.getElementById("ganhos-mostrar-historico").addEventListener("change", (evento) => {
-    mostrarHistorico = evento.target.checked;
-    renderizar();
-  });
 
   // O serviço avisa sozinho sempre que os dados mudarem (carregar, salvar,
   // remover, lote) — não precisa mais chamar renderizar() manualmente depois
@@ -68,15 +63,17 @@ function renderizar() {
   const total = doMes.reduce((soma, g) => soma + g.valor, 0);
   document.getElementById("ganhos-total").textContent = `Total: ${formatarMoeda(total)}`;
 
+  // Itens já recebidos com data passada ficam fora da lista do mês (mas
+  // continuam no arquivo, nunca são apagados) — a página Histórico mostra
+  // todas as transações de qualquer mês/status para quem quiser ver esses itens.
   const hoje = hojeISO();
-  const visiveis = doMes.filter((g) => mostrarHistorico || !(g.recebido && g.data < hoje));
+  const visiveis = doMes.filter((g) => !(g.recebido && g.data < hoje));
 
   const container = document.getElementById("ganhos-conteudo");
   container.innerHTML = "";
 
   if (visiveis.length === 0) {
-    const mensagem =
-      doMes.length === 0 ? "Nenhum ganho neste mês." : 'Todos os ganhos deste mês já foram recebidos (marque "mostrar histórico" para vê-los).';
+    const mensagem = doMes.length === 0 ? "Nenhum ganho neste mês." : "Todos os ganhos deste mês já foram recebidos (veja-os na página Histórico).";
     container.innerHTML = `<p class="estado-vazio">${mensagem}</p>`;
   } else {
     for (const grupo of agruparPorDia(visiveis)) {

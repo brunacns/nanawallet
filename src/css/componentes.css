@@ -939,19 +939,3 @@
   background: var(--cor-positivo);
   box-shadow: 0 0 10px var(--cor-positivo-fraco);
 }
-
-/* Alternar "mostrar histórico" (itens já pagos/recebidos de datas passadas) */
-.alternar-historico {
-  display: flex;
-  align-items: center;
-  gap: var(--espaco-sm);
-  margin-bottom: var(--espaco-md);
-  font-size: 13px;
-  color: var(--cor-texto-secundario);
-}
-
-.alternar-historico input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--cor-acento);
-}

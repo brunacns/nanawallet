@@ -5,7 +5,6 @@ import { chaveMesAtual, hojeISO, rotuloMesLongo } from "../utils/datas.js";
 import { obterMesSelecionado, avancarMes, retrocederMes, aoAtualizarMes } from "../estadoMes.js";
 
 let idEmEdicao = null;
-let mostrarHistorico = false;
 let filtroTipo = "todos"; // "todos" | "fixos" | "parcelados" — abas da página
 let fixoIdOriginalEmEdicao = null; // fixoId que o item já tinha ANTES desta edição (null se não fazia parte de uma série)
 
@@ -41,10 +40,6 @@ export async function iniciarPaginaGastos() {
   document.getElementById("gastos-corpo-tabela").addEventListener("click", tratarCliqueLista);
   document.getElementById("gastos-mes-anterior").addEventListener("click", retrocederMes);
   document.getElementById("gastos-mes-seguinte").addEventListener("click", avancarMes);
-  document.getElementById("gastos-mostrar-historico").addEventListener("change", (evento) => {
-    mostrarHistorico = evento.target.checked;
-    renderizar();
-  });
   document.getElementById("gastos-abas").addEventListener("click", (evento) => {
     const botao = evento.target.closest(".aba");
     if (!botao) return;
@@ -81,8 +76,11 @@ function renderizar() {
   const total = doMes.reduce((soma, g) => soma + g.valor, 0);
   document.getElementById("gastos-total").textContent = `Total: ${formatarMoeda(total)}`;
 
+  // Itens já pagos com data passada ficam fora da lista do mês (mas continuam
+  // no arquivo, nunca são apagados) — a página Histórico mostra todas as
+  // transações de qualquer mês/status para quem quiser ver esses itens.
   const hoje = hojeISO();
-  const visiveis = doMes.filter((g) => mostrarHistorico || !(g.pago && g.data < hoje));
+  const visiveis = doMes.filter((g) => !(g.pago && g.data < hoje));
 
   const corpo = document.getElementById("gastos-corpo-tabela");
   const estadoVazio = document.getElementById("gastos-estado-vazio");
@@ -90,7 +88,7 @@ function renderizar() {
   if (visiveis.length === 0) {
     corpo.innerHTML = "";
     estadoVazio.hidden = false;
-    estadoVazio.textContent = doMes.length === 0 ? mensagemVaziaPorFiltro() : "Todos os gastos deste mês já foram pagos (marque \"mostrar histórico\" para vê-los).";
+    estadoVazio.textContent = doMes.length === 0 ? mensagemVaziaPorFiltro() : "Todos os gastos deste mês já foram pagos (veja-os na página Histórico).";
   } else {
     estadoVazio.hidden = true;
     corpo.innerHTML = ordenarGastos(visiveis).map(linhaGasto).join("");
