@@ -12,7 +12,7 @@
     },
     {
       "identifier": "fs:allow-exists",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [{ "path": "$APPLOCALDATA" }, { "path": "$APPLOCALDATA/**" }, { "path": "$APPLOCALDATA/**/*" }]
     },
     {
       "identifier": "fs:allow-read-text-file",
@@ -24,15 +24,15 @@
     },
     {
       "identifier": "fs:allow-copy-file",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [{ "path": "$APPLOCALDATA" }, { "path": "$APPLOCALDATA/**" }, { "path": "$APPLOCALDATA/**/*" }]
     },
     {
       "identifier": "fs:allow-read-dir",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [{ "path": "$APPLOCALDATA" }, { "path": "$APPLOCALDATA/**" }, { "path": "$APPLOCALDATA/**/*" }]
     },
     {
       "identifier": "fs:allow-remove",
-      "allow": [{ "path": "$APPLOCALDATA/**" }]
+      "allow": [{ "path": "$APPLOCALDATA" }, { "path": "$APPLOCALDATA/**" }, { "path": "$APPLOCALDATA/**/*" }]
     }
   ]
 }

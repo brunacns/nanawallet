@@ -16,6 +16,19 @@ function mostrarStatusArmazenamento(texto) {
   if (el) el.textContent = texto;
 }
 
+// Roda uma etapa de inicialização isolada: se uma página falhar ao carregar
+// (ex: um arquivo de mês corrompido), as demais ainda são tentadas — antes,
+// todas as páginas ficavam dentro de um único try/catch e uma falha isolada
+// (ex: só em gastos) impedia até páginas sem nenhum problema (ex: metas) de
+// inicializar.
+async function iniciarEtapa(nome, fn) {
+  try {
+    await fn();
+  } catch (erro) {
+    console.error(`Erro ao inicializar "${nome}":`, erro);
+  }
+}
+
 async function iniciarApp() {
   configurarNavegacao();
   // Não depende do armazenamento (fs) — roda fora do try/catch de baixo para
@@ -29,19 +42,21 @@ async function iniciarApp() {
     // concreta de armazenamento.
     await armazenamentoAtivo.inicializar();
     mostrarStatusArmazenamento("Armazenamento OK");
-    await iniciarPaginaGanhos();
-    await iniciarPaginaGastos();
-    iniciarParcelamentos();
-    await iniciarPaginaLembretes();
-    iniciarDashboard();
-    iniciarGraficos();
-    iniciarHistorico();
-    await iniciarPaginaMetas();
-    await iniciarExportacao();
   } catch (erro) {
     mostrarStatusArmazenamento("Erro no armazenamento");
     console.error("Erro ao inicializar o armazenamento:", erro);
+    return;
   }
+
+  await iniciarEtapa("ganhos", iniciarPaginaGanhos);
+  await iniciarEtapa("gastos", iniciarPaginaGastos);
+  await iniciarEtapa("parcelamentos", iniciarParcelamentos);
+  await iniciarEtapa("lembretes", iniciarPaginaLembretes);
+  await iniciarEtapa("dashboard", iniciarDashboard);
+  await iniciarEtapa("gráficos", iniciarGraficos);
+  await iniciarEtapa("histórico", iniciarHistorico);
+  await iniciarEtapa("metas", iniciarPaginaMetas);
+  await iniciarEtapa("exportação", iniciarExportacao);
 }
 
 window.addEventListener("DOMContentLoaded", iniciarApp);

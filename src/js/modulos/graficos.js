@@ -1,7 +1,7 @@
 import { obterGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, aoAtualizarGastos } from "./gastos.js";
 import { formatarMoeda } from "../utils/formatadores.js";
-import { diaDoMes, chaveMesAtual, rotuloMesCurto, listaMeses } from "../utils/datas.js";
+import { diaDoMes, mesDeData, chaveMesAtual, rotuloMesCurto, listaMeses } from "../utils/datas.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const LARGURA = 560;
@@ -103,12 +103,17 @@ function renderizarEvolucaoGastos(gastos) {
     return;
   }
 
-  const datas = gastos.map((g) => g.data).sort();
-  const meses = listaMeses(datas[0].slice(0, 7), datas[datas.length - 1].slice(0, 7));
+  // Agrupa por `mesReferencia` (mês do salário que paga o gasto), não por
+  // `data` (data da compra) — os dois podem ser meses diferentes (ver
+  // MODELOS-DE-DADOS.md). Dashboard e a página Gastos já usam mesReferencia;
+  // usar `data` aqui fazia este gráfico divergir dos totais mostrados nas
+  // outras telas para o mesmo mês (bug real encontrado nesta auditoria).
+  const mesesComGasto = gastos.map((g) => g.mesReferencia).sort();
+  const meses = listaMeses(mesesComGasto[0], mesesComGasto[mesesComGasto.length - 1]);
   const pontos = meses.map((chave) => ({
     chave,
     valor: somar(
-      gastos.filter((g) => g.data.startsWith(chave)),
+      gastos.filter((g) => g.mesReferencia === chave),
       (g) => g.valor
     ),
   }));
@@ -130,17 +135,20 @@ function renderizarEvolucaoSaldo(ganhos, gastos) {
     return;
   }
 
-  const todasDatas = [...ganhos.map((g) => g.data), ...gastos.map((g) => g.data)].sort();
-  const meses = listaMeses(todasDatas[0].slice(0, 7), todasDatas[todasDatas.length - 1].slice(0, 7));
+  // Ganhos agrupam pelo mês da própria data; gastos por `mesReferencia` — o
+  // mesmo critério usado no Dashboard e na página Gastos (ver comentário em
+  // renderizarEvolucaoGastos).
+  const todosMeses = [...ganhos.map((g) => mesDeData(g.data)), ...gastos.map((g) => g.mesReferencia)].sort();
+  const meses = listaMeses(todosMeses[0], todosMeses[todosMeses.length - 1]);
 
   let acumulado = 0;
   const pontos = meses.map((chave) => {
     const ganhoMes = somar(
-      ganhos.filter((g) => g.data.startsWith(chave)),
+      ganhos.filter((g) => mesDeData(g.data) === chave),
       (g) => g.valor
     );
     const gastoPagoMes = somar(
-      gastos.filter((g) => g.data.startsWith(chave) && g.pago),
+      gastos.filter((g) => g.mesReferencia === chave && g.pago),
       (g) => g.valor
     );
     acumulado += ganhoMes - gastoPagoMes;
@@ -409,9 +417,12 @@ function renderizarPrevisoesFuturas(gastos) {
     return;
   }
 
+  // Agrupa por `mesReferencia` (mês do salário que vai pagar), não pela data
+  // da compra — é isso que "previsão futura" precisa refletir (mesmo
+  // critério do Dashboard/página Gastos, ver comentário em renderizarEvolucaoGastos).
   const mesAtual = chaveMesAtual();
-  const datasPendentes = pendentes.map((g) => g.data.slice(0, 7)).sort();
-  const ultimoMes = datasPendentes[datasPendentes.length - 1];
+  const mesesPendentes = pendentes.map((g) => g.mesReferencia).sort();
+  const ultimoMes = mesesPendentes[mesesPendentes.length - 1];
 
   let meses = listaMeses(mesAtual, ultimoMes > mesAtual ? ultimoMes : mesAtual);
   if (meses.length > 6) meses = meses.slice(0, 6);
@@ -419,7 +430,7 @@ function renderizarPrevisoesFuturas(gastos) {
   const pontos = meses.map((chave) => ({
     chave,
     valor: somar(
-      pendentes.filter((g) => g.data.startsWith(chave)),
+      pendentes.filter((g) => g.mesReferencia === chave),
       (g) => g.valor
     ),
   }));

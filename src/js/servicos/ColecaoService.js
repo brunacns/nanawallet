@@ -60,7 +60,13 @@ export class ColecaoService {
   /** Cria ou atualiza vários itens de uma vez (ex: parcelas de um parcelamento). */
   async salvarEmLote(itens) {
     await this.storage.salvarEmLote(this.colecao, itens);
-    this._itens.push(...itens);
+    // Upsert por id (igual a `salvar`) — não apenas `push`, para não duplicar
+    // em memória caso algum chamador reenvie um id que já existe em `_itens`
+    // (o armazenamento em arquivo já deduplica por id; o estado em memória
+    // precisa fazer o mesmo, senão os dois ficam fora de sincronia).
+    const porId = new Map(this._itens.map((i) => [i.id, i]));
+    for (const item of itens) porId.set(item.id, item);
+    this._itens = [...porId.values()];
     this._notificar();
   }
 

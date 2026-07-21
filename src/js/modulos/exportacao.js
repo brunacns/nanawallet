@@ -3,7 +3,7 @@ import { obterGanhos, recarregarGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, recarregarGastos, aoAtualizarGastos } from "./gastos.js";
 import { obterLembretes, recarregarLembretes, aoAtualizarLembretes } from "./lembretes.js";
 import { obterMetas, recarregarMetas, aoAtualizarMetas } from "./metas.js";
-import { formatarMoeda, formatarData, carimboDataHora } from "../utils/formatadores.js";
+import { formatarMoeda, formatarData, carimboDataHora, escaparHtml } from "../utils/formatadores.js";
 import { rotuloMesLongo } from "../utils/datas.js";
 
 export async function iniciarExportacao() {
@@ -155,7 +155,11 @@ function gerarTextoParaIA(ganhos, gastos, lembretes, metas) {
   linhas.push(`Total recebido: ${formatarMoeda(totalGanhos)}`);
   linhas.push(`Total gasto (já pago): ${formatarMoeda(totalPago)}`);
   linhas.push(`Total gasto pendente: ${formatarMoeda(totalPendente)}`);
-  linhas.push(`Saldo restante: ${formatarMoeda(totalGanhos - totalPago)}`);
+  // Mesma fórmula do "Saldo restante" do Dashboard (Etapa 13): desconta TODOS
+  // os gastos atribuídos, pagos ou não — não só os já pagos. Aqui é a soma de
+  // todo o histórico (o Dashboard mostra por mês selecionado), mas o conceito
+  // de "saldo restante" precisa ser o mesmo nos dois lugares.
+  linhas.push(`Saldo restante: ${formatarMoeda(totalGanhos - totalGastos)}`);
   linhas.push(`Reservado para lembretes ainda não concluídos: ${formatarMoeda(totalLembretesPendentes)}`);
 
   return linhas.join("\n");
@@ -215,8 +219,8 @@ async function listarBackupsAutomaticos() {
   container.innerHTML = arquivos
     .map(
       (a) => `
-    <li class="lista-simples__item" data-nome="${a.name}">
-      <span class="lista-simples__titulo">${a.name}</span>
+    <li class="lista-simples__item" data-nome="${escaparHtml(a.name)}">
+      <span class="lista-simples__titulo">${escaparHtml(a.name)}</span>
       <button type="button" class="botao botao--secundario" data-acao="restaurar-backup" style="padding: 4px 10px; font-size: 12px;">Restaurar</button>
     </li>
   `

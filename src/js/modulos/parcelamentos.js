@@ -73,7 +73,11 @@ function agruparParcelamentos(gastos) {
 
   return [...grupos.values()].map((itens) => {
     itens.sort((a, b) => a.parcela.numero - b.parcela.numero);
-    const total = itens[0].parcela.total;
+    // Usa a quantidade de parcelas que AINDA EXISTEM (itens.length), não
+    // itens[0].parcela.total (tamanho original do plano) — se uma parcela for
+    // excluída individualmente pela tabela de Gastos, o total original ficaria
+    // desatualizado e "Faltam X de Y" mostraria um Y que não existe mais.
+    const total = itens.length;
     const pagas = itens.filter((g) => g.pago).length;
     const dataUltimaParcela = itens.reduce((maior, g) => (g.data > maior ? g.data : maior), itens[0].data);
 

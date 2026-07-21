@@ -54,8 +54,17 @@ async function caminhoShard(colecao, anoMes) {
 async function lerShard(colecao, anoMes) {
   const caminho = await caminhoShard(colecao, anoMes);
   if (!(await fs.exists(caminho))) return [];
-  const conteudo = JSON.parse(await fs.readTextFile(caminho));
-  return conteudo[colecao] || [];
+  try {
+    const conteudo = JSON.parse(await fs.readTextFile(caminho));
+    return conteudo[colecao] || [];
+  } catch (erro) {
+    // Um arquivo de mês corrompido (ex: gravação interrompida por queda de
+    // energia) não pode derrubar `carregarColecao` inteira — os outros meses
+    // são lidos em paralelo (Promise.all) e um `throw` aqui rejeitaria todos.
+    // Trata como se o mês estivesse vazio, sem perder o arquivo (não é apagado).
+    console.error(`Arquivo corrompido: ${colecao}/${anoMes} — tratando como vazio.`, erro);
+    return [];
+  }
 }
 
 // Grava só o conteúdo do arquivo do mês (sem mexer no índice — ver

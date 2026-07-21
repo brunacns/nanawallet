@@ -14,6 +14,18 @@ async function pastaBackups() {
   return pasta;
 }
 
+// Carimbo com precisão de milissegundos, só para nomes de arquivo de backup
+// automático (diferente do carimbo "para humanos" usado em exportação/backup
+// manual). Duas gravações no mesmo arquivo (ex: dois cliques rápidos de
+// "marcar como pago" no mesmo mês) podem cair no mesmo SEGUNDO — sem os
+// milissegundos, o segundo backup teria o mesmo nome do primeiro e o
+// sobrescreveria silenciosamente, reduzindo a retenção real para menos dos
+// 15 backups esperados (bug real encontrado nesta auditoria).
+function carimboBackup() {
+  const ms = String(new Date().getMilliseconds()).padStart(3, "0");
+  return `${carimboDataHora()}-${ms}`;
+}
+
 // Copia o arquivo atual para a pasta de backups com um nome carimbado com
 // data/hora, e remove backups excedentes desse mesmo `identificador`
 // (mantém apenas os mais recentes). `identificador` identifica QUAL arquivo
@@ -23,7 +35,7 @@ async function pastaBackups() {
 // identificador pode conter hifens (datas), então "_" sozinho seria ambíguo.
 export async function criarBackup(identificador, caminhoOrigem) {
   const pasta = await pastaBackups();
-  const nomeBackup = `${identificador}__${carimboDataHora()}.json`;
+  const nomeBackup = `${identificador}__${carimboBackup()}.json`;
   const caminhoBackup = await path.join(pasta, nomeBackup);
 
   await fs.copyFile(caminhoOrigem, caminhoBackup);

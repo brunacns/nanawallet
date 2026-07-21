@@ -7,12 +7,15 @@ export async function iniciarPaginaConfiguracoes() {
 
 async function preencherInformacoesDeVersao() {
   const versaoEl = document.getElementById("config-versao");
+  const sidebarVersaoEl = document.getElementById("sidebar-versao");
   const dataBuildEl = document.getElementById("config-data-build");
   const ultimaAtualizacaoEl = document.getElementById("config-ultima-atualizacao");
 
   try {
     const { app } = window.__TAURI__;
-    versaoEl.textContent = await app.getVersion();
+    const versao = await app.getVersion();
+    versaoEl.textContent = versao;
+    if (sidebarVersaoEl) sidebarVersaoEl.textContent = `NanaWallet v${versao}`;
   } catch (erro) {
     versaoEl.textContent = "—";
     console.error("Não foi possível obter a versão do app:", erro);

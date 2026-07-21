@@ -12,6 +12,18 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.1.1] - 2026-07-20
+
+Auditoria completa do projeto (funcionalidades, cálculos, persistência, migração, edge cases), com testes automatizados reais sobre a camada de armazenamento. Só correções de bugs — nenhuma funcionalidade nova.
+
+- **Corrigido (alto impacto)**: gastos/ganhos fixos com vencimento no dia 31 (ou dia 29/30) ficavam PRESOS no dia 28 para sempre depois de atravessar fevereiro, mesmo em meses seguintes com 30 ou 31 dias — a geração automática de ocorrências (`src/js/utils/recorrencias.js`) encadeava a data de cada nova ocorrência a partir da ÚLTIMA gerada (já ajustada) em vez da primeira da série. Agora cada ocorrência é calculada a partir da data original da série, preservando o dia-do-mês verdadeiro (mesmo comportamento que os parcelamentos já tinham, corretamente, desde a Etapa 8).
+- **Corrigido**: os gráficos "Evolução dos gastos", "Evolução do saldo" e "Previsões futuras" (Dashboard) agrupavam gastos por `data` (data da compra); Dashboard e a página Gastos agrupam por `mesReferencia` (mês do salário que paga a conta) desde a Etapa 13, que podem ser meses diferentes. Um gasto atribuído a um mês diferente do da compra aparecia no mês errado nos gráficos, divergindo dos totais mostrados no resto do app. Os três gráficos agora usam `mesReferencia`, como o resto do app.
+- **Corrigido**: backups automáticos podiam colidir de nome quando duas gravações no mesmo arquivo (mesma coleção/mês) aconteciam dentro do mesmo segundo (ex: dois cliques rápidos de "marcar como pago"), sobrescrevendo silenciosamente um backup pelo outro e reduzindo a retenção real para menos dos 15 backups esperados. O carimbo dos nomes de arquivo de backup automático agora inclui milissegundos.
+- **Corrigido**: parcelamento com uma parcela excluída individualmente mostrava "faltam X de Y" com o Y original do plano, mesmo depois de excluir uma parcela (bug documentado desde a etapa de revisão final). Agora usa a quantidade de parcelas que realmente restam.
+- **Corrigido**: um arquivo de mês corrompido (ex: gravação interrompida por queda de energia) podia derrubar o carregamento de páginas inteiras que não tinham nada a ver com o problema; agora cada página inicializa isoladamente (uma falha não impede as outras) e um mês corrompido é tratado como vazio, sem perder o arquivo.
+- **Corrigido**: nomes de backup automático e "Saldo restante" do texto de exportação (para IA) continham HTML não escapado / uma fórmula desatualizada, respectivamente — ambos alinhados ao restante do app.
+- **Melhorado**: `salvarEmLote` (usado por parcelamentos e geração de recorrências) agora faz upsert por id em memória, evitando duplicar itens caso o mesmo id seja reenviado.
+
 ## [1.1.0] - 2026-07-19
 
 Simplificação do projeto: o app volta a ser exclusivamente desktop (Windows, via Tauri).
