@@ -189,6 +189,7 @@ function abrirModalEdicao(id) {
   document.getElementById("campo-data-ganho").value = ganho.data;
   document.getElementById("campo-recebido-ganho").checked = ganho.recebido;
   document.getElementById("campo-fixo-ganho").checked = ganho.fixo;
+  document.getElementById("campo-observacoes-ganho").value = ganho.observacoes || "";
   // Só faz sentido oferecer "aplicar às próximas" se este ganho já fazia
   // parte de uma série fixa antes desta edição (senão não há "próximas" ainda).
   document.getElementById("linha-aplicar-proximas-ganho").hidden = !ganho.fixoId;
@@ -214,6 +215,7 @@ async function salvarFormulario(evento) {
   const data = document.getElementById("campo-data-ganho").value;
   const recebido = document.getElementById("campo-recebido-ganho").checked;
   const fixo = document.getElementById("campo-fixo-ganho").checked;
+  const observacoes = document.getElementById("campo-observacoes-ganho").value.trim();
   const aplicarProximas = document.getElementById("campo-aplicar-proximas-ganho").checked;
 
   if (!titulo || !data || !(valor > 0)) return;
@@ -226,6 +228,7 @@ async function salvarFormulario(evento) {
     ganhoSalvo.valor = valor;
     ganhoSalvo.data = data;
     ganhoSalvo.recebido = recebido;
+    ganhoSalvo.observacoes = observacoes;
     if (fixo && !ganhoSalvo.fixoId) ganhoSalvo.fixoId = crypto.randomUUID();
     if (!fixo) ganhoSalvo.fixoId = null;
     ganhoSalvo.fixo = fixo;
@@ -238,18 +241,19 @@ async function salvarFormulario(evento) {
       recebido,
       fixo,
       fixoId: fixo ? crypto.randomUUID() : null,
+      observacoes,
     };
   }
 
-  // "Aplicar às próximas ocorrências": só propaga título/valor para
-  // ocorrências FUTURAS (mesma série, data depois desta) — nunca mexe nas já
-  // passadas nem no status recebido/data de cada uma.
+  // "Aplicar edições às próximas ocorrências": propaga título/valor/
+  // observações para ocorrências FUTURAS (mesma série, data depois desta) —
+  // nunca mexe nas já passadas nem no status recebido/data de cada uma.
   const futurasAtualizadas =
     aplicarProximas && fixoIdOriginalEmEdicao && ganhoSalvo.fixo && ganhoSalvo.fixoId
       ? transacoesGanhos
           .obterTodos()
           .filter((g) => g.fixoId === fixoIdOriginalEmEdicao && g.id !== ganhoSalvo.id && g.data > ganhoSalvo.data)
-          .map((g) => ({ ...g, titulo, valor }))
+          .map((g) => ({ ...g, titulo, valor, observacoes }))
       : [];
 
   if (futurasAtualizadas.length > 0) {

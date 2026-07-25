@@ -40,6 +40,7 @@ async function salvarFormulario(evento) {
   const dataPrimeiraParcela = document.getElementById("campo-data-parcelamento").value;
   const salarioResponsavel = document.getElementById("campo-salario-parcelamento").value;
   const categoriaId = seletorCategoriaParcelamento.obter();
+  const observacoes = document.getElementById("campo-observacoes-parcelamento").value.trim();
 
   if (!titulo || !dataPrimeiraParcela || !(valorParcela > 0) || !(quantidade >= 2)) return;
 
@@ -62,6 +63,7 @@ async function salvarFormulario(evento) {
       pago: false,
       parcela: { numero, total: quantidade, parcelamentoId },
       categoriaId,
+      observacoes,
     });
   }
 

@@ -6,15 +6,6 @@ import { ColecaoService } from "./ColecaoService.js";
 // ArmazenamentoLocalService, invisível aqui.
 export class GoalService extends ColecaoService {
   constructor(storage) {
-    super({
-      colecao: "metas",
-      storage,
-      // Migração: metas salvas antes do aporte mensal automático não têm
-      // esses dois campos. `ultimoAporteAplicado: null` faz `sincronizarAportes`
-      // (metas.js) tratar como "nunca aplicado" — não credita nada
-      // retroativamente, só passa a contar a partir do mês em que o app
-      // reabrir (mesmo espírito da migração de gastos/ganhos fixos da Etapa 13).
-      aplicarMigracaoCampos: (m) => ({ aporteMensal: 0, ultimoAporteAplicado: null, ...m }),
-    });
+    super({ colecao: "metas", storage });
   }
 }

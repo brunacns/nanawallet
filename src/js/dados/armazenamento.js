@@ -316,7 +316,7 @@ export async function salvarConfiguracoes(conteudo) {
   await salvarArquivoUnico("configuracoes", conteudo);
 }
 
-// Metas/wishlist: nome, valor desejado, valor guardado, prioridade, observações.
+// Metas/wishlist: nome, valor desejado, prioridade, observações.
 // Não é particionada por mês porque não tem uma data/ocorrência mensal —
 // é uma lista pequena que o usuário edita diretamente (como configurações).
 export async function lerMetas() {

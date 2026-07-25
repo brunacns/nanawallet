@@ -143,10 +143,8 @@ function gerarTextoParaIA(ganhos, gastos, lembretes, metas) {
     linhas.push("(nenhuma meta cadastrada)");
   } else {
     metas.forEach((m) => {
-      const pct = m.valorDesejado > 0 ? Math.round((m.valorGuardado / m.valorDesejado) * 100) : 0;
-      const status = m.valorGuardado >= m.valorDesejado ? "concluída" : `prioridade ${ROTULOS_PRIORIDADE_TEXTO[m.prioridade]}`;
       linhas.push(
-        `- ${m.nome} | guardado: ${formatarMoeda(m.valorGuardado)} de ${formatarMoeda(m.valorDesejado)} (${pct}%) | ${status}${
+        `- ${m.nome} | valor desejado: ${formatarMoeda(m.valorDesejado)} | prioridade ${ROTULOS_PRIORIDADE_TEXTO[m.prioridade]}${
           m.observacoes ? ` | obs: ${m.observacoes}` : ""
         }`
       );

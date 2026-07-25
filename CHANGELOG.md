@@ -12,6 +12,12 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.6.0] - 2026-07-25
+
+- **Novo**: campo "Observações" em ganhos, gastos e parcelamentos (parcelamento aplica a mesma observação a todas as parcelas geradas). Ao editar um item de uma série fixa, "aplicar edições às próximas ocorrências" também propaga as observações, junto com título/valor (e, em gastos, categoria/salário responsável).
+- **Alterado**: o checkbox "Ganho fixo (gerado automaticamente todo mês)" virou só "Ganho fixo", com o texto extra num tooltip ao passar o mouse. Os labels de "Aplicar título/valor/categoria/salário responsável às próximas ocorrências..." (ganhos e gastos) foram simplificados para "Aplicar edições às próximas ocorrências desta série".
+- **Removido**: Metas virou uma wishlist simples — os campos "Valor já guardado" e "Aporte mensal automático" (e, junto com eles, a barra de progresso, porcentagem e o selo "Concluída") saíram da tela. Uma meta agora só tem nome, valor desejado, prioridade e observações.
+
 ## [1.5.0] - 2026-07-24
 
 - **Novo**: excluir um gasto/ganho fixo ou uma parcela agora pergunta o escopo — "somente esta ocorrência", "esta e as futuras da série" ou "todas". Um gasto/ganho avulso continua com a confirmação simples de sempre.

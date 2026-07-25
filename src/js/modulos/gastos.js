@@ -214,6 +214,7 @@ function abrirModalEdicao(id) {
   document.getElementById("campo-salario-gasto").value = gasto.salarioResponsavel;
   document.getElementById("campo-fixo-gasto").checked = gasto.fixo;
   document.getElementById("campo-pago-gasto").checked = gasto.pago;
+  document.getElementById("campo-observacoes-gasto").value = gasto.observacoes || "";
   seletorCategoriaGasto.definir(gasto.categoriaId);
   // Só faz sentido oferecer "aplicar às próximas" se este gasto já fazia
   // parte de uma série fixa antes desta edição (senão não há "próximas" ainda).
@@ -243,6 +244,7 @@ async function salvarFormulario(evento) {
   const salarioResponsavel = document.getElementById("campo-salario-gasto").value;
   const fixo = document.getElementById("campo-fixo-gasto").checked;
   const pago = document.getElementById("campo-pago-gasto").checked;
+  const observacoes = document.getElementById("campo-observacoes-gasto").value.trim();
   const aplicarProximas = document.getElementById("campo-aplicar-proximas-gasto").checked;
   const categoriaId = seletorCategoriaGasto.obter();
 
@@ -259,6 +261,7 @@ async function salvarFormulario(evento) {
     gastoSalvo.salarioResponsavel = salarioResponsavel;
     gastoSalvo.pago = pago;
     gastoSalvo.categoriaId = categoriaId;
+    gastoSalvo.observacoes = observacoes;
     // Ativar "fixo" pela primeira vez cria a série; desativar interrompe
     // a geração de novas ocorrências, mas não apaga as já criadas.
     if (fixo && !gastoSalvo.fixoId) gastoSalvo.fixoId = crypto.randomUUID();
@@ -277,19 +280,21 @@ async function salvarFormulario(evento) {
       pago,
       parcela: null,
       categoriaId,
+      observacoes,
     };
   }
 
-  // "Aplicar às próximas ocorrências": só propaga título/valor/categoria/
-  // salário responsável para ocorrências FUTURAS (mesma série, data depois
-  // desta) — nunca mexe nas já passadas nem no status pago/data/mesReferencia
-  // de cada uma (cada ocorrência continua dona da própria data e do próprio status).
+  // "Aplicar edições às próximas ocorrências": propaga título/valor/
+  // categoria/salário responsável/observações para ocorrências FUTURAS
+  // (mesma série, data depois desta) — nunca mexe nas já passadas nem no
+  // status pago/data/mesReferencia de cada uma (cada ocorrência continua
+  // dona da própria data e do próprio status).
   const futurasAtualizadas =
     aplicarProximas && fixoIdOriginalEmEdicao && gastoSalvo.fixo && gastoSalvo.fixoId
       ? transacoesGastos
           .obterTodos()
           .filter((g) => g.fixoId === fixoIdOriginalEmEdicao && g.id !== gastoSalvo.id && g.data > gastoSalvo.data)
-          .map((g) => ({ ...g, titulo, valor, salarioResponsavel, categoriaId }))
+          .map((g) => ({ ...g, titulo, valor, salarioResponsavel, categoriaId, observacoes }))
       : [];
 
   if (futurasAtualizadas.length > 0) {
