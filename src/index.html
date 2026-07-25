@@ -677,7 +677,7 @@
           </div>
           <div class="campo-checkbox">
             <input type="checkbox" id="campo-fixo-gasto" />
-            <label for="campo-fixo-gasto">Gasto fixo (gerado automaticamente todo mês)</label>
+            <label for="campo-fixo-gasto" title="Gerado automaticamente todo mês">Gasto fixo</label>
           </div>
           <div class="campo-checkbox">
             <input type="checkbox" id="campo-pago-gasto" />
@@ -780,6 +780,10 @@
           <div class="campo">
             <label for="campo-data-lembrete">Data prevista</label>
             <input type="date" id="campo-data-lembrete" required />
+          </div>
+          <div class="campo">
+            <label for="campo-observacoes-lembrete">Observações</label>
+            <textarea id="campo-observacoes-lembrete" rows="3" placeholder="Opcional"></textarea>
           </div>
           <div class="modal__acoes">
             <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-lembrete">Cancelar</button>

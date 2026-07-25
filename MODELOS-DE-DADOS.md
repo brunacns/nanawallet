@@ -170,6 +170,7 @@ Campos de cada lembrete, conforme especificado na Etapa 11:
 | `data` | string (`AAAA-MM-DD`) | data prevista |
 | `valor` | number | quanto dinheiro isso deve custar (valor previsto) |
 | `concluido` | boolean | se o lembrete já foi resolvido |
+| `observacoes` | string | texto livre, opcional |
 
 ```json
 {
@@ -180,18 +181,22 @@ Campos de cada lembrete, conforme especificado na Etapa 11:
       "titulo": "Marcar psiquiatra",
       "data": "2026-08-01",
       "valor": 250.00,
-      "concluido": false
+      "concluido": false,
+      "observacoes": "Levar carteirinha do convênio"
     },
     {
       "id": "e9a4d7f8-4444-4a2b-9c3d-000000000002",
       "titulo": "Renovar seguro do carro",
       "data": "2026-08-15",
       "valor": 480.00,
-      "concluido": false
+      "concluido": false,
+      "observacoes": ""
     }
   ]
 }
 ```
+
+**Compatibilidade com dados antigos**: lembretes gravados antes do campo de observações ganham `observacoes: ""` ao carregar.
 
 **Importante**: o `valor` de um lembrete é dinheiro que **precisará ser reservado no futuro** — ele entra no cálculo de "Previsão futura" do dashboard, mas **nunca** vira um gasto pago nem é somado ao "Total gasto". Lembretes e gastos continuam sendo coleções completamente separadas; não existe conversão automática de um para o outro.
 

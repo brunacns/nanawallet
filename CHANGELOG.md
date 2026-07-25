@@ -12,6 +12,11 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.6.1] - 2026-07-25
+
+- **Novo**: campo "Observações" também em Lembretes (já existia em ganhos, gastos e parcelamentos desde a 1.6.0).
+- **Alterado**: o checkbox "Gasto fixo (gerado automaticamente todo mês)" virou só "Gasto fixo", com o texto extra num tooltip ao passar o mouse — mesmo ajuste já feito em "Ganho fixo" na 1.6.0.
+
 ## [1.6.0] - 2026-07-25
 
 - **Novo**: campo "Observações" em ganhos, gastos e parcelamentos (parcelamento aplica a mesma observação a todas as parcelas geradas). Ao editar um item de uma série fixa, "aplicar edições às próximas ocorrências" também propaga as observações, junto com título/valor (e, em gastos, categoria/salário responsável).

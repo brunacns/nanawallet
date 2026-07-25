@@ -132,6 +132,7 @@ function abrirModalEdicao(id) {
   document.getElementById("campo-titulo-lembrete").value = lembrete.titulo;
   document.getElementById("campo-valor-lembrete").value = lembrete.valor;
   document.getElementById("campo-data-lembrete").value = lembrete.data;
+  document.getElementById("campo-observacoes-lembrete").value = lembrete.observacoes || "";
   abrirModal();
 }
 
@@ -151,6 +152,7 @@ async function salvarFormulario(evento) {
   const titulo = document.getElementById("campo-titulo-lembrete").value.trim();
   const valor = Number(document.getElementById("campo-valor-lembrete").value);
   const data = document.getElementById("campo-data-lembrete").value;
+  const observacoes = document.getElementById("campo-observacoes-lembrete").value.trim();
 
   if (!titulo || !data || !(valor > 0)) return;
 
@@ -161,8 +163,9 @@ async function salvarFormulario(evento) {
     lembreteSalvo.titulo = titulo;
     lembreteSalvo.valor = valor;
     lembreteSalvo.data = data;
+    lembreteSalvo.observacoes = observacoes;
   } else {
-    lembreteSalvo = { id: crypto.randomUUID(), titulo, valor, data, concluido: false };
+    lembreteSalvo = { id: crypto.randomUUID(), titulo, valor, data, concluido: false, observacoes };
   }
 
   await lembretesService.salvar(lembreteSalvo);

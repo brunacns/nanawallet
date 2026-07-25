@@ -21,7 +21,7 @@ Estas regras valem para **todas as etapas futuras** deste projeto e devem ser se
 7. **Transparência técnica**: sempre explicar o motivo das decisões técnicas tomadas.
 8. **Quando algo não for possível**: se algo não puder ser feito exatamente como solicitado, explicar o motivo e propor a alternativa mais próxima possível.
 
-## Estado atual (atualizado em 2026-07-25, versão 1.6.0)
+## Estado atual (atualizado em 2026-07-25, versão 1.6.1)
 
 - Etapa 1 concluída: arquitetura e estrutura de pastas planejadas.
 - Etapa 3 concluída: sistema de armazenamento implementado (scaffolding do Tauri + camada de dados em `src/js/dados/`).
@@ -250,3 +250,8 @@ Estas regras valem para **todas as etapas futuras** deste projeto e devem ser se
   - **Metas virou uma wishlist simples**: removidos "Valor já guardado" e "Aporte mensal automático" do formulário, a pedido explícito. Perguntei antes de decidir o que fazer com a barra de progresso/porcentagem/selo "Concluída" (dependiam de `valorGuardado`) — resposta: remover tudo isso também, meta agora só tem nome, valor desejado, prioridade e observações. `GoalService` perdeu a migração de `aporteMensal`/`ultimoAporteAplicado` (metas antigas mantêm esses campos no arquivo, inofensivos, nunca mais lidos/gravados — mesmo raciocínio já usado para o `atualizadoEm` órfão da remoção de sincronização). Exportação em texto (para IA) ajustada para não mencionar mais "guardado"/percentual/status de conclusão.
   - **Testado de ponta a ponta na janela real do navegador**: mock leve de `window.__TAURI__` sobre um servidor estático local (removido depois do teste, mesmo método de etapas anteriores) — ganho fixo e gasto fixo criados, mês avançado, edição com propagação verificada nos dois (dados lidos diretamente do "arquivo" simulado, não só da tela), parcelamento de 3x com observação conferida nas 3 parcelas geradas, meta nova salva só com os 4 campos esperados e cartão renderizado sem barra de progresso. Sem erros no console em nenhum passo.
   - Versão `1.6.0` (minor — funcionalidade nova + remoção de funcionalidade, sem quebrar dados existentes) em `tauri.conf.json`. Entrada em `CHANGELOG.md`. `MODELOS-DE-DADOS.md` atualizado (campo `observacoes` em ganho/gasto, seção de `metas.json` reescrita).
+- **Complemento: "Gasto fixo" + Observações em Lembretes** (2026-07-25, versão `1.6.1`), 2 pedidos explícitos pequenos, mesma linha da etapa anterior.
+  - **Label "Gasto fixo"**: mesmo tratamento já aplicado a "Ganho fixo" na etapa anterior — "Gasto fixo (gerado automaticamente todo mês)" virou só "Gasto fixo", com o texto extra num `title` (tooltip nativo ao passar o mouse).
+  - **Observações em Lembretes**: campo textarea opcional adicionado ao formulário de lembrete, igual ao que ganhos/gastos/parcelamentos já tinham. `ReminderService` ganhou migração de campo (`observacoes: ""` para lembretes antigos) — antes não tinha nenhuma migração pendente, então essa é a primeira.
+  - **Testado de ponta a ponta na janela real do navegador**: mesmo mock leve de `window.__TAURI__` sobre servidor estático local (removido depois do teste) — confirmado que o label de "Gasto fixo" mostra só o texto curto com o tooltip certo no atributo `title`, e que um lembrete novo com observação salva e edita corretamente (valor lido direto do "arquivo" simulado, não só da tela). Sem erros no console.
+  - Versão `1.6.1` (patch — funcionalidade pequena replicada + ajuste de label) em `tauri.conf.json`. Entrada em `CHANGELOG.md`. `MODELOS-DE-DADOS.md` atualizado (campo `observacoes` em lembrete).
