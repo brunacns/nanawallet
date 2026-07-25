@@ -35,7 +35,8 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
 - **`valor`**: número decimal simples (ex: `342.75`), representando reais. Ponto de atenção técnico: números decimais podem ter pequenos erros de arredondamento em operações repetidas de soma. Se isso incomodar no futuro, a alternativa é guardar valores em centavos (inteiro, ex: `34275`). Por ora mantive decimal por ser mais legível no JSON — me avise se preferir centavos.
 - **"Gastos fixos" e "parcelamentos" não são arquivos separados.** Eles são representados dentro do próprio modelo de `gasto`, usando os campos `fixo`/`fixoId` e `parcela`:
   - Um **gasto fixo** (ex: aluguel) é um gasto com `"fixo": true` e um `fixoId` (uuid) compartilhado por toda a série. A partir da Etapa 13, o app **gera sozinho** uma nova ocorrência todo mês (mesmo dia, ajustado para meses mais curtos), sempre que o mês atual ou o mês que você está visualizando ainda não tiver uma. Por padrão, editar uma ocorrência afeta só ela; desmarcar "fixo" só impede novas gerações futuras, não apaga as existentes. Ao editar um gasto ou ganho que já faz parte de uma série fixa, o modal oferece a opção **"Aplicar às próximas ocorrências"**: título, valor (e, no caso de gastos, o salário responsável) passam a valer para todas as ocorrências FUTURAS da mesma série (data depois da que está sendo editada) e para as novas que ainda serão geradas — as ocorrências já passadas, e o status pago/recebido de cada uma, nunca são alterados por essa opção.
-  - Um **parcelamento** (ex: uma compra em 3x) vira várias entradas em `gastos.json`, uma por parcela, todas compartilhando o mesmo `parcelamentoId` dentro do campo `parcela`. Isso permite identificar quais gastos pertencem à mesma compra parcelada. Diferente de "fixo", parcelamentos têm quantidade definida e não geram novas parcelas além das criadas na hora.
+  - Um **parcelamento** (ex: uma compra em 3x) vira várias entradas em `gastos.json`, uma por parcela, todas compartilhando o mesmo `parcelamentoId` dentro do campo `parcela`. Isso permite identificar quais gastos pertencem à mesma compra parcelada. Diferente de "fixo", parcelamentos têm quantidade definida e não geram novas parcelas além das criadas na hora. `categoriaId` (opcional) pode ser escolhido uma vez, no cadastro do parcelamento — e é aplicado a todas as parcelas geradas.
+  - **Excluir um gasto/ganho fixo ou uma parcela** pergunta o escopo: "somente esta ocorrência/parcela", "esta e as futuras da mesma série" (por data, incluindo a própria) ou "todas as ocorrências/parcelas". Um gasto/ganho avulso (sem `fixoId` nem `parcela`) continua com a confirmação simples de sempre.
 - **`mesReferencia`** (Etapa 13, só em `gasto`): a data (`data`) de um gasto é quando ele foi feito/vence; `mesReferencia` (`"AAAA-MM"`) é **qual mês do salário** (dia 10 ou dia 25, indicado por `salarioResponsavel`) vai pagar essa conta — podem ser meses diferentes (ex: comprou dia 28/07 mas escolheu pagar com o salário de 10/08). Numa parcela, `mesReferencia` é sempre automaticamente igual ao mês da própria parcela.
 - **Mês de exibição (Dashboard/Gastos/Ganhos)**: as três páginas mostram um mês por vez (controlado por `src/js/estadoMes.js`, compartilhado entre elas). Gastos são filtrados por `mesReferencia`; ganhos são filtrados pelo mês da própria `data`.
 - **"Sumir quando pago/recebido"**: um gasto/ganho já marcado como pago/recebido, com data anterior a hoje, some da lista das páginas Gastos/Ganhos (mas continua no arquivo — nada é apagado). Não há como revelá-los de volta nessas duas páginas; a página Histórico mostra todas as transações de qualquer mês/status, incluindo essas.
@@ -92,6 +93,7 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
 | `fixo` | boolean | se é um gasto fixo/recorrente |
 | `fixoId` | `null` ou string (uuid) | agrupa as ocorrências de um mesmo gasto fixo (Etapa 13) |
 | `parcela` | `null` ou objeto | preenchido só se for parte de um parcelamento |
+| `categoriaId` | `null` ou string (uuid) | referência a uma categoria em `categorias.json` (sistema de categorias) — `null` = sem categoria |
 
 ```json
 {
@@ -107,7 +109,8 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
       "pago": true,
       "fixo": false,
       "fixoId": null,
-      "parcela": null
+      "parcela": null,
+      "categoriaId": "b1c2d3e4-0001-4a2b-9c3d-000000000001"
     },
     {
       "id": "c7e2b5d6-2222-4a2b-9c3d-000000000002",
@@ -119,7 +122,8 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
       "pago": true,
       "fixo": true,
       "fixoId": "d1e2f3a4-6666-4a2b-9c3d-000000000020",
-      "parcela": null
+      "parcela": null,
+      "categoriaId": "b1c2d3e4-0002-4a2b-9c3d-000000000002"
     },
     {
       "id": "c7e2b5d6-2222-4a2b-9c3d-000000000003",
@@ -135,13 +139,16 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
         "numero": 1,
         "total": 3,
         "parcelamentoId": "d8f3c6e7-3333-4a2b-9c3d-00000000000a"
-      }
+      },
+      "categoriaId": null
     }
   ]
 }
 ```
 
-**Compatibilidade com dados antigos**: arquivos gravados antes da Etapa 13 não têm `mesReferencia`/`fixoId`/`recebido`/`fixo`. Ao carregar, o app preenche automaticamente: `mesReferencia` = mês da própria `data` do gasto; `fixoId` = `null`; ganhos antigos ganham `recebido: true` (preserva o comportamento anterior, já que antes todo ganho cadastrado era tratado como recebido) e `fixo: false`. Nada precisa ser feito manualmente.
+**Compatibilidade com dados antigos**: arquivos gravados antes da Etapa 13 não têm `mesReferencia`/`fixoId`/`recebido`/`fixo`. Ao carregar, o app preenche automaticamente: `mesReferencia` = mês da própria `data` do gasto; `fixoId` = `null`; ganhos antigos ganham `recebido: true` (preserva o comportamento anterior, já que antes todo ganho cadastrado era tratado como recebido) e `fixo: false`. Gastos gravados antes do sistema de categorias não têm `categoriaId` — ao carregar, ganham `categoriaId: null` (sem categoria, comportamento equivalente a antes). Nada precisa ser feito manualmente.
+
+**Recorrências e categoria**: quando uma nova ocorrência de um gasto fixo é gerada automaticamente (ver seção acima), ela herda o `categoriaId` da ocorrência anterior, do mesmo jeito que já herda título e valor.
 
 ## `lembretes.json`
 
@@ -218,6 +225,33 @@ Campos de cada lembrete, conforme especificado na Etapa 11:
 
 **Compatibilidade com dados antigos**: metas salvas antes desta funcionalidade não têm `aporteMensal`/`ultimoAporteAplicado`. Ao carregar, o app preenche automaticamente `aporteMensal: 0` e `ultimoAporteAplicado: null` (sem aporte automático, comportamento idêntico ao de antes).
 
+## `categorias.json` (sistema de categorias de despesas)
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | string (uuid) | identificador único, referenciado por `gasto.categoriaId` |
+| `nome` | string | nome da categoria |
+| `emoji` | string | emoji usado como elemento visual principal |
+| `cor` | string (hex, ex: `"#F2A65A"`) | cor pastel personalizada da categoria |
+
+```json
+{
+  "versao": 1,
+  "categorias": [
+    { "id": "b1c2d3e4-0001-4a2b-9c3d-000000000001", "nome": "Delivery", "emoji": "🍔", "cor": "#F2A65A" },
+    { "id": "b1c2d3e4-0002-4a2b-9c3d-000000000002", "nome": "Mercado", "emoji": "🛒", "cor": "#8FD694" }
+  ]
+}
+```
+
+**Não é particionado por mês** (mesmo motivo de `metas.json`/`configuracoes.json`): uma categoria não tem data/ocorrência mensal, é uma lista pequena e estável ao longo do tempo.
+
+**18 categorias padrão carregadas automaticamente na primeira inicialização** (arquivo `categorias.json` ainda não existe): Delivery, Mercado, Comer fora, Hobbies, Lazer, Assinaturas, Comprinhas, Beleza, Saúde, Transporte, Casa, Contas, Presentes, Pets, Trabalho, Viagens, Imprevistos e Mimos — pensadas para refletir como as pessoas realmente encaram os próprios gastos no dia a dia, não a lista genérica de "Alimentação/Transporte/Outros" de apps financeiros tradicionais. Instalações já existentes (arquivo já presente, mesmo vazio) não são afetadas — o seed só acontece uma vez, na criação do arquivo.
+
+**Preparado para categorias personalizadas numa etapa futura**: `CategoryService` (em `src/js/servicos/CategoryService.js`) já herda o CRUD genérico completo de `ColecaoService` (`salvar`/`remover`/`salvarEmLote`/`listar`) — criar uma tela de "gerenciar categorias" no futuro não vai exigir nenhuma mudança na camada de dados/serviços, só a interface.
+
+**Onde a categoria aparece na interface** (implementado): seletor customizado no formulário de gasto (criar/editar), coluna "Categoria" nas tabelas de Gastos e Histórico, filtro por categoria em Gastos e Histórico, e um card "Gastos por categoria" + "Estatísticas por categoria" no Dashboard — todos referentes ao **mês selecionado** (mesmo critério de `mesReferencia` usado no resto do Dashboard/Gastos), não ao histórico completo. Gastos sem `categoriaId` entram nesses cálculos como "Sem categoria" (não são ignorados) — assim os totais mostrados batem com o "Total gasto" do mês.
+
 ## `configuracoes.json`
 
 Você não pediu nenhuma configuração específica ainda, então mantive vazio — este arquivo só ganha campos quando houver uma necessidade concreta (ex: dia do mês do salário, tema, etc.):
@@ -231,4 +265,4 @@ Você não pediu nenhuma configuração específica ainda, então mantive vazio 
 
 ## Apagar todos os dados
 
-Página Exportação → "Apagar todos os dados": zera gastos, ganhos, lembretes e metas (todos os meses), mantendo `configuracoes.json` intacto. Pede confirmação dupla e cria um backup automático completo antes de apagar (mesmo mecanismo de `dados/backup.js`), então é reversível pela tela de Exportação → "Backups automáticos recentes" logo em seguida.
+Página Exportação → "Apagar todos os dados": zera gastos, ganhos, lembretes e metas (todos os meses), mantendo `configuracoes.json` e `categorias.json` intactos (categorias são uma taxonomia/referência, não um registro financeiro do usuário — mesmo raciocínio de não apagar configurações). Pede confirmação dupla e cria um backup automático completo antes de apagar (mesmo mecanismo de `dados/backup.js`), então é reversível pela tela de Exportação → "Backups automáticos recentes" logo em seguida.

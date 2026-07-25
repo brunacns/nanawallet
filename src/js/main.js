@@ -1,4 +1,4 @@
-import { armazenamentoAtivo } from "./servicos/index.js";
+import { armazenamentoAtivo, categoriasService } from "./servicos/index.js";
 import { configurarNavegacao } from "./navegacao.js";
 import { iniciarPaginaGanhos } from "./modulos/ganhos.js";
 import { iniciarPaginaGastos } from "./modulos/gastos.js";
@@ -10,6 +10,7 @@ import { iniciarHistorico } from "./modulos/historico.js";
 import { iniciarPaginaMetas } from "./modulos/metas.js";
 import { iniciarExportacao } from "./modulos/exportacao.js";
 import { iniciarPaginaConfiguracoes } from "./modulos/configuracoes.js";
+import { iniciarConfirmacaoExclusao } from "./confirmacaoExclusao.js";
 
 function mostrarStatusArmazenamento(texto) {
   const el = document.getElementById("status-armazenamento");
@@ -31,8 +32,9 @@ async function iniciarEtapa(nome, fn) {
 
 async function iniciarApp() {
   configurarNavegacao();
-  // Não depende do armazenamento (fs) — roda fora do try/catch de baixo para
-  // continuar funcionando mesmo se o armazenamento falhar.
+  // Não dependem do armazenamento (fs) — rodam fora do try/catch de baixo
+  // para continuar funcionando mesmo se o armazenamento falhar.
+  iniciarConfirmacaoExclusao();
   await iniciarPaginaConfiguracoes();
 
   try {
@@ -48,6 +50,9 @@ async function iniciarApp() {
     return;
   }
 
+  // Carregada antes das telas que exibem categoria (gastos, dashboard,
+  // gráficos, histórico) precisarem dela para renderizar.
+  await iniciarEtapa("categorias", () => categoriasService.listar());
   await iniciarEtapa("ganhos", iniciarPaginaGanhos);
   await iniciarEtapa("gastos", iniciarPaginaGastos);
   await iniciarEtapa("parcelamentos", iniciarParcelamentos);

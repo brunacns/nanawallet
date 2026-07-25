@@ -9,5 +9,6 @@ export const CONFIG = {
     lembretes: "lembretes.json",
     configuracoes: "configuracoes.json",
     metas: "metas.json",
+    categorias: "categorias.json",
   },
 };

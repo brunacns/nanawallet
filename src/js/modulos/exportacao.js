@@ -1,8 +1,9 @@
-import { lerConfiguracoes, salvarConfiguracoes, salvarMetas, salvarMes, salvarColecaoCompleta, apagarTodosOsDados } from "../dados/armazenamento.js";
+import { lerConfiguracoes, salvarConfiguracoes, salvarMetas, salvarCategorias, salvarMes, salvarColecaoCompleta, apagarTodosOsDados } from "../dados/armazenamento.js";
 import { obterGanhos, recarregarGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, recarregarGastos, aoAtualizarGastos } from "./gastos.js";
 import { obterLembretes, recarregarLembretes, aoAtualizarLembretes } from "./lembretes.js";
 import { obterMetas, recarregarMetas, aoAtualizarMetas } from "./metas.js";
+import { categoriasService } from "../servicos/index.js";
 import { formatarMoeda, formatarData, carimboDataHora, escaparHtml } from "../utils/formatadores.js";
 import { rotuloMesLongo } from "../utils/datas.js";
 
@@ -20,6 +21,7 @@ export async function iniciarExportacao() {
   aoAtualizarGastos(listarBackupsAutomaticos);
   aoAtualizarLembretes(listarBackupsAutomaticos);
   aoAtualizarMetas(listarBackupsAutomaticos);
+  categoriasService.aoAtualizar(listarBackupsAutomaticos);
 
   await listarBackupsAutomaticos();
 }
@@ -50,6 +52,7 @@ async function exportarJson() {
     gastos: obterGastos(),
     lembretes: obterLembretes(),
     metas: obterMetas(),
+    categorias: categoriasService.obterTodos(),
     configuracoes: dadosConfiguracoes.configuracoes,
   };
 
@@ -180,7 +183,13 @@ async function criarBackupManual() {
   // O backup manual continua sendo um arquivo único e legível por coleção
   // (independente de como os dados estão particionados em disco), a partir
   // do que já está carregado em memória — evita reler tudo do disco de novo.
-  const colecoes = { ganhos: obterGanhos(), gastos: obterGastos(), lembretes: obterLembretes(), metas: obterMetas() };
+  const colecoes = {
+    ganhos: obterGanhos(),
+    gastos: obterGastos(),
+    lembretes: obterLembretes(),
+    metas: obterMetas(),
+    categorias: categoriasService.obterTodos(),
+  };
   for (const [chave, itens] of Object.entries(colecoes)) {
     const destino = await path.join(caminhoBackup, `${chave}.json`);
     await fs.writeTextFile(destino, JSON.stringify({ versao: 1, [chave]: itens }, null, 2));
@@ -237,9 +246,16 @@ function tratarCliqueBackups(evento) {
 
 // ==================== 4. Sistema de restauração ====================
 
-const ROTULOS_COLECAO = { ganhos: "Ganhos", gastos: "Gastos", lembretes: "Lembretes", metas: "Metas", configuracoes: "Configurações" };
+const ROTULOS_COLECAO = {
+  ganhos: "Ganhos",
+  gastos: "Gastos",
+  lembretes: "Lembretes",
+  metas: "Metas",
+  categorias: "Categorias",
+  configuracoes: "Configurações",
+};
 const COLECOES_VALIDAS = Object.keys(ROTULOS_COLECAO);
-const COLECOES_ARQUIVO_UNICO = ["configuracoes", "metas"];
+const COLECOES_ARQUIVO_UNICO = ["configuracoes", "metas", "categorias"];
 
 // Nome do arquivo de backup automático: "<identificador>__<carimbo>.json",
 // onde identificador é "configuracoes" (arquivo único) ou "<colecao>-<AAAA-MM>"
@@ -282,6 +298,8 @@ async function restaurarBackupAutomatico(nomeArquivo) {
     await salvarConfiguracoes(conteudo);
   } else if (colecao === "metas") {
     await salvarMetas(conteudo);
+  } else if (colecao === "categorias") {
+    await salvarCategorias(conteudo);
   } else {
     await salvarMes(colecao, anoMes, conteudo[colecao] || []);
   }
@@ -326,17 +344,21 @@ async function restaurarDeArquivo() {
   if (dados.configuracoes) {
     await salvarConfiguracoes({ versao: 1, configuracoes: dados.configuracoes });
   }
-  // "metas" é opcional na validação acima: exportações feitas antes desta
-  // funcionalidade existir não têm esse campo, e restaurá-las não deve apagar
-  // as metas atuais do usuário.
+  // "metas" e "categorias" são opcionais na validação acima: exportações
+  // feitas antes de cada funcionalidade existir não têm esses campos, e
+  // restaurá-las não deve apagar os dados atuais do usuário nessas coleções.
   if (Array.isArray(dados.metas)) {
     await salvarMetas({ versao: 1, metas: dados.metas });
+  }
+  if (Array.isArray(dados.categorias)) {
+    await salvarCategorias({ versao: 1, categorias: dados.categorias });
   }
 
   await recarregarGanhos();
   await recarregarGastos();
   await recarregarLembretes();
   await recarregarMetas();
+  await categoriasService.recarregar();
 
   mostrarStatus("Restauração concluída com sucesso.");
 }
@@ -368,5 +390,6 @@ async function recarregarModulo(chave) {
   else if (chave === "gastos") await recarregarGastos();
   else if (chave === "lembretes") await recarregarLembretes();
   else if (chave === "metas") await recarregarMetas();
+  else if (chave === "categorias") await categoriasService.recarregar();
   // "configuracoes" ainda não tem tela própria (Etapa 4 manteve vazio).
 }

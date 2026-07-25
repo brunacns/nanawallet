@@ -2,7 +2,8 @@ import { transacoesGanhos } from "../servicos/index.js";
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { svgEditar, svgExcluir } from "../utils/icones.js";
 import { diaDoMes, mesDeData, chaveMesAtual, hojeISO, rotuloMesLongo } from "../utils/datas.js";
-import { obterMesSelecionado, avancarMes, retrocederMes, aoAtualizarMes } from "../estadoMes.js";
+import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtualizarMes } from "../estadoMes.js";
+import { perguntarEscopoExclusao } from "../confirmacaoExclusao.js";
 
 let idEmEdicao = null;
 let fixoIdOriginalEmEdicao = null; // fixoId que o item já tinha ANTES desta edição (null se não fazia parte de uma série)
@@ -34,11 +35,17 @@ export async function iniciarPaginaGanhos() {
   document.getElementById("ganhos-conteudo").addEventListener("click", tratarCliqueLista);
   document.getElementById("ganhos-mes-anterior").addEventListener("click", retrocederMes);
   document.getElementById("ganhos-mes-seguinte").addEventListener("click", avancarMes);
+  document.getElementById("ganhos-mes-atual").addEventListener("click", irParaMesAtual);
 
   // O serviço avisa sozinho sempre que os dados mudarem (carregar, salvar,
   // remover, lote) — não precisa mais chamar renderizar() manualmente depois
   // de cada operação, como antes.
   transacoesGanhos.aoAtualizar(renderizar);
+  // Bug corrigido: antes só reagia a mudanças NOS DADOS (aoAtualizar), então
+  // trocar de mês só atualizava a tela quando a sincronização de recorrências
+  // "por acaso" gerava um ganho fixo novo — navegando para um mês sem nada a
+  // gerar, rótulo/lista ficavam travados no mês antigo (mesmo bug de gastos.js).
+  aoAtualizarMes(renderizar);
   aoAtualizarMes(sincronizarRecorrencias);
 
   await transacoesGanhos.listar();
@@ -253,9 +260,29 @@ async function salvarFormulario(evento) {
   fecharModal();
 }
 
+// Ganho fixo oferece escolha de escopo (só este / este e os futuros /
+// todos); um ganho avulso continua com a confirmação simples de sempre.
+// "Futuros" é sempre relativo à DATA deste item (>=, então inclui o próprio) —
+// mesmo critério já usado em "aplicar às próximas ocorrências".
 async function excluirGanho(id) {
   const ganho = transacoesGanhos.obterTodos().find((g) => g.id === id);
   if (!ganho) return;
+
+  if (ganho.fixoId) {
+    const escopo = await perguntarEscopoExclusao({ titulo: ganho.titulo, tipo: "fixo" });
+    if (!escopo) return;
+
+    if (escopo === "somente") {
+      await transacoesGanhos.remover(id);
+      return;
+    }
+    const relacionados = transacoesGanhos.obterTodos().filter((g) => g.fixoId === ganho.fixoId);
+    const alvo = escopo === "todas" ? relacionados : relacionados.filter((g) => g.data >= ganho.data);
+    for (const g of alvo) {
+      await transacoesGanhos.remover(g.id);
+    }
+    return;
+  }
 
   const confirmou = confirm(`Excluir o ganho "${ganho.titulo}"?`);
   if (!confirmou) return;

@@ -22,6 +22,17 @@ export function formatarDataHora(dataHoraISO) {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// Converte uma cor hex ("#F2A65A") para rgba com a opacidade dada — usado
+// para aplicar a cor pastel de cada categoria como fundo suave (estilo dos
+// selos existentes), sem precisar de uma classe CSS fixa por categoria.
+export function corComOpacidade(hex, alpha) {
+  const valor = hex.replace("#", "");
+  const r = parseInt(valor.substring(0, 2), 16);
+  const g = parseInt(valor.substring(2, 4), 16);
+  const b = parseInt(valor.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 // Carimbo "AAAA-MM-DD_HH-MM-SS", usado em nomes de arquivo de backup/exportação.
 export function carimboDataHora() {
   const agora = new Date();

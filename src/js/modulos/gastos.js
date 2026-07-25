@@ -2,10 +2,15 @@ import { transacoesGastos } from "../servicos/index.js";
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { svgEditar, svgExcluir } from "../utils/icones.js";
 import { chaveMesAtual, hojeISO, rotuloMesLongo } from "../utils/datas.js";
-import { obterMesSelecionado, avancarMes, retrocederMes, aoAtualizarMes } from "../estadoMes.js";
+import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtualizarMes } from "../estadoMes.js";
+import { chipCategoria, opcoesFiltroCategoria, criarSeletorCategoria } from "../categorias.js";
+import { perguntarEscopoExclusao } from "../confirmacaoExclusao.js";
+
+const seletorCategoriaGasto = criarSeletorCategoria("gasto");
 
 let idEmEdicao = null;
 let filtroTipo = "todos"; // "todos" | "fixos" | "parcelados" — abas da página
+let filtroCategoria = "todas"; // "todas" | "sem" | id de uma categoria
 let fixoIdOriginalEmEdicao = null; // fixoId que o item já tinha ANTES desta edição (null se não fazia parte de uma série)
 
 // Permite que outros módulos (ex: parcelamentos.js, dashboard.js, graficos.js)
@@ -40,6 +45,7 @@ export async function iniciarPaginaGastos() {
   document.getElementById("gastos-corpo-tabela").addEventListener("click", tratarCliqueLista);
   document.getElementById("gastos-mes-anterior").addEventListener("click", retrocederMes);
   document.getElementById("gastos-mes-seguinte").addEventListener("click", avancarMes);
+  document.getElementById("gastos-mes-atual").addEventListener("click", irParaMesAtual);
   document.getElementById("gastos-abas").addEventListener("click", (evento) => {
     const botao = evento.target.closest(".aba");
     if (!botao) return;
@@ -47,11 +53,23 @@ export async function iniciarPaginaGastos() {
     document.querySelectorAll("#gastos-abas .aba").forEach((b) => b.classList.toggle("ativa", b === botao));
     renderizar();
   });
+  document.getElementById("gastos-filtro-categoria").innerHTML = opcoesFiltroCategoria();
+  document.getElementById("gastos-filtro-categoria").addEventListener("change", (evento) => {
+    filtroCategoria = evento.target.value;
+    renderizar();
+  });
+  seletorCategoriaGasto.inicializar();
 
   // O serviço avisa sozinho sempre que os dados mudarem (carregar, salvar,
   // remover, lote) — não precisa mais chamar renderizar() manualmente depois
   // de cada operação, como antes.
   transacoesGastos.aoAtualizar(renderizar);
+  // Bug corrigido: antes só reagia a mudanças NOS DADOS (aoAtualizar), então
+  // trocar de mês só atualizava a tela quando a sincronização de recorrências
+  // "por acaso" gerava um gasto fixo novo (o que dispara aoAtualizar por
+  // tabela) — navegando para um mês sem nada a gerar, rótulo/tabela ficavam
+  // travados no mês antigo. Precisa reagir também à mudança de mês em si.
+  aoAtualizarMes(renderizar);
   aoAtualizarMes(sincronizarRecorrencias);
 
   await transacoesGastos.listar();
@@ -72,7 +90,7 @@ function renderizar() {
   const mesSelecionado = obterMesSelecionado();
   document.getElementById("gastos-mes-rotulo").textContent = rotuloMesLongo(mesSelecionado);
 
-  const doMes = aplicarFiltroTipo(gastos.filter((g) => g.mesReferencia === mesSelecionado));
+  const doMes = aplicarFiltros(gastos.filter((g) => g.mesReferencia === mesSelecionado));
   const total = doMes.reduce((soma, g) => soma + g.valor, 0);
   document.getElementById("gastos-total").textContent = `Total: ${formatarMoeda(total)}`;
 
@@ -95,17 +113,23 @@ function renderizar() {
   }
 }
 
-// Filtro das abas "Todos/Fixos/Parcelados" — aplicado antes do total e da
-// lista, para os dois sempre refletirem o mesmo conjunto de gastos.
-function aplicarFiltroTipo(lista) {
-  if (filtroTipo === "fixos") return lista.filter((g) => g.fixo);
-  if (filtroTipo === "parcelados") return lista.filter((g) => g.parcela);
-  return lista;
+// Filtro das abas "Todos/Fixos/Parcelados" + filtro por categoria — aplicados
+// antes do total e da lista, para os dois sempre refletirem o mesmo conjunto.
+function aplicarFiltros(lista) {
+  let filtrada = lista;
+  if (filtroTipo === "fixos") filtrada = filtrada.filter((g) => g.fixo);
+  else if (filtroTipo === "parcelados") filtrada = filtrada.filter((g) => g.parcela);
+
+  if (filtroCategoria === "sem") filtrada = filtrada.filter((g) => !g.categoriaId);
+  else if (filtroCategoria !== "todas") filtrada = filtrada.filter((g) => g.categoriaId === filtroCategoria);
+
+  return filtrada;
 }
 
 function mensagemVaziaPorFiltro() {
   if (filtroTipo === "fixos") return "Nenhum gasto fixo neste mês.";
   if (filtroTipo === "parcelados") return "Nenhuma parcela neste mês.";
+  if (filtroCategoria !== "todas") return "Nenhum gasto encontrado com esse filtro de categoria.";
   return "Nenhum gasto neste mês.";
 }
 
@@ -136,6 +160,7 @@ function linhaGasto(gasto) {
       <td>${escaparHtml(gasto.titulo)}</td>
       <td>${formatarData(gasto.data)}</td>
       <td class="tabela__valor-negativo">${formatarMoeda(gasto.valor)}</td>
+      <td>${chipCategoria(gasto.categoriaId)}</td>
       <td>${rotuloSalario} (${rotuloMesLongo(gasto.mesReferencia)})</td>
       <td>${rotuloStatus}</td>
       <td>${rotuloTipo}</td>
@@ -171,6 +196,7 @@ function abrirModalNovo() {
   document.getElementById("formulario-gasto").reset();
   document.getElementById("campo-mes-referencia-gasto").value = obterMesSelecionado();
   document.getElementById("linha-aplicar-proximas-gasto").hidden = true;
+  seletorCategoriaGasto.definir(null);
   abrirModal();
 }
 
@@ -188,6 +214,7 @@ function abrirModalEdicao(id) {
   document.getElementById("campo-salario-gasto").value = gasto.salarioResponsavel;
   document.getElementById("campo-fixo-gasto").checked = gasto.fixo;
   document.getElementById("campo-pago-gasto").checked = gasto.pago;
+  seletorCategoriaGasto.definir(gasto.categoriaId);
   // Só faz sentido oferecer "aplicar às próximas" se este gasto já fazia
   // parte de uma série fixa antes desta edição (senão não há "próximas" ainda).
   document.getElementById("linha-aplicar-proximas-gasto").hidden = !gasto.fixoId;
@@ -203,6 +230,7 @@ function abrirModal() {
 function fecharModal() {
   document.getElementById("sobreposicao-gasto").hidden = true;
   idEmEdicao = null;
+  seletorCategoriaGasto.fechar();
 }
 
 async function salvarFormulario(evento) {
@@ -216,6 +244,7 @@ async function salvarFormulario(evento) {
   const fixo = document.getElementById("campo-fixo-gasto").checked;
   const pago = document.getElementById("campo-pago-gasto").checked;
   const aplicarProximas = document.getElementById("campo-aplicar-proximas-gasto").checked;
+  const categoriaId = seletorCategoriaGasto.obter();
 
   if (!titulo || !data || !mesReferencia || !(valor > 0)) return;
 
@@ -229,6 +258,7 @@ async function salvarFormulario(evento) {
     gastoSalvo.mesReferencia = mesReferencia;
     gastoSalvo.salarioResponsavel = salarioResponsavel;
     gastoSalvo.pago = pago;
+    gastoSalvo.categoriaId = categoriaId;
     // Ativar "fixo" pela primeira vez cria a série; desativar interrompe
     // a geração de novas ocorrências, mas não apaga as já criadas.
     if (fixo && !gastoSalvo.fixoId) gastoSalvo.fixoId = crypto.randomUUID();
@@ -246,19 +276,20 @@ async function salvarFormulario(evento) {
       fixoId: fixo ? crypto.randomUUID() : null,
       pago,
       parcela: null,
+      categoriaId,
     };
   }
 
-  // "Aplicar às próximas ocorrências": só propaga título/valor/salário
-  // responsável para ocorrências FUTURAS (mesma série, data depois desta) —
-  // nunca mexe nas já passadas nem no status pago/data/mesReferencia de cada
-  // uma (cada ocorrência continua dona da própria data e do próprio status).
+  // "Aplicar às próximas ocorrências": só propaga título/valor/categoria/
+  // salário responsável para ocorrências FUTURAS (mesma série, data depois
+  // desta) — nunca mexe nas já passadas nem no status pago/data/mesReferencia
+  // de cada uma (cada ocorrência continua dona da própria data e do próprio status).
   const futurasAtualizadas =
     aplicarProximas && fixoIdOriginalEmEdicao && gastoSalvo.fixo && gastoSalvo.fixoId
       ? transacoesGastos
           .obterTodos()
           .filter((g) => g.fixoId === fixoIdOriginalEmEdicao && g.id !== gastoSalvo.id && g.data > gastoSalvo.data)
-          .map((g) => ({ ...g, titulo, valor, salarioResponsavel }))
+          .map((g) => ({ ...g, titulo, valor, salarioResponsavel, categoriaId }))
       : [];
 
   if (futurasAtualizadas.length > 0) {
@@ -269,12 +300,46 @@ async function salvarFormulario(evento) {
   fecharModal();
 }
 
+// Parcela e gasto fixo oferecem escolha de escopo (só este / este e os
+// futuros / todos); um gasto avulso continua com a confirmação simples de
+// sempre. "Futuros" é sempre relativo à DATA deste item (>=, então inclui o
+// próprio) — mesmo critério já usado em "aplicar às próximas ocorrências".
 async function excluirGasto(id) {
   const gasto = transacoesGastos.obterTodos().find((g) => g.id === id);
   if (!gasto) return;
+
+  if (gasto.parcela) {
+    const escopo = await perguntarEscopoExclusao({ titulo: gasto.titulo, tipo: "parcela" });
+    if (!escopo) return;
+    await excluirComEscopo(escopo, gasto, (g) => g.parcela && g.parcela.parcelamentoId === gasto.parcela.parcelamentoId);
+    return;
+  }
+
+  if (gasto.fixoId) {
+    const escopo = await perguntarEscopoExclusao({ titulo: gasto.titulo, tipo: "fixo" });
+    if (!escopo) return;
+    await excluirComEscopo(escopo, gasto, (g) => g.fixoId === gasto.fixoId);
+    return;
+  }
 
   const confirmou = confirm(`Excluir o gasto "${gasto.titulo}"?`);
   if (!confirmou) return;
 
   await transacoesGastos.remover(id);
+}
+
+// Aplica o escopo escolhido ("somente"/"futuras"/"todas") a um grupo de itens
+// relacionados (mesma série fixa ou mesmo parcelamento), identificado por
+// `pertenceAoGrupo`. Remove um por um (não é uma operação do dia a dia, então
+// não precisou de um `removerEmLote` novo na camada de dados).
+async function excluirComEscopo(escopo, item, pertenceAoGrupo) {
+  if (escopo === "somente") {
+    await transacoesGastos.remover(item.id);
+    return;
+  }
+  const relacionados = transacoesGastos.obterTodos().filter(pertenceAoGrupo);
+  const alvo = escopo === "todas" ? relacionados : relacionados.filter((g) => g.data >= item.data);
+  for (const g of alvo) {
+    await transacoesGastos.remover(g.id);
+  }
 }

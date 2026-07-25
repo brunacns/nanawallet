@@ -12,6 +12,29 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.5.0] - 2026-07-24
+
+- **Novo**: excluir um gasto/ganho fixo ou uma parcela agora pergunta o escopo — "somente esta ocorrência", "esta e as futuras da série" ou "todas". Um gasto/ganho avulso continua com a confirmação simples de sempre.
+- **Novo**: categoria (opcional) no cadastro de parcelamento — aplicada a todas as parcelas geradas.
+- **Corrigido**: o modal de criar/editar gasto podia ficar maior que a tela (principalmente com o campo de categoria); agora tem altura máxima e rola internamente, com os botões Cancelar/Salvar sempre acessíveis. Vale para todos os modais do app (ganho, gasto, parcelamento, lembrete, meta).
+
+## [1.4.0] - 2026-07-24
+
+- **Corrigido (alto impacto)**: nas páginas Gastos e Ganhos, os botões de "mês anterior"/"próximo mês" só atualizavam a tela quando a troca de mês, por coincidência, gerava uma nova ocorrência de item fixo (o que dispara uma notificação de dados) — navegando para um mês sem nada a gerar, o rótulo e a lista ficavam travados no mês antigo, dando a impressão de navegação "travada" ou "sem volta". As duas páginas agora reagem diretamente à troca de mês, como o Dashboard já fazia.
+- **Novo**: botão "Mês atual" ao lado das setas de navegação de mês em Dashboard, Gastos e Ganhos, para voltar rapidamente ao mês corrente.
+
+## [1.3.0] - 2026-07-24
+
+Sistema de categorias de despesas — categorias pensadas para como as pessoas realmente encaram os próprios gastos no dia a dia (Delivery, Mimos, Hobbies...), não a lista genérica de "Alimentação/Transporte/Outros". Implementado em 4 etapas pequenas, cada uma testada e aprovada antes da próxima.
+
+- **Novo**: 18 categorias padrão (Delivery, Mercado, Comer fora, Hobbies, Lazer, Assinaturas, Comprinhas, Beleza, Saúde, Transporte, Casa, Contas, Presentes, Pets, Trabalho, Viagens, Imprevistos, Mimos), cada uma com nome, emoji e cor pastel própria, carregadas automaticamente na primeira inicialização.
+- **Novo**: seletor de categoria (opcional) no formulário de criar/editar gasto — painel customizado com chip colorido por categoria (emoji + nome + cor), não um `<select>` nativo.
+- **Novo**: coluna "Categoria" nas tabelas de Gastos e Histórico, com o mesmo selo colorido.
+- **Novo**: filtro por categoria em Gastos e Histórico.
+- **Novo**: card "Gastos por categoria" no Dashboard (gráfico de barras horizontais, uma por categoria, do mês selecionado), mostrando também a maior categoria do mês.
+- **Novo**: card "Estatísticas por categoria" no Dashboard, com frases automáticas (maior categoria, quantidade de gastos, percentual das categorias mais relevantes do mês).
+- **Arquitetura**: `CategoryService` segue o mesmo CRUD genérico já usado por metas/lembretes — categorias personalizadas (criar/editar/excluir pela interface) podem ser adicionadas numa etapa futura sem refatorar a camada de dados.
+
 ## [1.2.1] - 2026-07-20
 
 - **Removido**: a caixinha "Mostrar histórico" das páginas Gastos e Ganhos. Itens já pagos/recebidos de datas passadas continuam saindo da lista do mês por padrão (nada muda nisso) — só não há mais como revelá-los ali; a página Histórico já mostra todas as transações de qualquer mês/status.

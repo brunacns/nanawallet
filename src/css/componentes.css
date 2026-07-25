@@ -183,6 +183,12 @@
   background-color: var(--cor-negativo);
 }
 
+/* Ponto neutro (informativo, não é um alerta) — estatísticas por categoria */
+.item-diagnostico__ponto--neutro {
+  background-color: var(--cor-acento);
+  box-shadow: 0 0 6px var(--cor-acento-fraco);
+}
+
 /* Grade de duas colunas (dashboard) */
 .grade-duas-colunas {
   display: grid;
@@ -537,6 +543,13 @@
 .modal {
   width: 100%;
   max-width: 400px;
+  /* Formulários longos (ex: gasto, com categoria) podem ultrapassar a altura
+     da tela — o modal vira uma coluna flex com altura máxima, e é o <form>
+     lá dentro (não o .modal inteiro) que rola, para o cabeçalho e os botões
+     de ação continuarem sempre visíveis. */
+  max-height: calc(100vh - var(--espaco-xl) * 2);
+  display: flex;
+  flex-direction: column;
   background-color: var(--cor-superficie);
   border: 1px solid rgba(201, 163, 245, 0.18);
   border-radius: var(--raio-lg);
@@ -545,11 +558,19 @@
   animation: apareceModal 220ms var(--curva-suave);
 }
 
+.modal > form {
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: var(--espaco-xs);
+  margin-right: calc(var(--espaco-xs) * -1);
+}
+
 .modal__cabecalho {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--espaco-md);
+  flex-shrink: 0;
 }
 
 .modal__cabecalho h2 {
@@ -577,6 +598,14 @@
   justify-content: flex-end;
   gap: var(--espaco-sm);
   margin-top: var(--espaco-lg);
+  /* Fica "grudado" no fim da área rolável do formulário — assim os botões
+     Cancelar/Salvar continuam alcançáveis mesmo num formulário longo, sem
+     precisar rolar até o final. */
+  position: sticky;
+  bottom: calc(var(--espaco-xs) * -1);
+  background-color: var(--cor-superficie);
+  padding-top: var(--espaco-sm);
+  padding-bottom: var(--espaco-xs);
 }
 
 /* Campos de formulário */
@@ -657,10 +686,16 @@
   margin-bottom: var(--espaco-md);
 }
 
-.campo-checkbox input[type="checkbox"] {
+.campo-checkbox input[type="checkbox"],
+.campo-checkbox input[type="radio"] {
   width: 17px;
   height: 17px;
   accent-color: var(--cor-acento);
+  flex-shrink: 0;
+}
+
+.campo-checkbox input[type="radio"] {
+  margin-top: 2px;
 }
 
 .campo-checkbox label {
@@ -915,6 +950,126 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--espaco-xs);
+}
+
+/* Chip de categoria (badge somente leitura — tabela de Gastos, Histórico, dashboard) */
+.chip-categoria {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--espaco-sm);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip-categoria--vazia {
+  background-color: var(--cor-superficie-alta);
+  color: var(--cor-texto-fraco);
+  font-weight: 500;
+}
+
+/* Seletor de categoria (formulário de gasto) — botão que abre um painel com
+   um chip colorido por categoria, emoji como elemento visual principal. */
+.seletor-categoria {
+  position: relative;
+}
+
+.seletor-categoria__botao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-sm);
+  width: 100%;
+  background-color: var(--cor-superficie-alta);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+  padding: var(--espaco-sm) var(--espaco-md);
+  color: var(--cor-texto);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color var(--transicao-rapida), box-shadow var(--transicao-rapida);
+}
+
+.seletor-categoria__botao:focus,
+.seletor-categoria__botao.aberto {
+  outline: none;
+  border-color: var(--cor-acento);
+  box-shadow: var(--sombra-brilho-acento);
+}
+
+.seletor-categoria__rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seletor-categoria__chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--cor-texto-secundario);
+  transition: transform var(--transicao-rapida);
+}
+
+.seletor-categoria__botao.aberto .seletor-categoria__chevron {
+  transform: rotate(180deg);
+}
+
+.seletor-categoria__painel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background-color: var(--cor-superficie-alta);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-md);
+  box-shadow: var(--sombra-media);
+  padding: var(--espaco-sm);
+  max-height: 220px;
+  overflow-y: auto;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  animation: apareceModal 150ms var(--curva-suave);
+}
+
+.seletor-categoria__painel[hidden] {
+  display: none;
+}
+
+.opcao-categoria {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  border-radius: var(--raio-sm);
+  padding: 6px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: transparent;
+  text-align: left;
+  transition: transform var(--transicao-rapida), border-color var(--transicao-rapida);
+}
+
+.opcao-categoria:hover {
+  transform: scale(1.03);
+}
+
+.opcao-categoria:active {
+  transform: scale(0.97);
+}
+
+.opcao-categoria.selecionada {
+  border-color: currentColor;
+}
+
+.opcao-categoria--vazia {
+  grid-column: 1 / -1;
+  color: var(--cor-texto-secundario);
+  background-color: var(--cor-superficie);
 }
 
 /* Barra de progresso (página Metas) */

@@ -127,6 +127,9 @@
             <button type="button" class="botao-icone" id="dash-mes-seguinte" title="Próximo mês">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
+            <button type="button" class="botao botao--secundario" id="dash-mes-atual" style="padding: 4px 10px; font-size: 12px; margin-left: var(--espaco-sm);">
+              Mês atual
+            </button>
           </div>
 
           <div class="grade-estatisticas">
@@ -196,11 +199,22 @@
               <div class="grafico-container" id="grafico-dinheiro-comprometido"></div>
               <div class="grafico-legenda" id="legenda-dinheiro-comprometido"></div>
             </div>
+
+            <div class="cartao-grafico cartao-grafico--largo">
+              <div class="cartao-grafico__titulo">Gastos por categoria</div>
+              <div class="cartao-grafico__subtitulo" id="grafico-gastos-por-categoria-subtitulo">Como os gastos deste mês se distribuem</div>
+              <div class="grafico-container" id="grafico-gastos-por-categoria"></div>
+            </div>
           </div>
 
           <div class="cartao" style="margin-bottom: var(--espaco-lg);">
             <div class="cartao__titulo">Diagnósticos</div>
             <ul class="lista-diagnosticos" id="dashboard-diagnosticos-conteudo"></ul>
+          </div>
+
+          <div class="cartao" style="margin-bottom: var(--espaco-lg);">
+            <div class="cartao__titulo">Estatísticas por categoria</div>
+            <ul class="lista-diagnosticos" id="dashboard-insights-categoria"></ul>
           </div>
 
           <div class="grade-duas-colunas">
@@ -240,6 +254,9 @@
             <button type="button" class="botao-icone" id="ganhos-mes-seguinte" title="Próximo mês">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
+            <button type="button" class="botao botao--secundario" id="ganhos-mes-atual" style="padding: 4px 10px; font-size: 12px; margin-left: var(--espaco-sm);">
+              Mês atual
+            </button>
           </div>
 
           <div id="ganhos-conteudo"></div>
@@ -278,12 +295,19 @@
             <button type="button" class="botao-icone" id="gastos-mes-seguinte" title="Próximo mês">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
+            <button type="button" class="botao botao--secundario" id="gastos-mes-atual" style="padding: 4px 10px; font-size: 12px; margin-left: var(--espaco-sm);">
+              Mês atual
+            </button>
           </div>
 
           <div class="abas" id="gastos-abas">
             <button type="button" class="aba ativa" data-filtro="todos">Todos</button>
             <button type="button" class="aba" data-filtro="fixos">Fixos</button>
             <button type="button" class="aba" data-filtro="parcelados">Parcelados</button>
+          </div>
+
+          <div class="barra-filtros">
+            <select id="gastos-filtro-categoria"></select>
           </div>
 
           <div class="cartao" id="parcelamentos-resumo-cartao" hidden style="margin-bottom: var(--espaco-md);">
@@ -299,6 +323,7 @@
                   <th>Título</th>
                   <th>Data</th>
                   <th>Valor</th>
+                  <th>Categoria</th>
                   <th>Salário responsável</th>
                   <th>Status</th>
                   <th>Tipo</th>
@@ -372,6 +397,7 @@
               <option value="feito">Pago/recebido</option>
               <option value="pendente">Pendente</option>
             </select>
+            <select id="historico-filtro-categoria"></select>
             <select id="historico-ordenar">
               <option value="data-desc">Mais recentes primeiro</option>
               <option value="data-asc">Mais antigos primeiro</option>
@@ -386,6 +412,7 @@
                 <tr>
                   <th>Tipo</th>
                   <th>Título</th>
+                  <th>Categoria</th>
                   <th>Data</th>
                   <th>Valor</th>
                   <th>Status</th>
@@ -613,6 +640,19 @@
             <input type="text" id="campo-titulo-gasto" placeholder="Ex: Aluguel, Mercado..." required />
           </div>
           <div class="campo">
+            <label for="seletor-categoria-gasto-botao">Categoria (opcional)</label>
+            <div class="seletor-categoria" id="seletor-categoria-gasto">
+              <button type="button" class="seletor-categoria__botao" id="seletor-categoria-gasto-botao" aria-haspopup="true" aria-expanded="false">
+                <span class="seletor-categoria__rotulo" id="seletor-categoria-gasto-rotulo">Sem categoria</span>
+                <svg class="seletor-categoria__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              <input type="hidden" id="campo-categoria-gasto" value="" />
+              <div class="seletor-categoria__painel" id="seletor-categoria-gasto-painel" hidden></div>
+            </div>
+          </div>
+          <div class="campo">
             <label for="campo-valor-gasto">Valor (R$)</label>
             <input type="number" id="campo-valor-gasto" step="0.01" min="0.01" placeholder="0,00" required />
           </div>
@@ -641,7 +681,7 @@
           </div>
           <div class="campo-checkbox" id="linha-aplicar-proximas-gasto" hidden>
             <input type="checkbox" id="campo-aplicar-proximas-gasto" />
-            <label for="campo-aplicar-proximas-gasto">Aplicar título, valor e salário responsável às próximas ocorrências desta série (as já passadas não mudam)</label>
+            <label for="campo-aplicar-proximas-gasto">Aplicar título, valor, categoria e salário responsável às próximas ocorrências desta série (as já passadas não mudam)</label>
           </div>
           <div class="modal__acoes">
             <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-gasto">Cancelar</button>
@@ -662,6 +702,25 @@
           <div class="campo">
             <label for="campo-titulo-parcelamento">Título</label>
             <input type="text" id="campo-titulo-parcelamento" placeholder="Ex: Notebook novo" required />
+          </div>
+          <div class="campo">
+            <label for="seletor-categoria-parcelamento-botao">Categoria (opcional)</label>
+            <div class="seletor-categoria" id="seletor-categoria-parcelamento">
+              <button
+                type="button"
+                class="seletor-categoria__botao"
+                id="seletor-categoria-parcelamento-botao"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span class="seletor-categoria__rotulo" id="seletor-categoria-parcelamento-rotulo">Sem categoria</span>
+                <svg class="seletor-categoria__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              <input type="hidden" id="campo-categoria-parcelamento" value="" />
+              <div class="seletor-categoria__painel" id="seletor-categoria-parcelamento-painel" hidden></div>
+            </div>
           </div>
           <div class="campo">
             <label for="campo-quantidade-parcelamento">Quantidade de parcelas</label>
@@ -759,6 +818,22 @@
             <button type="submit" class="botao botao--primario">Salvar</button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Modal compartilhado: perguntar o escopo de uma exclusão (item fixo ou
+         parcela) — "somente esse", "esse e os futuros" ou "todos". -->
+    <div class="sobreposicao" id="sobreposicao-escopo-exclusao" hidden>
+      <div class="modal" style="max-width: 380px;">
+        <div class="modal__cabecalho">
+          <h2 id="escopo-exclusao-titulo">Excluir</h2>
+          <button type="button" class="modal__fechar" id="botao-fechar-escopo-exclusao" aria-label="Fechar">&times;</button>
+        </div>
+        <div id="escopo-exclusao-opcoes"></div>
+        <div class="modal__acoes">
+          <button type="button" class="botao botao--secundario" id="botao-cancelar-escopo-exclusao">Cancelar</button>
+          <button type="button" class="botao botao--perigo" id="botao-confirmar-escopo-exclusao">Excluir</button>
+        </div>
       </div>
     </div>
 

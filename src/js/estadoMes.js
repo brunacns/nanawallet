@@ -23,6 +23,10 @@ export function retrocederMes() {
   definirMesSelecionado(mesAnterior(mesSelecionado));
 }
 
+export function irParaMesAtual() {
+  definirMesSelecionado(chaveMesAtual());
+}
+
 // Chamado sempre que o mês selecionado mudar (em qualquer página).
 export function aoAtualizarMes(callback) {
   ouvintes.push(callback);

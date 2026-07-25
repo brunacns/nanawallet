@@ -2,6 +2,8 @@ import { obterGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, aoAtualizarGastos } from "./gastos.js";
 import { formatarMoeda } from "../utils/formatadores.js";
 import { diaDoMes, mesDeData, chaveMesAtual, rotuloMesCurto, listaMeses } from "../utils/datas.js";
+import { obterMesSelecionado, aoAtualizarMes } from "../estadoMes.js";
+import { obterCategoriaPorId } from "../categorias.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const LARGURA = 560;
@@ -10,6 +12,10 @@ const MARGEM = { topo: 16, direita: 16, baixo: 26, esquerda: 54 };
 export function iniciarGraficos() {
   aoAtualizarGanhos(renderizarTudo);
   aoAtualizarGastos(renderizarTudo);
+  // Diferente dos outros 5 gráficos (que mostram tendências no histórico
+  // completo), "Gastos por categoria" é sobre o mês selecionado — precisa
+  // re-renderizar ao navegar de mês, os outros só re-renderizam à toa.
+  aoAtualizarMes(renderizarTudo);
   renderizarTudo();
 }
 
@@ -22,6 +28,7 @@ function renderizarTudo() {
   renderizarDinheiroComprometido(ganhos, gastos);
   renderizarComparacaoSalarios(ganhos, gastos);
   renderizarPrevisoesFuturas(gastos);
+  renderizarGastosPorCategoria(gastos);
 }
 
 // ---------- Utilidades gerais ----------
@@ -481,5 +488,88 @@ function desenharBarrasSimples(container, pontos, opcoes) {
     const rotuloEixo = svgEl("text", { x: centro, y: altura - MARGEM.baixo + 16, "text-anchor": "middle" });
     rotuloEixo.textContent = opcoes.formatarRotulo(p.chave);
     svg.appendChild(rotuloEixo);
+  });
+}
+
+// ==================== 6. Gastos por categoria ====================
+// Diferente dos outros 5 gráficos, é sobre o MÊS SELECIONADO (não o
+// histórico completo) — mesmo critério de Dashboard/Gastos desde a Etapa 13,
+// e é isso que "quanto foi gasto por categoria [neste mês]" pede.
+
+const COR_SEM_CATEGORIA = "var(--cor-texto-fraco)";
+
+function renderizarGastosPorCategoria(gastos) {
+  const container = document.getElementById("grafico-gastos-por-categoria");
+  const subtitulo = document.getElementById("grafico-gastos-por-categoria-subtitulo");
+  const doMes = gastos.filter((g) => g.mesReferencia === obterMesSelecionado());
+
+  if (doMes.length === 0) {
+    subtitulo.textContent = "Como os gastos deste mês se distribuem";
+    container.innerHTML = vazioHtml("Nenhum gasto neste mês.");
+    return;
+  }
+
+  const totalMes = somar(doMes, (g) => g.valor);
+  const porCategoria = new Map();
+  for (const gasto of doMes) {
+    const chave = gasto.categoriaId || "sem";
+    porCategoria.set(chave, (porCategoria.get(chave) || 0) + gasto.valor);
+  }
+
+  const segmentos = [...porCategoria.entries()]
+    .map(([chave, valor]) => {
+      const categoria = chave === "sem" ? null : obterCategoriaPorId(chave);
+      return {
+        nome: categoria ? `${categoria.emoji} ${categoria.nome}` : "Sem categoria",
+        valor,
+        cor: categoria ? categoria.cor : COR_SEM_CATEGORIA,
+      };
+    })
+    .sort((a, b) => b.valor - a.valor);
+
+  subtitulo.textContent = `Maior categoria este mês: ${segmentos[0].nome} (${formatarMoeda(segmentos[0].valor)})`;
+
+  desenharBarrasCategoria(container, segmentos, totalMes);
+}
+
+// Lista horizontal (rótulo + barra + valor), uma linha por categoria — mais
+// legível que um gráfico de pizza quando há muitas categorias possíveis.
+function desenharBarrasCategoria(container, segmentos, totalMes) {
+  const alturaLinha = 28;
+  const altura = segmentos.length * alturaLinha + 6;
+  const svg = novoSvg(container, altura);
+
+  const colunaRotulo = 150;
+  const colunaValor = 74;
+  const larguraBarra = LARGURA - colunaRotulo - colunaValor;
+  const maxValor = Math.max(...segmentos.map((s) => s.valor));
+
+  segmentos.forEach((seg, i) => {
+    const centroY = i * alturaLinha + alturaLinha / 2;
+
+    const rotulo = svgEl("text", { x: 0, y: centroY + 4, "text-anchor": "start", style: "font-size: 12px;" });
+    rotulo.textContent = seg.nome;
+    svg.appendChild(rotulo);
+
+    const largura = maxValor > 0 ? Math.max((seg.valor / maxValor) * larguraBarra, 3) : 3;
+    const rect = svgEl("rect", { x: colunaRotulo, y: centroY - 7, width: largura, height: 14, rx: 6, fill: seg.cor });
+    svg.appendChild(rect);
+
+    const rotuloValor = svgEl("text", {
+      x: colunaRotulo + larguraBarra + 8,
+      y: centroY + 4,
+      "text-anchor": "end",
+      style: "font-size: 11px; font-weight: 600; fill: var(--cor-texto-secundario);",
+    });
+    rotuloValor.textContent = formatarMoeda(seg.valor);
+    svg.appendChild(rotuloValor);
+
+    const areaClique = svgEl("rect", { x: colunaRotulo, y: centroY - 10, width: larguraBarra, height: 20, fill: "transparent", style: "cursor: pointer;" });
+    const pct = totalMes > 0 ? Math.round((seg.valor / totalMes) * 100) : 0;
+    const conteudoTooltip = `<div>${seg.nome}</div><div class="grafico-tooltip__valor">${formatarMoeda(seg.valor)} (${pct}%)</div>`;
+    areaClique.addEventListener("pointerenter", (e) => mostrarTooltip(e, conteudoTooltip));
+    areaClique.addEventListener("pointermove", (e) => mostrarTooltip(e, conteudoTooltip));
+    areaClique.addEventListener("pointerleave", esconderTooltip);
+    svg.appendChild(areaClique);
   });
 }

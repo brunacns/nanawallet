@@ -257,9 +257,38 @@ export async function salvarColecaoCompleta(colecao, itens) {
 // "configuracoes" e "metas" não crescem com o tempo como gastos/ganhos/lembretes
 // (não há uma ocorrência nova todo mês) — continuam sendo um arquivo só.
 
+// Categorias padrão de despesas, carregadas automaticamente só na primeira
+// inicialização (arquivo `categorias.json` ainda não existe) — pensadas para
+// refletir como as pessoas realmente encaram os próprios gastos no dia a dia,
+// não a lista genérica de "Alimentação/Transporte/Outros" de apps financeiros
+// tradicionais. `crypto.randomUUID()` roda aqui mesmo, na primeira vez que
+// este módulo é importado em cada execução do app — os ids só viram
+// permanentes de fato quando `inicializar()` grava o arquivo pela 1ª vez.
+const CATEGORIAS_PADRAO = [
+  { nome: "Delivery", emoji: "🍔", cor: "#F2A65A" },
+  { nome: "Mercado", emoji: "🛒", cor: "#8FD694" },
+  { nome: "Comer fora", emoji: "🍽️", cor: "#F7C873" },
+  { nome: "Hobbies", emoji: "🎮", cor: "#B89CFF" },
+  { nome: "Lazer", emoji: "🎬", cor: "#FFB7D5" },
+  { nome: "Assinaturas", emoji: "🎵", cor: "#7FD8BE" },
+  { nome: "Comprinhas", emoji: "🛍️", cor: "#F6A6C9" },
+  { nome: "Beleza", emoji: "🧴", cor: "#FFC7E5" },
+  { nome: "Saúde", emoji: "🩺", cor: "#91D6FF" },
+  { nome: "Transporte", emoji: "🚗", cor: "#9EC5FE" },
+  { nome: "Casa", emoji: "🏠", cor: "#C9B6FF" },
+  { nome: "Contas", emoji: "💡", cor: "#FFE082" },
+  { nome: "Presentes", emoji: "🎁", cor: "#FF9FB2" },
+  { nome: "Pets", emoji: "🐶", cor: "#D7B98E" },
+  { nome: "Trabalho", emoji: "💼", cor: "#7CB9E8" },
+  { nome: "Viagens", emoji: "✈️", cor: "#6EDCD9" },
+  { nome: "Imprevistos", emoji: "💸", cor: "#FF8A8A" },
+  { nome: "Mimos", emoji: "❤️", cor: "#F497D6" },
+].map((c) => ({ id: crypto.randomUUID(), ...c }));
+
 const PADRAO_ARQUIVO_UNICO = {
   configuracoes: { versao: CONFIG.versaoSchema, configuracoes: {} },
   metas: { versao: CONFIG.versaoSchema, metas: [] },
+  categorias: { versao: CONFIG.versaoSchema, categorias: CATEGORIAS_PADRAO },
 };
 
 async function caminhoArquivoUnico(nome) {
@@ -296,6 +325,17 @@ export async function lerMetas() {
 
 export async function salvarMetas(conteudo) {
   await salvarArquivoUnico("metas", conteudo);
+}
+
+// Categorias de despesas: nome, emoji, cor. Não particionado por mês pelo
+// mesmo motivo de metas/configurações — é uma lista pequena, editada
+// diretamente pelo usuário, sem crescimento ao longo do tempo.
+export async function lerCategorias() {
+  return lerArquivoUnico("categorias");
+}
+
+export async function salvarCategorias(conteudo) {
+  await salvarArquivoUnico("categorias", conteudo);
 }
 
 // ---------- Apagar todos os dados ----------

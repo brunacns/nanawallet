@@ -2,6 +2,7 @@ import { ArmazenamentoLocalService } from "./ArmazenamentoLocalService.js";
 import { TransactionService } from "./TransactionService.js";
 import { ReminderService } from "./ReminderService.js";
 import { GoalService } from "./GoalService.js";
+import { CategoryService } from "./CategoryService.js";
 import { mesDeData } from "../utils/datas.js";
 
 // ---------------------------------------------------------------------------
@@ -15,11 +16,13 @@ import { mesDeData } from "../utils/datas.js";
 export const armazenamentoAtivo = new ArmazenamentoLocalService();
 
 // ---- Transações (gastos) ----
-// Migração: gastos salvos antes da Etapa 13 não tinham mesReferencia/fixoId.
+// Migração: gastos salvos antes da Etapa 13 não tinham mesReferencia/fixoId;
+// gastos salvos antes do sistema de categorias não tinham categoriaId
+// (null = sem categoria, comportamento idêntico ao de antes).
 const transacoesGastos = new TransactionService({
   colecao: "gastos",
   storage: armazenamentoAtivo,
-  aplicarMigracaoCampos: (g) => ({ mesReferencia: mesDeData(g.data), fixoId: null, ...g }),
+  aplicarMigracaoCampos: (g) => ({ mesReferencia: mesDeData(g.data), fixoId: null, categoriaId: null, ...g }),
   criarProximaOcorrencia: (ultimo, novaData) => ({
     id: crypto.randomUUID(),
     titulo: ultimo.titulo,
@@ -31,6 +34,7 @@ const transacoesGastos = new TransactionService({
     fixo: true,
     fixoId: ultimo.fixoId,
     parcela: null,
+    categoriaId: ultimo.categoriaId,
   }),
 });
 
@@ -54,5 +58,6 @@ const transacoesGanhos = new TransactionService({
 
 const lembretesService = new ReminderService(armazenamentoAtivo);
 const metasService = new GoalService(armazenamentoAtivo);
+const categoriasService = new CategoryService(armazenamentoAtivo);
 
-export { transacoesGastos, transacoesGanhos, lembretesService, metasService };
+export { transacoesGastos, transacoesGanhos, lembretesService, metasService, categoriasService };

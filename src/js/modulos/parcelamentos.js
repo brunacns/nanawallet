@@ -1,6 +1,9 @@
 import { obterGastos, adicionarGastosEmLote, aoAtualizarGastos } from "./gastos.js";
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { somarMeses, mesDeData } from "../utils/datas.js";
+import { criarSeletorCategoria } from "../categorias.js";
+
+const seletorCategoriaParcelamento = criarSeletorCategoria("parcelamento");
 
 export function iniciarParcelamentos() {
   document.getElementById("botao-novo-parcelamento").addEventListener("click", abrirModal);
@@ -10,6 +13,7 @@ export function iniciarParcelamentos() {
     if (evento.target.id === "sobreposicao-parcelamento") fecharModal();
   });
   document.getElementById("formulario-parcelamento").addEventListener("submit", salvarFormulario);
+  seletorCategoriaParcelamento.inicializar();
 
   aoAtualizarGastos(renderizarResumo);
   renderizarResumo(obterGastos());
@@ -17,12 +21,14 @@ export function iniciarParcelamentos() {
 
 function abrirModal() {
   document.getElementById("formulario-parcelamento").reset();
+  seletorCategoriaParcelamento.definir(null);
   document.getElementById("sobreposicao-parcelamento").hidden = false;
   document.getElementById("campo-titulo-parcelamento").focus();
 }
 
 function fecharModal() {
   document.getElementById("sobreposicao-parcelamento").hidden = true;
+  seletorCategoriaParcelamento.fechar();
 }
 
 async function salvarFormulario(evento) {
@@ -33,6 +39,7 @@ async function salvarFormulario(evento) {
   const valorParcela = Number(document.getElementById("campo-valor-parcelamento").value);
   const dataPrimeiraParcela = document.getElementById("campo-data-parcelamento").value;
   const salarioResponsavel = document.getElementById("campo-salario-parcelamento").value;
+  const categoriaId = seletorCategoriaParcelamento.obter();
 
   if (!titulo || !dataPrimeiraParcela || !(valorParcela > 0) || !(quantidade >= 2)) return;
 
@@ -54,6 +61,7 @@ async function salvarFormulario(evento) {
       fixoId: null,
       pago: false,
       parcela: { numero, total: quantidade, parcelamentoId },
+      categoriaId,
     });
   }
 

@@ -3,7 +3,8 @@ import { obterGastos, aoAtualizarGastos } from "./gastos.js";
 import { obterLembretes, aoAtualizarLembretes } from "./lembretes.js";
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { diaDoMes, mesDeData, mesAnterior, rotuloMesLongo } from "../utils/datas.js";
-import { obterMesSelecionado, avancarMes, retrocederMes, aoAtualizarMes } from "../estadoMes.js";
+import { obterCategoriaPorId } from "../categorias.js";
+import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtualizarMes } from "../estadoMes.js";
 
 // Limites usados para decidir a cor de alerta de um saldo, em relação
 // ao total recebido correspondente (geral, ou só do dia 10 / dia 25).
@@ -18,6 +19,7 @@ const LIMITE_COMPROMETIMENTO = 0.7; // gastos totais >= 70% da renda do mês
 export function iniciarDashboard() {
   document.getElementById("dash-mes-anterior").addEventListener("click", retrocederMes);
   document.getElementById("dash-mes-seguinte").addEventListener("click", avancarMes);
+  document.getElementById("dash-mes-atual").addEventListener("click", irParaMesAtual);
 
   aoAtualizarGanhos(renderizar);
   aoAtualizarGastos(renderizar);
@@ -63,6 +65,7 @@ function renderizar() {
   atualizarCartaoSaldo("dash-saldo-previsto", saldoPrevisto, totalRecebido);
 
   renderizarDiagnosticos({ mes, gastos, totalRecebido, totalGasto });
+  renderizarInsightsCategoria(gastos, totalGasto);
   renderizarProximosGastos(gastos);
   renderizarProximosLembretes(lembretes);
 }
@@ -194,6 +197,68 @@ function diagnosticoComprometimentoDaRenda(totalGasto, totalRecebido) {
       texto: `${Math.round(proporcao * 100)}% da renda deste mês está comprometida com gastos.`,
     },
   ];
+}
+
+// "Estatísticas por categoria": frases geradas a partir dos gastos categorizados
+// do mês selecionado. Usa só um template genérico por tipo de frase (em vez de
+// um texto escrito à mão por categoria) de propósito — assim continua
+// funcionando sem alteração quando categorias personalizadas existirem no
+// futuro, sem precisar de um texto novo por categoria nova.
+function renderizarInsightsCategoria(gastosDoMes, totalGasto) {
+  const container = document.getElementById("dashboard-insights-categoria");
+  const mensagemVazia = `<li class="estado-vazio" style="padding: var(--espaco-md) 0;">Nenhum gasto categorizado neste mês ainda.</li>`;
+
+  const porCategoria = new Map();
+  for (const gasto of gastosDoMes) {
+    if (!gasto.categoriaId) continue;
+    const atual = porCategoria.get(gasto.categoriaId) || { valor: 0, quantidade: 0 };
+    atual.valor += gasto.valor;
+    atual.quantidade += 1;
+    porCategoria.set(gasto.categoriaId, atual);
+  }
+
+  const ranking = [...porCategoria.entries()]
+    .map(([categoriaId, dados]) => ({ categoria: obterCategoriaPorId(categoriaId), ...dados }))
+    .filter((r) => r.categoria)
+    .sort((a, b) => b.valor - a.valor);
+
+  if (ranking.length === 0) {
+    container.innerHTML = mensagemVazia;
+    return;
+  }
+
+  const insights = [];
+  const principal = ranking[0];
+  const pctPrincipal = totalGasto > 0 ? Math.round((principal.valor / totalGasto) * 100) : 0;
+  insights.push(
+    `Sua maior categoria este mês foi ${principal.categoria.emoji} ${escaparHtml(principal.categoria.nome)}, com ${formatarMoeda(
+      principal.valor
+    )} (${pctPrincipal}% dos gastos).`
+  );
+  insights.push(
+    `${principal.categoria.emoji} Você fez ${principal.quantidade} gasto${principal.quantidade > 1 ? "s" : ""} em ${escaparHtml(
+      principal.categoria.nome
+    )} este mês.`
+  );
+
+  ranking
+    .slice(1, 3)
+    .filter((r) => totalGasto > 0 && Math.round((r.valor / totalGasto) * 100) >= 1)
+    .forEach((r) => {
+      const pct = Math.round((r.valor / totalGasto) * 100);
+      insights.push(`${r.categoria.emoji} ${escaparHtml(r.categoria.nome)} representou ${pct}% dos seus gastos este mês (${formatarMoeda(r.valor)}).`);
+    });
+
+  container.innerHTML = insights
+    .map(
+      (texto) => `
+    <li class="item-diagnostico">
+      <span class="item-diagnostico__ponto item-diagnostico__ponto--neutro"></span>
+      <span>${texto}</span>
+    </li>
+  `
+    )
+    .join("");
 }
 
 // Usada tanto para "Próximos gastos pendentes" quanto "Próximos lembretes"
