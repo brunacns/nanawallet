@@ -10,5 +10,7 @@ export const CONFIG = {
     configuracoes: "configuracoes.json",
     metas: "metas.json",
     categorias: "categorias.json",
+    carteiras: "carteiras.json",
+    carteiraMovimentacoes: "carteira_movimentacoes.json",
   },
 };

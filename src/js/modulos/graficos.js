@@ -4,6 +4,7 @@ import { formatarMoeda } from "../utils/formatadores.js";
 import { diaDoMes, mesDeData, chaveMesAtual, rotuloMesCurto, listaMeses } from "../utils/datas.js";
 import { obterMesSelecionado, aoAtualizarMes } from "../estadoMes.js";
 import { obterCategoriaPorId } from "../categorias.js";
+import { filtrarGastosPrincipais } from "../carteiras.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const LARGURA = 560;
@@ -21,7 +22,10 @@ export function iniciarGraficos() {
 
 function renderizarTudo() {
   const ganhos = obterGanhos();
-  const gastos = obterGastos();
+  // Gastos pagos com uma carteira de benefício (ex: Ticket Alimentação) não
+  // são "financeiro principal" — excluídos dos 6 gráficos deste dashboard
+  // (regra de ouro do sistema de carteiras).
+  const gastos = filtrarGastosPrincipais(obterGastos());
 
   renderizarEvolucaoGastos(gastos);
   renderizarEvolucaoSaldo(ganhos, gastos);
@@ -330,31 +334,31 @@ function renderizarDinheiroComprometido(ganhos, gastos) {
 function renderizarComparacaoSalarios(ganhos, gastos) {
   const container = document.getElementById("grafico-comparacao-salarios");
 
-  const recebidoDia10 = somar(
-    ganhos.filter((g) => diaDoMes(g.data) === 10),
+  const recebidoDia15 = somar(
+    ganhos.filter((g) => diaDoMes(g.data) === 15),
     (g) => g.valor
   );
-  const recebidoDia25 = somar(
-    ganhos.filter((g) => diaDoMes(g.data) === 25),
+  const recebidoDia30 = somar(
+    ganhos.filter((g) => diaDoMes(g.data) === 30),
     (g) => g.valor
   );
-  const gastoDia10 = somar(
-    gastos.filter((g) => g.salarioResponsavel === "dia10" && g.pago),
+  const gastoDia15 = somar(
+    gastos.filter((g) => g.salarioResponsavel === "dia15" && g.pago),
     (g) => g.valor
   );
-  const gastoDia25 = somar(
-    gastos.filter((g) => g.salarioResponsavel === "dia25" && g.pago),
+  const gastoDia30 = somar(
+    gastos.filter((g) => g.salarioResponsavel === "dia30" && g.pago),
     (g) => g.valor
   );
 
-  if (recebidoDia10 + recebidoDia25 + gastoDia10 + gastoDia25 === 0) {
+  if (recebidoDia15 + recebidoDia30 + gastoDia15 + gastoDia30 === 0) {
     container.innerHTML = vazioHtml("Sem dados suficientes ainda.");
     return;
   }
 
   const categorias = [
-    { rotulo: "Dia 10", valores: [recebidoDia10, gastoDia10] },
-    { rotulo: "Dia 25", valores: [recebidoDia25, gastoDia25] },
+    { rotulo: "Dia 15", valores: [recebidoDia15, gastoDia15] },
+    { rotulo: "Dia 30", valores: [recebidoDia30, gastoDia30] },
   ];
   const series = [
     { nome: "Recebido", cor: "var(--cor-grafico-positivo)" },

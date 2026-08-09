@@ -189,6 +189,38 @@
   box-shadow: 0 0 6px var(--cor-acento-fraco);
 }
 
+/* Indicador de ritmo de consumo (página Ticket Alimentação/benefícios) */
+.ritmo-status--verde {
+  color: var(--cor-positivo);
+}
+
+.ritmo-status--amarelo {
+  color: var(--cor-alerta);
+}
+
+.ritmo-status--vermelho {
+  color: var(--cor-negativo);
+}
+
+/* Barra de progresso (utilização de carteira de benefício) */
+.barra-progresso {
+  height: 10px;
+  background-color: var(--cor-superficie-alta);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.barra-progresso__preenchimento {
+  height: 100%;
+  background: var(--gradiente-acento);
+  border-radius: 999px;
+  transition: width var(--transicao-suave);
+}
+
+.barra-progresso__preenchimento--excedido {
+  background: var(--cor-negativo);
+}
+
 /* Grade de duas colunas (dashboard) */
 .grade-duas-colunas {
   display: grid;
@@ -658,6 +690,12 @@
   outline: none;
   border-color: var(--cor-acento);
   box-shadow: var(--sombra-brilho-acento);
+}
+
+.campo__aviso {
+  font-size: 12px;
+  color: var(--cor-acento);
+  margin: 0;
 }
 
 .campo textarea {

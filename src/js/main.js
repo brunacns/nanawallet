@@ -1,7 +1,8 @@
-import { armazenamentoAtivo, categoriasService } from "./servicos/index.js";
+import { armazenamentoAtivo, categoriasService, carteirasService, carteiraEntradasService } from "./servicos/index.js";
 import { configurarNavegacao } from "./navegacao.js";
 import { iniciarPaginaGanhos } from "./modulos/ganhos.js";
 import { iniciarPaginaGastos } from "./modulos/gastos.js";
+import { iniciarPaginaTicketAlimentacao } from "./modulos/ticketAlimentacao.js";
 import { iniciarParcelamentos } from "./modulos/parcelamentos.js";
 import { iniciarPaginaLembretes } from "./modulos/lembretes.js";
 import { iniciarDashboard } from "./modulos/dashboard.js";
@@ -50,11 +51,14 @@ async function iniciarApp() {
     return;
   }
 
-  // Carregada antes das telas que exibem categoria (gastos, dashboard,
-  // gráficos, histórico) precisarem dela para renderizar.
+  // Carregadas antes das telas que exibem categoria/carteira (gastos,
+  // dashboard, gráficos, histórico) precisarem delas para renderizar.
   await iniciarEtapa("categorias", () => categoriasService.listar());
+  await iniciarEtapa("carteiras", () => carteirasService.listar());
+  await iniciarEtapa("movimentações de carteira", () => carteiraEntradasService.listar());
   await iniciarEtapa("ganhos", iniciarPaginaGanhos);
   await iniciarEtapa("gastos", iniciarPaginaGastos);
+  await iniciarEtapa("ticket alimentação", iniciarPaginaTicketAlimentacao);
   await iniciarEtapa("parcelamentos", iniciarParcelamentos);
   await iniciarEtapa("lembretes", iniciarPaginaLembretes);
   await iniciarEtapa("dashboard", iniciarDashboard);

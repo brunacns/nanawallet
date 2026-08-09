@@ -49,7 +49,7 @@ async function salvarFormulario(evento) {
 
   for (let numero = 1; numero <= quantidade; numero++) {
     // O mês de referência do salário de cada parcela é sempre o próprio mês
-    // dela (parcela de agosto -> salário do dia 10/25 de agosto), automático.
+    // dela (parcela de agosto -> salário do dia 15/30 de agosto), automático.
     const data = somarMeses(dataPrimeiraParcela, numero - 1);
     novosGastos.push({
       id: crypto.randomUUID(),
@@ -63,6 +63,7 @@ async function salvarFormulario(evento) {
       pago: false,
       parcela: { numero, total: quantidade, parcelamentoId },
       categoriaId,
+      carteiraId: null,
       observacoes,
     });
   }

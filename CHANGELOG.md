@@ -12,6 +12,27 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.10.0] - 2026-08-09
+
+- **Novo**: card "Próximo recebimento" na página Ticket Alimentação — valor, data prevista e dias restantes, só aparece para um benefício ativo e recorrente (nunca mostra uma previsão falsa).
+- **Novo**: indicador de ritmo de consumo (🟢 dentro do ritmo / 🟡 gastando acima do esperado / 🔴 saldo pode acabar antes do próximo crédito), com gasto médio diário e valor disponível por dia. Fica oculto quando não há dados suficientes para um cálculo confiável.
+- Fecha o sistema de Ticket Alimentação/benefícios (4 etapas): carteiras separadas do dinheiro principal, página com saldo/histórico/configuração, recorrência automática do crédito, saldo acumulado entre meses, e agora ritmo de consumo + próximo recebimento.
+
+## [1.9.0] - 2026-08-09
+
+- **Novo**: geração automática do crédito mensal do Ticket Alimentação (quando "Recorrente" está ativo) — gera sozinha a entrada de cada mês que ainda não tiver nenhuma (manual ou automática), sem duplicar nada, ajustando o dia de recebimento para o último dia válido do mês quando necessário.
+- **Novo**: saldo acumulado de verdade entre os meses (quando "Acumula saldo" está ativo) — o que sobrar de um mês passa para o seguinte, com a composição ("vindo do mês anterior" + "recebido este mês") mostrada claramente na página Ticket Alimentação. O card "Benefícios" do Dashboard usa o mesmo cálculo.
+
+## [1.8.0] - 2026-08-09
+
+- **Novo**: sistema de carteiras (Etapa 1) — gastos agora podem ser atribuídos a uma carteira (Conta bancária, Dinheiro, ou uma carteira de benefício como Ticket Alimentação). Um gasto pago com uma carteira de benefício **nunca** conta como despesa financeira principal: fica de fora do total/tabela de Gastos, do Dashboard (total gasto, saldo do salário, diagnósticos), dos 6 gráficos, do Histórico e do resumo de texto para IA.
+- **Novo**: página "Ticket Alimentação" (Etapa 2) — saldo atual, recebido no mês, gasto no mês, percentual utilizado (com barra de progresso), gastos por categoria, lista de movimentações do mês (recebimentos e gastos), configuração do benefício (valor mensal, dia de recebimento, recorrente, acumula saldo, ativo) e lançamento manual de recebimentos. Card "Benefícios" novo no Dashboard principal, mostrando o saldo de cada benefício ativo, sempre separado dos totais financeiros.
+- Ainda não implementado (próximas etapas): geração automática do crédito mensal, saldo acumulado entre meses, indicador de ritmo de consumo e previsão do próximo recebimento.
+
+## [1.7.0] - 2026-07-27
+
+- **Alterado**: os dois dias de salário usados em todo o app (Ganhos, Gastos, Dashboard, gráfico "Comparação entre salários" e exportação em texto) mudaram de **dia 10 / dia 25** para **dia 15 / dia 30**. Gastos salvos antes desta versão com o salário responsável antigo (`"dia10"`/`"dia25"`) são convertidos automaticamente ao carregar (`"dia15"`/`"dia30"`), sem precisar editar nada manualmente. Ganhos continuam agrupados pelo dia real da própria data (não por um campo salvo) — um ganho recorrente cadastrado com data no dia 10/25 não migra sozinho para o dia 15/30; para continuar aparecendo no grupo certo, a data dele precisa ser ajustada manualmente (ou a próxima ocorrência gerada automaticamente já no novo dia).
+
 ## [1.6.1] - 2026-07-25
 
 - **Novo**: campo "Observações" também em Lembretes (já existia em ganhos, gastos e parcelamentos desde a 1.6.0).

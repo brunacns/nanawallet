@@ -4,11 +4,11 @@ import * as armazenamento from "../dados/armazenamento.js";
 // Coleções particionadas por mês (ver Etapa de "nova arquitetura de
 // armazenamento") — precisam do índice interno id -> anoMes (ver abaixo).
 const COLECOES_PARTICIONADAS = new Set(["gastos", "ganhos", "lembretes"]);
-// "metas" e "categorias" também são coleções (lista de itens com id) do
-// ponto de vista de quem usa StorageService, mas por baixo continuam um
-// arquivo único (não crescem por mês como gastos/ganhos/lembretes) — ver
-// dados/armazenamento.js.
-const COLECOES_ARQUIVO_UNICO = new Set(["metas", "categorias"]);
+// "metas", "categorias", "carteiras" e "carteiraMovimentacoes" também são
+// coleções (lista de itens com id) do ponto de vista de quem usa
+// StorageService, mas por baixo continuam um arquivo único (não crescem por
+// mês como gastos/ganhos/lembretes) — ver dados/armazenamento.js.
+const COLECOES_ARQUIVO_UNICO = new Set(["metas", "categorias", "carteiras", "carteiraMovimentacoes"]);
 // "configuracoes" NÃO é uma coleção (não é uma lista de itens com id, é um
 // objeto único de preferências) — por isso usa lerConfig/salvarConfig, não
 // listar/salvar/remover.
@@ -153,12 +153,17 @@ export class ArmazenamentoLocalService extends StorageService {
   async _lerArquivoDaColecao(colecao) {
     if (colecao === "metas") return armazenamento.lerMetas();
     if (colecao === "categorias") return armazenamento.lerCategorias();
+    if (colecao === "carteiras") return armazenamento.lerCarteiras();
+    if (colecao === "carteiraMovimentacoes") return armazenamento.lerCarteiraMovimentacoes();
     throw new Error(`Coleção de arquivo único desconhecida: "${colecao}".`);
   }
 
   async _salvarArquivoDaColecao(colecao, itens) {
     if (colecao === "metas") return armazenamento.salvarMetas({ versao: 1, metas: itens });
     if (colecao === "categorias") return armazenamento.salvarCategorias({ versao: 1, categorias: itens });
+    if (colecao === "carteiras") return armazenamento.salvarCarteiras({ versao: 1, carteiras: itens });
+    if (colecao === "carteiraMovimentacoes")
+      return armazenamento.salvarCarteiraMovimentacoes({ versao: 1, carteiraMovimentacoes: itens });
     throw new Error(`Coleção de arquivo único desconhecida: "${colecao}".`);
   }
 

@@ -1,9 +1,20 @@
-import { lerConfiguracoes, salvarConfiguracoes, salvarMetas, salvarCategorias, salvarMes, salvarColecaoCompleta, apagarTodosOsDados } from "../dados/armazenamento.js";
+import {
+  lerConfiguracoes,
+  salvarConfiguracoes,
+  salvarMetas,
+  salvarCategorias,
+  salvarCarteiras,
+  salvarCarteiraMovimentacoes,
+  salvarMes,
+  salvarColecaoCompleta,
+  apagarTodosOsDados,
+} from "../dados/armazenamento.js";
 import { obterGanhos, recarregarGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, recarregarGastos, aoAtualizarGastos } from "./gastos.js";
 import { obterLembretes, recarregarLembretes, aoAtualizarLembretes } from "./lembretes.js";
 import { obterMetas, recarregarMetas, aoAtualizarMetas } from "./metas.js";
-import { categoriasService } from "../servicos/index.js";
+import { categoriasService, carteirasService, carteiraEntradasService } from "../servicos/index.js";
+import { filtrarGastosPrincipais } from "../carteiras.js";
 import { formatarMoeda, formatarData, carimboDataHora, escaparHtml } from "../utils/formatadores.js";
 import { rotuloMesLongo } from "../utils/datas.js";
 
@@ -22,6 +33,8 @@ export async function iniciarExportacao() {
   aoAtualizarLembretes(listarBackupsAutomaticos);
   aoAtualizarMetas(listarBackupsAutomaticos);
   categoriasService.aoAtualizar(listarBackupsAutomaticos);
+  carteirasService.aoAtualizar(listarBackupsAutomaticos);
+  carteiraEntradasService.aoAtualizar(listarBackupsAutomaticos);
 
   await listarBackupsAutomaticos();
 }
@@ -53,6 +66,8 @@ async function exportarJson() {
     lembretes: obterLembretes(),
     metas: obterMetas(),
     categorias: categoriasService.obterTodos(),
+    carteiras: carteirasService.obterTodos(),
+    carteiraMovimentacoes: carteiraEntradasService.obterTodos(),
     configuracoes: dadosConfiguracoes.configuracoes,
   };
 
@@ -71,7 +86,11 @@ async function exportarTexto() {
   });
   if (!caminho) return;
 
-  const texto = gerarTextoParaIA(obterGanhos(), obterGastos(), obterLembretes(), obterMetas());
+  // Gastos pagos com uma carteira de benefício (ex: Ticket Alimentação) não
+  // são "financeiro principal" — excluídos do resumo (regra de ouro do
+  // sistema de carteiras). O benefício ganha sua própria seção no resumo
+  // numa etapa futura, quando tiver saldo/histórico próprios.
+  const texto = gerarTextoParaIA(obterGanhos(), filtrarGastosPrincipais(obterGastos()), obterLembretes(), obterMetas());
   await fs.writeTextFile(caminho, texto);
   mostrarStatus(`Exportado com sucesso em: ${caminho}`);
 }
@@ -116,7 +135,7 @@ function gerarTextoParaIA(ganhos, gastos, lembretes, metas) {
       .sort((a, b) => a.data.localeCompare(b.data))
       .forEach((g) => {
         const tipo = g.fixo ? "fixo" : g.parcela ? `parcela ${g.parcela.numero}/${g.parcela.total}` : "único";
-        const salario = g.salarioResponsavel === "dia25" ? "salário dia 25" : "salário dia 10";
+        const salario = g.salarioResponsavel === "dia30" ? "salário dia 30" : "salário dia 15";
         const status = g.pago ? "pago" : "pendente";
         linhas.push(`- ${formatarData(g.data)} | ${g.titulo} | ${formatarMoeda(g.valor)} | ${status} | ${tipo} | ${salario}`);
       });
@@ -187,6 +206,8 @@ async function criarBackupManual() {
     lembretes: obterLembretes(),
     metas: obterMetas(),
     categorias: categoriasService.obterTodos(),
+    carteiras: carteirasService.obterTodos(),
+    carteiraMovimentacoes: carteiraEntradasService.obterTodos(),
   };
   for (const [chave, itens] of Object.entries(colecoes)) {
     const destino = await path.join(caminhoBackup, `${chave}.json`);
@@ -250,10 +271,12 @@ const ROTULOS_COLECAO = {
   lembretes: "Lembretes",
   metas: "Metas",
   categorias: "Categorias",
+  carteiras: "Carteiras",
+  carteiraMovimentacoes: "Movimentações de carteira",
   configuracoes: "Configurações",
 };
 const COLECOES_VALIDAS = Object.keys(ROTULOS_COLECAO);
-const COLECOES_ARQUIVO_UNICO = ["configuracoes", "metas", "categorias"];
+const COLECOES_ARQUIVO_UNICO = ["configuracoes", "metas", "categorias", "carteiras", "carteiraMovimentacoes"];
 
 // Nome do arquivo de backup automático: "<identificador>__<carimbo>.json",
 // onde identificador é "configuracoes" (arquivo único) ou "<colecao>-<AAAA-MM>"
@@ -298,6 +321,10 @@ async function restaurarBackupAutomatico(nomeArquivo) {
     await salvarMetas(conteudo);
   } else if (colecao === "categorias") {
     await salvarCategorias(conteudo);
+  } else if (colecao === "carteiras") {
+    await salvarCarteiras(conteudo);
+  } else if (colecao === "carteiraMovimentacoes") {
+    await salvarCarteiraMovimentacoes(conteudo);
   } else {
     await salvarMes(colecao, anoMes, conteudo[colecao] || []);
   }
@@ -342,14 +369,21 @@ async function restaurarDeArquivo() {
   if (dados.configuracoes) {
     await salvarConfiguracoes({ versao: 1, configuracoes: dados.configuracoes });
   }
-  // "metas" e "categorias" são opcionais na validação acima: exportações
-  // feitas antes de cada funcionalidade existir não têm esses campos, e
-  // restaurá-las não deve apagar os dados atuais do usuário nessas coleções.
+  // "metas", "categorias", "carteiras" e "carteiraMovimentacoes" são
+  // opcionais na validação acima: exportações feitas antes de cada
+  // funcionalidade existir não têm esses campos, e restaurá-las não deve
+  // apagar os dados atuais do usuário nessas coleções.
   if (Array.isArray(dados.metas)) {
     await salvarMetas({ versao: 1, metas: dados.metas });
   }
   if (Array.isArray(dados.categorias)) {
     await salvarCategorias({ versao: 1, categorias: dados.categorias });
+  }
+  if (Array.isArray(dados.carteiras)) {
+    await salvarCarteiras({ versao: 1, carteiras: dados.carteiras });
+  }
+  if (Array.isArray(dados.carteiraMovimentacoes)) {
+    await salvarCarteiraMovimentacoes({ versao: 1, carteiraMovimentacoes: dados.carteiraMovimentacoes });
   }
 
   await recarregarGanhos();
@@ -357,6 +391,8 @@ async function restaurarDeArquivo() {
   await recarregarLembretes();
   await recarregarMetas();
   await categoriasService.recarregar();
+  await carteirasService.recarregar();
+  await carteiraEntradasService.recarregar();
 
   mostrarStatus("Restauração concluída com sucesso.");
 }
@@ -365,7 +401,7 @@ async function restaurarDeArquivo() {
 
 async function tratarApagarTudo() {
   const primeiraConfirmacao = confirm(
-    "Isso vai apagar PERMANENTEMENTE todos os ganhos, gastos, lembretes e metas cadastrados (de todos os meses). As configurações não são afetadas.\n\nUm backup completo é criado automaticamente antes, mas essa ação não pode ser desfeita pela interface. Deseja continuar?"
+    "Isso vai apagar PERMANENTEMENTE todos os ganhos, gastos, lembretes, metas e movimentações de carteira de benefício cadastrados (de todos os meses). As configurações e as carteiras cadastradas não são afetadas.\n\nUm backup completo é criado automaticamente antes, mas essa ação não pode ser desfeita pela interface. Deseja continuar?"
   );
   if (!primeiraConfirmacao) return;
 
@@ -378,6 +414,7 @@ async function tratarApagarTudo() {
   await recarregarGastos();
   await recarregarLembretes();
   await recarregarMetas();
+  await carteiraEntradasService.recarregar();
   await listarBackupsAutomaticos();
 
   mostrarStatus("Todos os dados foram apagados. Um backup do estado anterior está disponível em \"Backups automáticos recentes\".");
@@ -389,5 +426,7 @@ async function recarregarModulo(chave) {
   else if (chave === "lembretes") await recarregarLembretes();
   else if (chave === "metas") await recarregarMetas();
   else if (chave === "categorias") await categoriasService.recarregar();
+  else if (chave === "carteiras") await carteirasService.recarregar();
+  else if (chave === "carteiraMovimentacoes") await carteiraEntradasService.recarregar();
   // "configuracoes" ainda não tem tela própria (Etapa 4 manteve vazio).
 }

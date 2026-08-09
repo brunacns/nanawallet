@@ -93,13 +93,13 @@ function renderizar() {
 
 function agruparPorDia(lista) {
   const ordenarPorData = (a, b) => a.data.localeCompare(b.data);
-  const dia10 = lista.filter((g) => diaDoMes(g.data) === 10).sort(ordenarPorData);
-  const dia25 = lista.filter((g) => diaDoMes(g.data) === 25).sort(ordenarPorData);
-  const outros = lista.filter((g) => ![10, 25].includes(diaDoMes(g.data))).sort(ordenarPorData);
+  const dia15 = lista.filter((g) => diaDoMes(g.data) === 15).sort(ordenarPorData);
+  const dia30 = lista.filter((g) => diaDoMes(g.data) === 30).sort(ordenarPorData);
+  const outros = lista.filter((g) => ![15, 30].includes(diaDoMes(g.data))).sort(ordenarPorData);
 
   return [
-    { titulo: "Recebidos no dia 10", itens: dia10 },
-    { titulo: "Recebidos no dia 25", itens: dia25 },
+    { titulo: "Recebidos no dia 15", itens: dia15 },
+    { titulo: "Recebidos no dia 30", itens: dia30 },
     { titulo: "Outras datas", itens: outros },
   ];
 }

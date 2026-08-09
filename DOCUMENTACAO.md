@@ -76,7 +76,7 @@ financeiro/
 |---|---|
 | `dados/armazenamento.js` | Único módulo que sabe onde os arquivos JSON ficam e como ler/gravar. Toda gravação (`salvar`) aciona um backup automático antes de sobrescrever. |
 | `dados/backup.js` | Copia o arquivo atual para `backups/` com carimbo de data/hora, e apaga os mais antigos além do limite (15 por arquivo, configurável em `config.js`). |
-| `modulos/ganhos.js` | CRUD de ganhos, filtrado pelo mês selecionado. Agrupa visualmente por dia do recebimento (dia 10 / dia 25 / outras datas). Gera automaticamente a ocorrência do mês para ganhos fixos. Caixinha na lista alterna "recebido" sem abrir modal. |
+| `modulos/ganhos.js` | CRUD de ganhos, filtrado pelo mês selecionado. Agrupa visualmente por dia do recebimento (dia 15 / dia 30 / outras datas). Gera automaticamente a ocorrência do mês para ganhos fixos. Caixinha na lista alterna "recebido" sem abrir modal. |
 | `modulos/gastos.js` | CRUD de gastos, filtrado pelo mês selecionado (por `mesReferencia`, não pela `data`). Ordena fixos primeiro, depois por data. Gera automaticamente a ocorrência do mês para gastos fixos. Caixinha na lista alterna "pago" sem abrir modal. |
 | `modulos/parcelamentos.js` | Não é uma coleção própria — gera vários gastos de uma vez (um por parcela) dentro de `gastos.json`, usando `gastos.js` por baixo. Cada parcela já nasce com `mesReferencia` = seu próprio mês. Mostra o resumo "Parcelamentos ativos". |
 | `modulos/lembretes.js` | CRUD de lembretes com valor previsto. O valor nunca vira gasto pago — só entra na "Previsão futura" do dashboard enquanto não estiver concluído. |

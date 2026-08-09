@@ -4,10 +4,12 @@ import { obterLembretes, aoAtualizarLembretes } from "./lembretes.js";
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { diaDoMes, mesDeData, mesAnterior, rotuloMesLongo } from "../utils/datas.js";
 import { obterCategoriaPorId } from "../categorias.js";
+import { filtrarGastosPrincipais, obterCarteiras, calcularSaldoCarteira } from "../carteiras.js";
+import { carteirasService, carteiraEntradasService } from "../servicos/index.js";
 import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtualizarMes } from "../estadoMes.js";
 
 // Limites usados para decidir a cor de alerta de um saldo, em relação
-// ao total recebido correspondente (geral, ou só do dia 10 / dia 25).
+// ao total recebido correspondente (geral, ou só do dia 15 / dia 30).
 const LIMITE_SALDO_LARANJA = 0.1; // abaixo de 10% do recebido -> laranja
 const LIMITE_SALDO_AMARELO = 0.25; // abaixo de 25% do recebido -> amarelo
 
@@ -24,6 +26,8 @@ export function iniciarDashboard() {
   aoAtualizarGanhos(renderizar);
   aoAtualizarGastos(renderizar);
   aoAtualizarLembretes(renderizar);
+  carteirasService.aoAtualizar(renderizar);
+  carteiraEntradasService.aoAtualizar(renderizar);
   aoAtualizarMes(renderizar);
   renderizar();
 }
@@ -33,7 +37,10 @@ function renderizar() {
   document.getElementById("dash-mes-rotulo").textContent = rotuloMesLongo(mes);
 
   const ganhos = obterGanhos().filter((g) => mesDeData(g.data) === mes);
-  const gastos = obterGastos().filter((g) => g.mesReferencia === mes);
+  // Gastos pagos com uma carteira de benefício (ex: Ticket Alimentação) não
+  // são "financeiro principal" — excluídos de todos os totais/diagnósticos
+  // deste dashboard (regra de ouro do sistema de carteiras).
+  const gastos = filtrarGastosPrincipais(obterGastos().filter((g) => g.mesReferencia === mes));
   const lembretes = obterLembretes().filter((l) => mesDeData(l.data) === mes);
 
   const totalRecebido = somar(ganhos, (g) => g.valor);
@@ -48,26 +55,27 @@ function renderizar() {
   const saldoRestante = totalRecebido - totalGasto;
   const saldoPrevisto = saldoRestante - totalLembretesPendentes;
 
-  const recebidoDia10 = somar(ganhos.filter((g) => diaDoMes(g.data) === 10), (g) => g.valor);
-  const recebidoDia25 = somar(ganhos.filter((g) => diaDoMes(g.data) === 25), (g) => g.valor);
-  const gastoDia10 = somar(gastos.filter((g) => g.salarioResponsavel === "dia10"), (g) => g.valor);
-  const gastoDia25 = somar(gastos.filter((g) => g.salarioResponsavel === "dia25"), (g) => g.valor);
-  const saldoDia10 = recebidoDia10 - gastoDia10;
-  const saldoDia25 = recebidoDia25 - gastoDia25;
+  const recebidoDia15 = somar(ganhos.filter((g) => diaDoMes(g.data) === 15), (g) => g.valor);
+  const recebidoDia30 = somar(ganhos.filter((g) => diaDoMes(g.data) === 30), (g) => g.valor);
+  const gastoDia15 = somar(gastos.filter((g) => g.salarioResponsavel === "dia15"), (g) => g.valor);
+  const gastoDia30 = somar(gastos.filter((g) => g.salarioResponsavel === "dia30"), (g) => g.valor);
+  const saldoDia15 = recebidoDia15 - gastoDia15;
+  const saldoDia30 = recebidoDia30 - gastoDia30;
 
   document.getElementById("dash-total-recebido").textContent = formatarMoeda(totalRecebido);
   document.getElementById("dash-total-gasto").textContent = formatarMoeda(totalGasto);
   document.getElementById("dash-reservado-lembretes").textContent = formatarMoeda(totalLembretesPendentes);
 
   atualizarCartaoSaldo("dash-saldo-restante", saldoRestante, totalRecebido);
-  atualizarCartaoSaldo("dash-saldo-dia10", saldoDia10, recebidoDia10);
-  atualizarCartaoSaldo("dash-saldo-dia25", saldoDia25, recebidoDia25);
+  atualizarCartaoSaldo("dash-saldo-dia15", saldoDia15, recebidoDia15);
+  atualizarCartaoSaldo("dash-saldo-dia30", saldoDia30, recebidoDia30);
   atualizarCartaoSaldo("dash-saldo-previsto", saldoPrevisto, totalRecebido);
 
   renderizarDiagnosticos({ mes, gastos, totalRecebido, totalGasto });
   renderizarInsightsCategoria(gastos, totalGasto);
   renderizarProximosGastos(gastos);
   renderizarProximosLembretes(lembretes);
+  renderizarBeneficios(mes);
 }
 
 function somar(lista, seletor) {
@@ -168,7 +176,7 @@ function diagnosticoAumentoDeGastos(mes, gastoMesAtual) {
 }
 
 function obterGastosDoMesGlobal(mes) {
-  return obterGastos().filter((g) => g.mesReferencia === mes);
+  return filtrarGastosPrincipais(obterGastos().filter((g) => g.mesReferencia === mes));
 }
 
 function diagnosticoExcessoDeParcelamentos(gastos, totalRecebido) {
@@ -293,4 +301,38 @@ function renderizarProximosGastos(gastosDoMes) {
 
 function renderizarProximosLembretes(lembretesDoMes) {
   renderizarListaProxima("dashboard-proximos-lembretes", lembretesDoMes, (l) => !l.concluido, "Nenhum lembrete pendente neste mês.");
+}
+
+// Seção "Benefícios": mostra o saldo de cada carteira de benefício ativa
+// (ex: Ticket Alimentação), separado por completo do dinheiro principal —
+// nunca somado a nenhum dos totais/cartões acima (regra de ouro do sistema
+// de carteiras). Card inteiro fica oculto se não houver nenhuma carteira de
+// benefício ativa, para não mostrar uma seção vazia a quem não usa nenhuma.
+// Mesmo `calcularSaldoCarteira` usado na página própria do Ticket
+// Alimentação (respeita "acumula saldo") — os dois nunca divergem no cálculo.
+function renderizarBeneficios(mes) {
+  const cartao = document.getElementById("dash-cartao-beneficios");
+  const container = document.getElementById("dash-beneficios-conteudo");
+  const beneficios = obterCarteiras().filter((c) => c.tipo === "beneficio" && c.ativa);
+
+  if (beneficios.length === 0) {
+    cartao.hidden = true;
+    return;
+  }
+
+  cartao.hidden = false;
+  const todosGastos = obterGastos();
+  const todasEntradas = carteiraEntradasService.obterTodos();
+
+  container.innerHTML = beneficios
+    .map((carteira) => {
+      const { saldoAtual } = calcularSaldoCarteira(carteira, todasEntradas, todosGastos, mes);
+      return `
+        <li class="lista-simples__item">
+          <span class="lista-simples__titulo">${carteira.emoji} ${escaparHtml(carteira.nome)}</span>
+          <span class="lista-simples__legenda">${formatarMoeda(saldoAtual)}</span>
+        </li>
+      `;
+    })
+    .join("");
 }

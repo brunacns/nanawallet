@@ -37,7 +37,7 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
   - Um **gasto fixo** (ex: aluguel) é um gasto com `"fixo": true` e um `fixoId` (uuid) compartilhado por toda a série. A partir da Etapa 13, o app **gera sozinho** uma nova ocorrência todo mês (mesmo dia, ajustado para meses mais curtos), sempre que o mês atual ou o mês que você está visualizando ainda não tiver uma. Por padrão, editar uma ocorrência afeta só ela; desmarcar "fixo" só impede novas gerações futuras, não apaga as existentes. Ao editar um gasto ou ganho que já faz parte de uma série fixa, o modal oferece a opção **"Aplicar edições às próximas ocorrências desta série"**: título, valor, observações (e, no caso de gastos, categoria e salário responsável) passam a valer para todas as ocorrências FUTURAS da mesma série (data depois da que está sendo editada) e para as novas que ainda serão geradas — as ocorrências já passadas, e a data/mesReferencia/status pago/recebido de cada uma, nunca são alterados por essa opção.
   - Um **parcelamento** (ex: uma compra em 3x) vira várias entradas em `gastos.json`, uma por parcela, todas compartilhando o mesmo `parcelamentoId` dentro do campo `parcela`. Isso permite identificar quais gastos pertencem à mesma compra parcelada. Diferente de "fixo", parcelamentos têm quantidade definida e não geram novas parcelas além das criadas na hora. `categoriaId` e `observacoes` (ambos opcionais) podem ser escolhidos uma vez, no cadastro do parcelamento — e são aplicados a todas as parcelas geradas.
   - **Excluir um gasto/ganho fixo ou uma parcela** pergunta o escopo: "somente esta ocorrência/parcela", "esta e as futuras da mesma série" (por data, incluindo a própria) ou "todas as ocorrências/parcelas". Um gasto/ganho avulso (sem `fixoId` nem `parcela`) continua com a confirmação simples de sempre.
-- **`mesReferencia`** (Etapa 13, só em `gasto`): a data (`data`) de um gasto é quando ele foi feito/vence; `mesReferencia` (`"AAAA-MM"`) é **qual mês do salário** (dia 10 ou dia 25, indicado por `salarioResponsavel`) vai pagar essa conta — podem ser meses diferentes (ex: comprou dia 28/07 mas escolheu pagar com o salário de 10/08). Numa parcela, `mesReferencia` é sempre automaticamente igual ao mês da própria parcela.
+- **`mesReferencia`** (Etapa 13, só em `gasto`): a data (`data`) de um gasto é quando ele foi feito/vence; `mesReferencia` (`"AAAA-MM"`) é **qual mês do salário** (dia 15 ou dia 30, indicado por `salarioResponsavel`) vai pagar essa conta — podem ser meses diferentes (ex: comprou dia 28/07 mas escolheu pagar com o salário de 15/08). Numa parcela, `mesReferencia` é sempre automaticamente igual ao mês da própria parcela.
 - **Mês de exibição (Dashboard/Gastos/Ganhos)**: as três páginas mostram um mês por vez (controlado por `src/js/estadoMes.js`, compartilhado entre elas). Gastos são filtrados por `mesReferencia`; ganhos são filtrados pelo mês da própria `data`.
 - **"Sumir quando pago/recebido"**: um gasto/ganho já marcado como pago/recebido, com data anterior a hoje, some da lista das páginas Gastos/Ganhos (mas continua no arquivo — nada é apagado). Não há como revelá-los de volta nessas duas páginas; a página Histórico mostra todas as transações de qualquer mês/status, incluindo essas.
 
@@ -90,13 +90,14 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
 | `titulo` | string | nome do gasto |
 | `data` | string (`AAAA-MM-DD`) | data do gasto (quando foi feito/vence) |
 | `valor` | number | valor em reais |
-| `salarioResponsavel` | `"dia10"` \| `"dia25"` | qual salário paga essa conta |
-| `mesReferencia` | string (`"AAAA-MM"`) | **mês** desse salário responsável (Etapa 13) — ex: `"dia25"` + `"2026-08"` = "salário do dia 25 de agosto" |
+| `salarioResponsavel` | `"dia15"` \| `"dia30"` | qual salário paga essa conta |
+| `mesReferencia` | string (`"AAAA-MM"`) | **mês** desse salário responsável (Etapa 13) — ex: `"dia30"` + `"2026-08"` = "salário do dia 30 de agosto" |
 | `pago` | boolean | se já foi pago (não afeta mais o cálculo de saldo — ver Dashboard) |
 | `fixo` | boolean | se é um gasto fixo/recorrente |
 | `fixoId` | `null` ou string (uuid) | agrupa as ocorrências de um mesmo gasto fixo (Etapa 13) |
 | `parcela` | `null` ou objeto | preenchido só se for parte de um parcelamento |
 | `categoriaId` | `null` ou string (uuid) | referência a uma categoria em `categorias.json` (sistema de categorias) — `null` = sem categoria |
+| `carteiraId` | `null` ou string (uuid) | referência a uma carteira em `carteiras.json` (sistema de carteiras/benefícios) — `null` = carteira principal, mesmo comportamento de antes |
 | `observacoes` | string | texto livre, opcional |
 
 ```json
@@ -108,7 +109,7 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
       "titulo": "Supermercado",
       "data": "2026-07-15",
       "valor": 342.75,
-      "salarioResponsavel": "dia10",
+      "salarioResponsavel": "dia15",
       "mesReferencia": "2026-07",
       "pago": true,
       "fixo": false,
@@ -122,7 +123,7 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
       "titulo": "Aluguel",
       "data": "2026-07-25",
       "valor": 1200.00,
-      "salarioResponsavel": "dia25",
+      "salarioResponsavel": "dia30",
       "mesReferencia": "2026-07",
       "pago": true,
       "fixo": true,
@@ -136,7 +137,7 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
       "titulo": "Notebook novo",
       "data": "2026-07-28",
       "valor": 500.00,
-      "salarioResponsavel": "dia10",
+      "salarioResponsavel": "dia15",
       "mesReferencia": "2026-08",
       "pago": false,
       "fixo": false,
@@ -153,11 +154,13 @@ Ganhos, gastos e lembretes crescem indefinidamente com o tempo (uma ocorrência 
 }
 ```
 
-**Compatibilidade com dados antigos**: arquivos gravados antes da Etapa 13 não têm `mesReferencia`/`fixoId`/`recebido`/`fixo`. Ao carregar, o app preenche automaticamente: `mesReferencia` = mês da própria `data` do gasto; `fixoId` = `null`; ganhos antigos ganham `recebido: true` (preserva o comportamento anterior, já que antes todo ganho cadastrado era tratado como recebido) e `fixo: false`. Gastos gravados antes do sistema de categorias não têm `categoriaId` — ao carregar, ganham `categoriaId: null` (sem categoria, comportamento equivalente a antes). Itens gravados antes do campo de observações ganham `observacoes: ""` ao carregar. Nada precisa ser feito manualmente.
+**Compatibilidade com dados antigos**: arquivos gravados antes da Etapa 13 não têm `mesReferencia`/`fixoId`/`recebido`/`fixo`. Ao carregar, o app preenche automaticamente: `mesReferencia` = mês da própria `data` do gasto; `fixoId` = `null`; ganhos antigos ganham `recebido: true` (preserva o comportamento anterior, já que antes todo ganho cadastrado era tratado como recebido) e `fixo: false`. Gastos gravados antes do sistema de categorias não têm `categoriaId` — ao carregar, ganham `categoriaId: null` (sem categoria, comportamento equivalente a antes). Gastos gravados antes do sistema de carteiras não têm `carteiraId` — ao carregar, ganham `carteiraId: null` (carteira principal, comportamento equivalente a antes). Itens gravados antes do campo de observações ganham `observacoes: ""` ao carregar. Nada precisa ser feito manualmente.
 
-**Recorrências e categoria/observações**: quando uma nova ocorrência de um gasto ou ganho fixo é gerada automaticamente (ver seção acima), ela herda o `categoriaId` (só gasto) e as `observacoes` da ocorrência anterior, do mesmo jeito que já herda título e valor.
+**Recorrências e categoria/observações**: quando uma nova ocorrência de um gasto ou ganho fixo é gerada automaticamente (ver seção acima), ela herda o `categoriaId`/`carteiraId` (só gasto) e as `observacoes` da ocorrência anterior, do mesmo jeito que já herda título e valor.
 
-**"Aplicar edições às próximas ocorrências"**: ao editar um gasto/ganho que já faz parte de uma série fixa, o checkbox do modal propaga título, valor, observações (e, no caso de gastos, categoria e salário responsável) para as ocorrências FUTURAS da mesma série (data depois da que está sendo editada) — nunca mexe nas já passadas, nem no status pago/recebido/data/mesReferencia de cada uma.
+**"Aplicar edições às próximas ocorrências"**: ao editar um gasto/ganho que já faz parte de uma série fixa, o checkbox do modal propaga título, valor, observações (e, no caso de gastos, categoria, carteira e salário responsável) para as ocorrências FUTURAS da mesma série (data depois da que está sendo editada) — nunca mexe nas já passadas, nem no status pago/recebido/data/mesReferencia de cada uma.
+
+**Gasto pago com uma carteira de benefício** (`carteiraId` aponta para uma carteira `tipo: "beneficio"` em `carteiras.json`, ex: Ticket Alimentação): esse gasto é **excluído de todo cálculo/gráfico/lista "financeiro principal"** — total gasto e saldo do Dashboard, os 6 gráficos, a página Histórico, e o resumo de "GASTOS"/"Saldo restante" da exportação em texto para IA (regra de ouro do sistema de carteiras: dinheiro de benefício não é dinheiro principal). Também não aparece na tabela/total da própria página Gastos (que mostra só financeiro principal) — só fica visível na página do benefício correspondente. Por não ter "salário responsável", `mesReferencia` é sempre igual ao mês da própria `data`, e o formulário força `fixo: false` (a recorrência de um benefício é a do crédito mensal, um conceito separado — ver `carteiras.json` abaixo).
 
 ## `lembretes.json`
 
@@ -260,6 +263,80 @@ Meta é uma **wishlist simples**, sem acompanhamento de progresso — não exist
 
 **Onde a categoria aparece na interface** (implementado): seletor customizado no formulário de gasto (criar/editar), coluna "Categoria" nas tabelas de Gastos e Histórico, filtro por categoria em Gastos e Histórico, e um card "Gastos por categoria" + "Estatísticas por categoria" no Dashboard — todos referentes ao **mês selecionado** (mesmo critério de `mesReferencia` usado no resto do Dashboard/Gastos), não ao histórico completo. Gastos sem `categoriaId` entram nesses cálculos como "Sem categoria" (não são ignorados) — assim os totais mostrados batem com o "Total gasto" do mês.
 
+## `carteiras.json` (sistema de carteiras/benefícios — Ticket Alimentação e futuros benefícios)
+
+Uma carteira representa de onde o dinheiro de um gasto saiu. Carteiras do tipo `"dinheiro"` (ex: Conta bancária, Dinheiro) são só uma forma de organizar/rotular — continuam contando normalmente em "financeiro principal", exatamente como antes deste sistema existir. Carteiras do tipo `"beneficio"` (ex: Ticket Alimentação) são **isoladas por completo** do dinheiro principal: um gasto pago com uma carteira de benefício nunca soma em salário, renda, saldo bancário, gráficos, histórico ou exportação (ver nota na seção `gastos.json` acima) — regra de ouro do sistema, para não confundir dinheiro de benefício com dinheiro de verdade.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | string (uuid) | identificador único, referenciado por `gasto.carteiraId` |
+| `nome` | string | nome da carteira |
+| `tipo` | `"dinheiro"` \| `"beneficio"` | `"dinheiro"` conta como financeiro principal; `"beneficio"` é isolada |
+| `emoji` | string | emoji usado como elemento visual (mesmo padrão de categoria) |
+| `cor` | string (hex) | cor da carteira |
+| `ativa` | boolean | carteiras inativas não aparecem no seletor do formulário de gasto |
+| `beneficio` | `null` ou objeto | só preenchido quando `tipo === "beneficio"` — configuração de recorrência (ver abaixo) |
+
+Quando `tipo === "beneficio"`, o objeto `beneficio` tem:
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `valorMensal` | number | valor do crédito mensal (ex: 990.00) |
+| `diaRecebimento` | number (1-31) | dia do mês em que o benefício é creditado |
+| `recorrente` | boolean | se o crédito mensal é gerado automaticamente todo mês |
+| `acumulaSaldo` | boolean | se o saldo não utilizado passa para o mês seguinte |
+| `ativoDesde` | `null` ou string (`AAAA-MM-DD`) | a partir de quando a recorrência automática gera créditos — gravado sozinho na primeira vez que "recorrente" é ligado, nunca creditando retroativamente meses anteriores a essa data |
+
+```json
+{
+  "versao": 1,
+  "carteiras": [
+    { "id": "...", "nome": "Conta bancária", "tipo": "dinheiro", "emoji": "🏦", "cor": "#9EC5FE", "ativa": true, "beneficio": null },
+    { "id": "...", "nome": "Dinheiro", "tipo": "dinheiro", "emoji": "💵", "cor": "#8FD694", "ativa": true, "beneficio": null },
+    {
+      "id": "...",
+      "nome": "Ticket Alimentação",
+      "tipo": "beneficio",
+      "emoji": "🍽️",
+      "cor": "#F7C873",
+      "ativa": false,
+      "beneficio": { "valorMensal": 990.0, "diaRecebimento": 1, "recorrente": true, "acumulaSaldo": true, "ativoDesde": "2026-08-01" }
+    }
+  ]
+}
+```
+
+**Não é particionado por mês** (mesmo motivo de `metas.json`/`categorias.json`): lista pequena e estável, editada diretamente pelo usuário.
+
+**3 carteiras padrão carregadas automaticamente na primeira inicialização** (arquivo `carteiras.json` ainda não existe): "Conta bancária" e "Dinheiro" (`tipo: "dinheiro"`, ativas) e "Ticket Alimentação" (`tipo: "beneficio"`, criada **inativa** — só passa a aparecer no seletor de carteira do formulário de gasto depois de configurada e ativada na página própria "Ticket Alimentação", implementada na Etapa 2). Instalações já existentes não são afetadas.
+
+**Onde a carteira aparece na interface**: página própria "Ticket Alimentação" (menu lateral) com card de configuração (edita `nome` — fixo —, `beneficio.valorMensal`, `beneficio.diaRecebimento`, `beneficio.recorrente`, `beneficio.acumulaSaldo` e `ativa`), saldo/recebido/gasto do mês selecionado (Etapa 2), barra de progresso de utilização, gastos por categoria e a lista de movimentações do mês (entradas e gastos combinados), geração automática do crédito mensal e saldo acumulado entre meses (Etapa 3), e os cards "Próximo recebimento" e "Ritmo de consumo" (Etapa 4, ver abaixo). O seletor de carteira do formulário de gasto (Etapa 1) só lista carteiras `ativa: true`, repopulado a cada abertura do modal — necessário porque `carteiraId` pode ser ativado depois do app já ter iniciado, na própria página do benefício. Também aparece um card "Benefícios" no Dashboard principal, com o saldo de cada carteira de benefício ativa, claramente separado dos totais de financeiro principal.
+
+**Próximo recebimento e ritmo de consumo (Etapa 4)**: `calcularProximoRecebimento`/`calcularRitmoConsumo` (em `src/js/carteiras.js`) sempre calculam a partir de **hoje** (não do mês navegado na tela — a previsão é sobre o momento real, independente de qual mês está sendo visualizado). "Próximo recebimento" só aparece para uma carteira `ativa` e `recorrente` (sem isso não existe uma data prevista confiável — nunca mostra uma previsão falsa). "Ritmo de consumo" (🟢 dentro do ritmo / 🟡 gastando acima do esperado / 🔴 saldo pode acabar antes do próximo crédito) fica oculto quando não há dados suficientes: benefício não recorrente/inativo, hoje é o próprio dia do crédito (evita divisão por zero), ou ainda não existe nenhuma entrada registrada para servir de início do período de gasto. O "gasto médio diário" é calculado desde a última entrada registrada até hoje; o "valor disponível por dia" usa o saldo **atual** (já considerando acumulado, se houver) dividido pelos dias restantes até o próximo crédito — nunca o valor do próximo crédito, que ainda não chegou.
+
+**Preparado para outros tipos de benefício no futuro** (Vale Cultura, Vale Refeição separado, etc.): `CarteiraService` (em `src/js/servicos/CarteiraService.js`) só herda o CRUD genérico de `ColecaoService`, sem nenhuma lógica específica de Ticket Alimentação — nenhum código do app verifica `nome === "Ticket Alimentação"`, só `tipo === "beneficio"`. Adicionar um novo benefício no futuro é criar uma nova carteira com esse tipo, sem mudar a camada de dados/serviços.
+
+## `carteira_movimentacoes.json` (entradas/créditos de carteiras de benefício)
+
+Guarda só as **entradas** (créditos) de uma carteira de benefício — por exemplo, o crédito mensal do Ticket Alimentação. **Nunca é tratado como um ganho** (regra de ouro do sistema de carteiras: dinheiro de benefício não é renda) — por isso é uma coleção separada de `ganhos.json`, não um `ganho` com uma flag. Gastos feitos com uma carteira de benefício continuam em `gastos.json` normalmente (só marcados com `carteiraId`) — não são duplicados aqui.
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | string (uuid) | identificador único |
+| `carteiraId` | string (uuid) | referência à carteira de benefício creditada |
+| `valor` | number | valor do crédito |
+| `data` | string (`AAAA-MM-DD`) | data do crédito |
+| `automatica` | boolean | se foi gerada sozinha pela recorrência mensal, ou lançada manualmente |
+| `observacoes` | string | texto livre, opcional |
+
+**Não é particionado por mês**: o volume é pequeno (poucos créditos por ano, por carteira de benefício) — mesmo raciocínio de `metas.json`/`categorias.json`.
+
+**Lançamento manual** (card "Lançar recebimento manualmente" na página Ticket Alimentação, Etapa 2) — todo registro criado por essa tela tem `automatica: false`.
+
+**Geração automática (Etapa 3)**: para cada carteira de benefício `ativa` com `beneficio.recorrente: true`, `CarteiraEntradaService.sincronizarEntradas(carteiras, mesAlvo)` (chamado ao abrir a página e sempre que o mês navegado muda, mesmo padrão de `sincronizarRecorrencias` em gastos.js/ganhos.js) gera uma entrada com `automatica: true` para cada mês entre `beneficio.ativoDesde` e `mesAlvo` que ainda não tenha NENHUMA entrada (nem manual, nem automática) — evita duplicar o crédito caso a usuária já tenha lançado manualmente aquele mês. `beneficio.diaRecebimento` é ajustado para o último dia válido do mês quando não existir (ex: dia 31 num mês de 30 dias ou fevereiro) — implementado em `src/js/utils/recorrenciaCarteira.js`, calculado do zero a cada mês (não encadeado a partir da ocorrência anterior), então não sofre do bug de "ficar preso no dia 28" já corrigido na recorrência de gastos/ganhos fixos.
+
+**Saldo acumulado (Etapa 3)**: `calcularSaldoCarteira` (em `src/js/carteiras.js`) decide, a partir de `beneficio.acumulaSaldo`, se o saldo de meses anteriores (tudo antes do mês selecionado) soma ao recebido do mês antes de descontar o gasto (`acumulaSaldo: true`) ou se cada mês começa zerado (`acumulaSaldo: false`, padrão se o campo estiver ausente). Usada tanto pela página Ticket Alimentação quanto pelo card "Benefícios" do Dashboard, para os dois nunca divergirem.
+
 ## `configuracoes.json`
 
 Você não pediu nenhuma configuração específica ainda, então mantive vazio — este arquivo só ganha campos quando houver uma necessidade concreta (ex: dia do mês do salário, tema, etc.):
@@ -273,4 +350,4 @@ Você não pediu nenhuma configuração específica ainda, então mantive vazio 
 
 ## Apagar todos os dados
 
-Página Exportação → "Apagar todos os dados": zera gastos, ganhos, lembretes e metas (todos os meses), mantendo `configuracoes.json` e `categorias.json` intactos (categorias são uma taxonomia/referência, não um registro financeiro do usuário — mesmo raciocínio de não apagar configurações). Pede confirmação dupla e cria um backup automático completo antes de apagar (mesmo mecanismo de `dados/backup.js`), então é reversível pela tela de Exportação → "Backups automáticos recentes" logo em seguida.
+Página Exportação → "Apagar todos os dados": zera gastos, ganhos, lembretes, metas e movimentações de carteira de benefício (`carteira_movimentacoes.json`, todos os meses), mantendo `configuracoes.json`, `categorias.json` e `carteiras.json` intactos (categorias e carteiras são taxonomia/configuração, não um registro financeiro do usuário — mesmo raciocínio de não apagar configurações). Pede confirmação dupla e cria um backup automático completo antes de apagar (mesmo mecanismo de `dados/backup.js`), então é reversível pela tela de Exportação → "Backups automáticos recentes" logo em seguida.
