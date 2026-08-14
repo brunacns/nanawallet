@@ -2,6 +2,8 @@
 // excluído faz parte de uma série de gasto/ganho fixo ou de um parcelamento —
 // a confirmação nativa `confirm()` só tem OK/Cancelar, não dá pra oferecer
 // "só esse / esse e os futuros / todos" nela. Usado por gastos.js e ganhos.js.
+import { prenderFocoNoModal } from "./utils/focoModal.js";
+
 const OPCOES_POR_TIPO = {
   fixo: [
     { valor: "somente", rotulo: "Somente esta ocorrência" },
@@ -37,12 +39,28 @@ export function iniciarConfirmacaoExclusao() {
     const selecionada = document.querySelector('input[name="escopo-exclusao"]:checked');
     fechar(selecionada ? selecionada.value : null);
   });
+  prenderFocoNoModal(document.getElementById("sobreposicao-escopo-exclusao"));
 }
 
 // Pergunta qual o escopo da exclusão. `tipo` é "fixo" ou "parcela" (decide as
 // opções mostradas). Devolve uma Promise que resolve com "somente" | "futuras"
 // | "todas", ou `null` se o usuário cancelar/fechar o modal.
+//
+// Correção (auditoria 2026-08-09, BUG-03): se esta função fosse chamada de
+// novo enquanto uma chamada anterior ainda não tinha sido respondida (ex:
+// clicar "excluir" rapidamente em dois gastos fixos diferentes antes do
+// primeiro modal fechar), `resolverAtual` era simplesmente sobrescrito — a
+// Promise da PRIMEIRA chamada nunca era resolvida nem rejeitada, ficando
+// pendurada para sempre (nem erro, nem exclusão, nem cancelamento). Agora,
+// abrir um novo modal de escopo resolve explicitamente qualquer pedido
+// anterior ainda pendente com `null` (cancelamento implícito) — o mesmo
+// resultado que fechar o modal sem escolher nada já produzia.
 export function perguntarEscopoExclusao({ titulo, tipo }) {
+  if (resolverAtual) {
+    resolverAtual(null);
+    resolverAtual = null;
+  }
+
   const opcoes = OPCOES_POR_TIPO[tipo];
 
   document.getElementById("escopo-exclusao-titulo").textContent = `Excluir "${titulo}"`;

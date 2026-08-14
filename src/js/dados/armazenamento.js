@@ -229,12 +229,20 @@ export async function salvarItensEmLote(colecao, novosItens) {
 // Substitui a coleção inteira (todos os meses) pelo conjunto de itens dado.
 // Usado só em operações de restauração/importação em massa — não para
 // edições do dia a dia, que devem usar `salvarItem`/`removerItem`.
+//
+// Correção (auditoria 2026-08-09, BUG-02): antes, dois itens diferentes com o
+// MESMO id no array de entrada ficavam ambos gravados no shard do mês —
+// `salvarItensEmLote` já deduplicava por id (via Map), mas esta função só
+// empilhava (`push`) sem checar. Um id duplicado então "sumia" da busca por
+// id (`.find` sempre encontra o primeiro), ficando impossível de editar ou
+// excluir pela interface, mas continuando a somar nos totais. Agora as duas
+// funções usam o mesmo critério: por id, o último item do array vence.
 export async function salvarColecaoCompleta(colecao, itens) {
   const grupos = new Map();
   for (const item of itens) {
     const anoMes = resolverAnoMes(colecao, item);
-    if (!grupos.has(anoMes)) grupos.set(anoMes, []);
-    grupos.get(anoMes).push(item);
+    if (!grupos.has(anoMes)) grupos.set(anoMes, new Map());
+    grupos.get(anoMes).set(item.id, item);
   }
 
   // Meses que existiam antes mas não aparecem mais nos itens novos precisam
@@ -244,8 +252,8 @@ export async function salvarColecaoCompleta(colecao, itens) {
   for (const anoMes of mesesExistentes) {
     if (!grupos.has(anoMes)) escritas.push(gravarShard(colecao, anoMes, []));
   }
-  for (const [anoMes, itensDoGrupo] of grupos) {
-    escritas.push(gravarShard(colecao, anoMes, itensDoGrupo));
+  for (const [anoMes, itensPorId] of grupos) {
+    escritas.push(gravarShard(colecao, anoMes, [...itensPorId.values()]));
   }
   await Promise.all(escritas);
 

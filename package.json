@@ -1,13 +1,16 @@
 {
   "name": "financeiro",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "private": true,
   "type": "module",
   "scripts": {
     "tauri": "tauri",
-    "preparar-build": "node scripts/preparar-build.js"
+    "preparar-build": "node scripts/preparar-build.js",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2.0.0"
+    "@tauri-apps/cli": "^2.0.0",
+    "jsdom": "^30.0.1"
   }
 }

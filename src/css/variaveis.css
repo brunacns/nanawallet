@@ -1,14 +1,25 @@
 :root {
-  /* Cores de fundo — preto arroxeado (base "pastel goth"), não cinza neutro */
+  /* ===== Cores — superfícies =====
+     Hierarquia de camadas em vez de "preto + branco": cada nível deve ser um
+     degrau sutil acima do anterior, nunca um salto grande de contraste.
+     fundo (base da janela) → superficie (cartão) → superficie-elevada (cartão
+     em destaque/hover) → superficie-alta (elemento selecionado/preenchido,
+     ex: fundo de input, item de sidebar ativo). */
   --cor-fundo: #14101d;
   --cor-superficie: #1e1728;
+  --cor-superficie-elevada: #231b2f;
   --cor-superficie-alta: #291f36;
   --cor-borda: #3c2f4d;
 
-  /* Texto com leve tom lilás, mantendo contraste alto sobre o fundo escuro */
+  /* Texto com leve tom lilás, mantendo contraste alto sobre o fundo escuro.
+     --cor-texto-fraco foi clareado nesta etapa (de #7c6f92 para #9386a9):
+     o valor antigo dava só 3.4:1 sobre --cor-superficie-alta (abaixo do
+     mínimo WCAG AA de 4.5:1 para texto normal) — usado em estados vazios,
+     chip "sem categoria" e rodapé da sidebar. O novo valor mede 4.6:1 no
+     pior caso (mantendo a mesma família de cor, só mais claro). */
   --cor-texto: #f6f1fb;
   --cor-texto-secundario: #b6a8cc;
-  --cor-texto-fraco: #7c6f92;
+  --cor-texto-fraco: #9386a9;
 
   /* Acento principal: lilás pastel. --cor-rosa é o acento de apoio (gradientes,
      detalhes decorativos), dando o toque "girly" sem depender de uma cor só. */
@@ -40,34 +51,95 @@
   --cor-grafico-negativo: #ea580c;
   --cor-grafico-neutro: #0d9488;
 
-  /* Espaçamento */
+  /* Cores "ambiente" — versões translúcidas do acento/rosa usadas em glow,
+     backdrop e gradientes de fundo decorativos. Antes eram valores rgba()
+     soltos e repetidos em vários arquivos; centralizados aqui para não
+     divergir silenciosamente entre um lugar e outro. */
+  --cor-backdrop: rgba(10, 8, 15, 0.65);
+  --cor-acento-ambiente: rgba(201, 163, 245, 0.12);
+  --cor-rosa-ambiente: rgba(240, 168, 216, 0.08);
+  --cor-borda-acento: rgba(201, 163, 245, 0.18);
+
+  /* ===== Espaçamento =====
+     Escala em progressão ~1.5x-2x. --espaco-2xl existe para respiros maiores
+     entre seções (ex: blocos do dashboard), sem precisar empilhar --espaco-xl. */
   --espaco-xs: 4px;
   --espaco-sm: 8px;
   --espaco-md: 16px;
   --espaco-lg: 24px;
   --espaco-xl: 32px;
+  --espaco-2xl: 48px;
 
-  /* Raio de borda — mais arredondado, para o clima aconchegante ("cozy") */
+  /* ===== Raio de borda =====
+     Primitivos (sm/md/lg) + aliases semânticos, para um componente novo
+     escolher pelo PAPEL ("é um input?") em vez de adivinhar entre sm/md/lg. */
   --raio-sm: 8px;
   --raio-md: 14px;
   --raio-lg: 20px;
+  --raio-pilula: 999px;
+  --raio-input: var(--raio-md);
+  --raio-botao: var(--raio-md);
+  --raio-cartao: var(--raio-lg);
 
-  /* Sombras — com um leve brilho lilás/rosa em vez de preto puro */
+  /* ===== Sombras =====
+     Com um leve brilho lilás/rosa em vez de preto puro. --sombra-logo e
+     --sombra-item-ativo isolam os dois glows decorativos que já existiam
+     soltos em layout.css, para não haver dois valores de brilho ligeiramente
+     diferentes por engano no futuro. */
   --sombra-suave: 0 2px 12px rgba(10, 8, 15, 0.4), 0 0 0 1px rgba(201, 163, 245, 0.05);
   --sombra-media: 0 12px 32px rgba(10, 8, 15, 0.5), 0 0 24px rgba(201, 163, 245, 0.12);
   --sombra-brilho-acento: 0 0 0 3px var(--cor-acento-fraco);
   --sombra-brilho-rosa: 0 0 24px rgba(240, 168, 216, 0.28);
+  --sombra-logo: 0 0 16px rgba(201, 163, 245, 0.35);
+  --sombra-item-ativo: 0 0 20px rgba(201, 163, 245, 0.18);
+  --sombra-cartao: var(--sombra-suave);
 
-  /* Tipografia */
+  /* ===== Tipografia =====
+     Escala única para toda a interface — 8 degraus, todos referenciados por
+     papel (rótulo, corpo, título de cartão...), não por número de pixels.
+     Antes havia 7 tamanhos (11/12/13/14/15/17/22/26px) escolhidos ad-hoc em
+     cada componente; os mesmos valores viram esta escala nomeada. */
   --fonte: "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  --fonte-tamanho-2xs: 11px; /* texto de eixo/rótulo dentro de gráficos SVG */
+  --fonte-tamanho-xs: 12px; /* legendas, badges, texto auxiliar */
+  --fonte-tamanho-sm: 13px; /* rótulos de campo, texto secundário, botões */
+  --fonte-tamanho-base: 14px; /* corpo de texto padrão, valores de tabela */
+  --fonte-tamanho-md: 15px; /* títulos de cartão */
+  --fonte-tamanho-lg: 17px; /* título de modal, nome da marca na sidebar */
+  --fonte-tamanho-xl: 22px; /* título de página */
+  --fonte-tamanho-2xl: 26px; /* valor financeiro em destaque (cartão de estatística) */
+  --fonte-tamanho-3xl: 34px; /* número "herói" do Dashboard (Saldo restante) — Etapa 4 */
+
+  --peso-regular: 400;
+  --peso-medio: 500;
+  --peso-semi: 600;
+  --peso-negrito: 700;
+
+  --linha-apertada: 1.2; /* títulos e números grandes */
+  --linha-normal: 1.5; /* corpo de texto */
+
+  --letra-apertada-leve: -0.01em; /* h1/h2/h3 genéricos */
+  --letra-apertada: -0.02em; /* números/títulos grandes, dá sensação "premium" */
+  --letra-normal: 0;
+  --letra-espacada: 0.04em; /* rótulos em maiúsculas (ex: cabeçalho de tabela) */
 
   /* Sidebar */
   --largura-sidebar: 240px;
   --largura-sidebar-recolhida: 72px;
 
   /* Transições — curva separada da duração para poder reaproveitar só a
-     curva em `animation` (que já tem sua própria duração no shorthand) */
+     curva em `animation` (que já tem sua própria duração no shorthand).
+     --transicao-lenta é para movimentos maiores (ex: troca de página),
+     onde 150/250ms ficaria brusco demais. */
   --curva-suave: cubic-bezier(0.4, 0, 0.2, 1);
   --transicao-rapida: 150ms ease;
   --transicao-suave: 250ms var(--curva-suave);
+  --transicao-lenta: 400ms var(--curva-suave);
+
+  /* ===== Breakpoints de referência (documentação — CSS puro não permite
+     var() dentro de @media sem um pré-processador, que este projeto não usa
+     de propósito). Mantidos aqui como fonte única da verdade "de leitura":
+     860px = sidebar recolhe para só ícones
+     560px = sidebar vira barra superior horizontal (empilhamento mobile) */
 }

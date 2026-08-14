@@ -3,6 +3,7 @@ import { obterGastos, aoAtualizarGastos } from "./gastos.js";
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { chipCategoria, opcoesFiltroCategoria } from "../categorias.js";
 import { filtrarGastosPrincipais } from "../carteiras.js";
+import { debounce } from "../utils/debounce.js";
 
 // Diferente de Dashboard/Gastos/Ganhos (que mostram um mês por vez), o
 // Histórico mostra TODAS as transações já cadastradas, de qualquer mês.
@@ -11,27 +12,57 @@ let filtroStatus = "todos";
 let filtroCategoria = "todas"; // "todas" | "sem" | id de uma categoria
 let termoBusca = "";
 let ordenacao = "data-desc";
+let paginaAtual = 1;
+
+// Depois de muitos anos de uso, a lista pode chegar a milhares de
+// transações — renderizar todas de uma vez via innerHTML fica cada vez mais
+// lento (é só HTML puro, sem virtualização). Paginar em blocos de 50 mantém
+// o tempo de renderização constante independente do total cadastrado, sem
+// mudar nada nos totais do topo (que continuam somando TODO o conjunto
+// filtrado, não só a página visível).
+const ITENS_POR_PAGINA = 50;
+
+// Correção (auditoria 2026-08-09, BUG-08): com muitos anos de uso (milhares
+// de transações), cada tecla digitada na busca refazia a tabela inteira via
+// innerHTML — medido em ~108ms por tecla com ~4.800 transações. Um debounce
+// de 200ms deixa de re-renderizar a cada tecla e passa a renderizar só
+// quando a pessoa realmente pausa de digitar.
+const ATRASO_DEBOUNCE_BUSCA_MS = 200;
+const renderizarComDebounce = debounce(() => renderizar(), ATRASO_DEBOUNCE_BUSCA_MS);
 
 export function iniciarHistorico() {
   document.getElementById("historico-busca").addEventListener("input", (evento) => {
     termoBusca = evento.target.value.trim().toLowerCase();
-    renderizar();
+    paginaAtual = 1;
+    renderizarComDebounce();
   });
   document.getElementById("historico-filtro-tipo").addEventListener("change", (evento) => {
     filtroTipo = evento.target.value;
+    paginaAtual = 1;
     renderizar();
   });
   document.getElementById("historico-filtro-status").addEventListener("change", (evento) => {
     filtroStatus = evento.target.value;
+    paginaAtual = 1;
     renderizar();
   });
   document.getElementById("historico-filtro-categoria").innerHTML = opcoesFiltroCategoria();
   document.getElementById("historico-filtro-categoria").addEventListener("change", (evento) => {
     filtroCategoria = evento.target.value;
+    paginaAtual = 1;
     renderizar();
   });
   document.getElementById("historico-ordenar").addEventListener("change", (evento) => {
     ordenacao = evento.target.value;
+    paginaAtual = 1;
+    renderizar();
+  });
+  document.getElementById("historico-pagina-anterior").addEventListener("click", () => {
+    paginaAtual = Math.max(1, paginaAtual - 1);
+    renderizar();
+  });
+  document.getElementById("historico-pagina-seguinte").addEventListener("click", () => {
+    paginaAtual += 1;
     renderizar();
   });
 
@@ -115,13 +146,36 @@ function renderizar() {
 
   const corpo = document.getElementById("historico-corpo-tabela");
   const estadoVazio = document.getElementById("historico-estado-vazio");
+  const paginacao = document.getElementById("historico-paginacao");
 
   if (filtradas.length === 0) {
     corpo.innerHTML = "";
     estadoVazio.hidden = false;
+    paginacao.hidden = true;
+    // Distingue "nada cadastrado ainda" de "nada bate com o filtro atual" —
+    // as duas coisas pareciam a mesma mensagem genérica antes.
+    estadoVazio.textContent =
+      combinarTransacoes().length === 0
+        ? "Nenhuma transação cadastrada ainda — comece em Ganhos ou Gastos."
+        : "Nenhuma transação encontrada com esse filtro.";
   } else {
     estadoVazio.hidden = true;
-    corpo.innerHTML = filtradas.map(linhaTransacao).join("");
+
+    // Corrige a página atual se ela ficou fora do intervalo (ex: um filtro
+    // novo reduziu o total, ou um item foi excluído enquanto a pessoa via a
+    // última página) — sem isso, a tabela podia renderizar vazia mesmo
+    // havendo resultados nas páginas anteriores.
+    const totalPaginas = Math.max(1, Math.ceil(filtradas.length / ITENS_POR_PAGINA));
+    paginaAtual = Math.min(Math.max(1, paginaAtual), totalPaginas);
+
+    const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+    const paginaDeItens = filtradas.slice(inicio, inicio + ITENS_POR_PAGINA);
+    corpo.innerHTML = paginaDeItens.map(linhaTransacao).join("");
+
+    paginacao.hidden = totalPaginas <= 1;
+    document.getElementById("historico-pagina-rotulo").textContent = `Página ${paginaAtual} de ${totalPaginas}`;
+    document.getElementById("historico-pagina-anterior").disabled = paginaAtual <= 1;
+    document.getElementById("historico-pagina-seguinte").disabled = paginaAtual >= totalPaginas;
   }
 }
 

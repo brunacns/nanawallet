@@ -7,6 +7,7 @@ import { obterCategoriaPorId } from "../categorias.js";
 import { filtrarGastosPrincipais, obterCarteiras, calcularSaldoCarteira } from "../carteiras.js";
 import { carteirasService, carteiraEntradasService } from "../servicos/index.js";
 import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtualizarMes } from "../estadoMes.js";
+import { somarGastosDoMes } from "../utils/calculosFinanceiros.js";
 
 // Limites usados para decidir a cor de alerta de um saldo, em relação
 // ao total recebido correspondente (geral, ou só do dia 15 / dia 30).
@@ -46,7 +47,9 @@ function renderizar() {
   const totalRecebido = somar(ganhos, (g) => g.valor);
   // Todos os gastos do mês contam aqui, pagos ou não — a maioria é no cartão
   // de crédito, então o saldo precisa refletir o que ainda vai ser cobrado.
-  const totalGasto = somar(gastos, (g) => g.valor);
+  // Usa a mesma função compartilhada que o gráfico "Evolução do saldo"
+  // (utils/calculosFinanceiros.js) — ver BUG-01 da auditoria de 2026-08-09.
+  const totalGasto = somarGastosDoMes(gastos, mes);
   const totalLembretesPendentes = somar(
     lembretes.filter((l) => !l.concluido),
     (l) => l.valor

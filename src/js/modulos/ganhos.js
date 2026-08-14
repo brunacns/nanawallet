@@ -4,6 +4,9 @@ import { svgEditar, svgExcluir } from "../utils/icones.js";
 import { diaDoMes, mesDeData, chaveMesAtual, hojeISO, rotuloMesLongo } from "../utils/datas.js";
 import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtualizarMes } from "../estadoMes.js";
 import { perguntarEscopoExclusao } from "../confirmacaoExclusao.js";
+import { avisarCampoInvalido, limparValidacao } from "../utils/validacaoFormulario.js";
+import { prenderFocoNoModal } from "../utils/focoModal.js";
+import { mostrarToast } from "../utils/toast.js";
 
 let idEmEdicao = null;
 let fixoIdOriginalEmEdicao = null; // fixoId que o item já tinha ANTES desta edição (null se não fazia parte de uma série)
@@ -31,8 +34,10 @@ export async function iniciarPaginaGanhos() {
   document.getElementById("sobreposicao-ganho").addEventListener("click", (evento) => {
     if (evento.target.id === "sobreposicao-ganho") fecharModal();
   });
+  prenderFocoNoModal(document.getElementById("sobreposicao-ganho"));
   document.getElementById("formulario-ganho").addEventListener("submit", salvarFormulario);
   document.getElementById("ganhos-conteudo").addEventListener("click", tratarCliqueLista);
+  document.getElementById("ganhos-conteudo").addEventListener("keydown", tratarTecladoToggle);
   document.getElementById("ganhos-mes-anterior").addEventListener("click", retrocederMes);
   document.getElementById("ganhos-mes-seguinte").addEventListener("click", avancarMes);
   document.getElementById("ganhos-mes-atual").addEventListener("click", irParaMesAtual);
@@ -80,7 +85,7 @@ function renderizar() {
   container.innerHTML = "";
 
   if (visiveis.length === 0) {
-    const mensagem = doMes.length === 0 ? "Nenhum ganho neste mês." : "Todos os ganhos deste mês já foram recebidos (veja-os na página Histórico).";
+    const mensagem = doMes.length === 0 ? "Nenhum ganho neste mês ainda." : "Todos os ganhos deste mês já foram recebidos (veja-os na página Histórico).";
     container.innerHTML = `<p class="estado-vazio">${mensagem}</p>`;
   } else {
     for (const grupo of agruparPorDia(visiveis)) {
@@ -138,14 +143,21 @@ function linhaGanho(ganho) {
   return `
     <tr data-id="${ganho.id}" class="${ganho.recebido ? "linha-paga" : ""}">
       <td>
-        <div class="caixa-toggle ${ganho.recebido ? "marcada" : ""}" data-acao="alternar-recebido" title="Marcar como recebido" style="cursor: pointer;"></div>
+        <div
+          class="caixa-toggle ${ganho.recebido ? "marcada" : ""}"
+          data-acao="alternar-recebido"
+          role="checkbox"
+          aria-checked="${ganho.recebido}"
+          aria-label="Marcar como recebido"
+          tabindex="0"
+        ></div>
       </td>
       <td>${escaparHtml(ganho.titulo)} ${rotuloTipo}</td>
       <td>${formatarData(ganho.data)}</td>
       <td class="tabela__valor-positivo">${formatarMoeda(ganho.valor)}</td>
       <td class="tabela__acoes">
-        <button type="button" class="botao-icone" data-acao="editar" title="Editar">${svgEditar}</button>
-        <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir" title="Excluir">${svgExcluir}</button>
+        <button type="button" class="botao-icone" data-acao="editar" title="Editar" aria-label="Editar">${svgEditar}</button>
+        <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir" title="Excluir" aria-label="Excluir">${svgExcluir}</button>
       </td>
     </tr>
   `;
@@ -161,6 +173,16 @@ function tratarCliqueLista(evento) {
   else if (alvo.dataset.acao === "alternar-recebido") alternarRecebido(id);
 }
 
+// A caixa de marcar/desmarcar recebido é um <div role="checkbox"> (não um
+// <input> nativo, para reaproveitar o visual de .caixa-toggle) — sem isso,
+// ela só respondia a clique de mouse.
+function tratarTecladoToggle(evento) {
+  if (evento.key !== "Enter" && evento.key !== " ") return;
+  if (!evento.target.closest('[data-acao="alternar-recebido"]')) return;
+  evento.preventDefault();
+  tratarCliqueLista(evento);
+}
+
 async function alternarRecebido(id) {
   const ganho = transacoesGanhos.obterTodos().find((g) => g.id === id);
   if (!ganho) return;
@@ -174,6 +196,9 @@ function abrirModalNovo() {
   document.getElementById("modal-ganho-titulo").textContent = "Novo ganho";
   document.getElementById("formulario-ganho").reset();
   document.getElementById("linha-aplicar-proximas-ganho").hidden = true;
+  // Um ganho novo começa com "Mais opções" fechado — só abre sozinho ao
+  // EDITAR algo que já usa um desses campos (ver abrirModalEdicao).
+  document.getElementById("ganho-mais-opcoes").open = false;
   abrirModal();
 }
 
@@ -194,6 +219,9 @@ function abrirModalEdicao(id) {
   // parte de uma série fixa antes desta edição (senão não há "próximas" ainda).
   document.getElementById("linha-aplicar-proximas-ganho").hidden = !ganho.fixoId;
   document.getElementById("campo-aplicar-proximas-ganho").checked = false;
+  // Editar sempre abre "Mais opções" — o ganho pode já ser fixo ou ter
+  // observações, e isso não deveria ficar escondido atrás de um clique extra.
+  document.getElementById("ganho-mais-opcoes").open = true;
   abrirModal();
 }
 
@@ -210,7 +238,10 @@ function fecharModal() {
 async function salvarFormulario(evento) {
   evento.preventDefault();
 
-  const titulo = document.getElementById("campo-titulo-ganho").value.trim();
+  const campoTitulo = document.getElementById("campo-titulo-ganho");
+  limparValidacao(campoTitulo);
+
+  const titulo = campoTitulo.value.trim();
   const valor = Number(document.getElementById("campo-valor-ganho").value);
   const data = document.getElementById("campo-data-ganho").value;
   const recebido = document.getElementById("campo-recebido-ganho").checked;
@@ -218,9 +249,17 @@ async function salvarFormulario(evento) {
   const observacoes = document.getElementById("campo-observacoes-ganho").value.trim();
   const aplicarProximas = document.getElementById("campo-aplicar-proximas-ganho").checked;
 
-  if (!titulo || !data || !(valor > 0)) return;
+  // Correção (auditoria 2026-08-09, BUG-04): um título só com espaços passa
+  // despercebido pelo `required` do HTML (não é uma string vazia para o
+  // navegador) — sem este aviso explícito, o formulário falhava em silêncio.
+  if (!titulo) {
+    avisarCampoInvalido(campoTitulo, "Preencha o título.");
+    return;
+  }
+  if (!data || !(valor > 0)) return;
 
   let ganhoSalvo;
+  const foiEdicao = Boolean(idEmEdicao);
 
   if (idEmEdicao) {
     ganhoSalvo = transacoesGanhos.obterTodos().find((g) => g.id === idEmEdicao);
@@ -262,6 +301,7 @@ async function salvarFormulario(evento) {
     await transacoesGanhos.salvar(ganhoSalvo);
   }
   fecharModal();
+  mostrarToast(foiEdicao ? "Ganho atualizado" : "Ganho adicionado");
 }
 
 // Ganho fixo oferece escolha de escopo (só este / este e os futuros /
@@ -278,6 +318,7 @@ async function excluirGanho(id) {
 
     if (escopo === "somente") {
       await transacoesGanhos.remover(id);
+      mostrarToast("Ganho excluído", "exclusao");
       return;
     }
     const relacionados = transacoesGanhos.obterTodos().filter((g) => g.fixoId === ganho.fixoId);
@@ -285,6 +326,7 @@ async function excluirGanho(id) {
     for (const g of alvo) {
       await transacoesGanhos.remover(g.id);
     }
+    mostrarToast(alvo.length === 1 ? "Ganho excluído" : `${alvo.length} ganhos excluídos`, "exclusao");
     return;
   }
 
@@ -292,4 +334,5 @@ async function excluirGanho(id) {
   if (!confirmou) return;
 
   await transacoesGanhos.remover(id);
+  mostrarToast("Ganho excluído", "exclusao");
 }

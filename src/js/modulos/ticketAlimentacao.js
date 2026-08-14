@@ -11,6 +11,7 @@ import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.
 import { hojeISO, mesDeData, chaveMesAtual, rotuloMesLongo } from "../utils/datas.js";
 import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtualizarMes } from "../estadoMes.js";
 import { svgEditar, svgExcluir } from "../utils/icones.js";
+import { mostrarToast } from "../utils/toast.js";
 
 export async function iniciarPaginaTicketAlimentacao() {
   document.getElementById("ticket-mes-anterior").addEventListener("click", retrocederMes);
@@ -193,6 +194,7 @@ async function lancarRecebimento(evento) {
   });
 
   document.getElementById("formulario-recebimento-ticket").reset();
+  mostrarToast("Recebimento lançado");
 }
 
 // `disponivel` = saldo do mês anterior (se "acumula saldo") + recebido deste
@@ -285,7 +287,7 @@ function linhaMovimentacao(m) {
         <td>—</td>
         <td class="tabela__valor-positivo">+ ${formatarMoeda(m.valor)}</td>
         <td class="tabela__acoes">
-          <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir-entrada" title="Excluir">${svgExcluir}</button>
+          <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir-entrada" title="Excluir" aria-label="Excluir">${svgExcluir}</button>
         </td>
       </tr>
     `;
@@ -298,8 +300,8 @@ function linhaMovimentacao(m) {
       <td>${chipCategoria(m.categoriaId)}</td>
       <td class="tabela__valor-negativo">- ${formatarMoeda(m.valor)}</td>
       <td class="tabela__acoes">
-        <button type="button" class="botao-icone" data-acao="editar-gasto" title="Editar">${svgEditar}</button>
-        <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir-gasto" title="Excluir">${svgExcluir}</button>
+        <button type="button" class="botao-icone" data-acao="editar-gasto" title="Editar" aria-label="Editar">${svgEditar}</button>
+        <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir-gasto" title="Excluir" aria-label="Excluir">${svgExcluir}</button>
       </td>
     </tr>
   `;
@@ -321,4 +323,5 @@ async function excluirEntrada(id) {
   const confirmou = confirm(`Excluir este recebimento de ${formatarMoeda(entrada.valor)}?`);
   if (!confirmou) return;
   await carteiraEntradasService.remover(id);
+  mostrarToast("Recebimento excluído", "exclusao");
 }

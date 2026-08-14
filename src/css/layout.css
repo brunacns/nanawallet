@@ -28,13 +28,13 @@
   height: 28px;
   border-radius: var(--raio-sm);
   background: var(--gradiente-acento);
-  box-shadow: 0 0 16px rgba(201, 163, 245, 0.35);
+  box-shadow: var(--sombra-logo);
   flex-shrink: 0;
 }
 
 .sidebar__nome {
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: var(--peso-negrito);
+  font-size: var(--fonte-tamanho-lg);
   white-space: nowrap;
   background: var(--gradiente-acento);
   -webkit-background-clip: text;
@@ -61,8 +61,8 @@
   color: var(--cor-texto-secundario);
   padding: var(--espaco-sm) var(--espaco-md);
   border-radius: var(--raio-md);
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--fonte-tamanho-base);
+  font-weight: var(--peso-medio);
   text-align: left;
   transition: background-color var(--transicao-suave), color var(--transicao-suave), transform var(--transicao-suave);
 }
@@ -79,10 +79,16 @@
   transform: translateX(2px);
 }
 
+.sidebar__item:focus-visible {
+  outline: none;
+  color: var(--cor-texto);
+  box-shadow: var(--sombra-brilho-acento);
+}
+
 .sidebar__item.ativo {
   background-color: var(--cor-acento-fraco);
   color: var(--cor-acento);
-  box-shadow: 0 0 20px rgba(201, 163, 245, 0.18);
+  box-shadow: var(--sombra-item-ativo);
 }
 
 .sidebar__item.ativo::before {
@@ -92,13 +98,13 @@
   top: 22%;
   bottom: 22%;
   width: 3px;
-  border-radius: 999px;
+  border-radius: var(--raio-pilula);
   background: var(--gradiente-acento);
 }
 
 .sidebar__rodape {
   padding: var(--espaco-sm);
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-fraco);
   border-top: 1px solid var(--cor-borda);
   margin-top: var(--espaco-md);
@@ -143,7 +149,7 @@
 }
 
 .pagina__titulo {
-  font-size: 22px;
+  font-size: var(--fonte-tamanho-xl);
   background: var(--gradiente-acento);
   -webkit-background-clip: text;
   background-clip: text;
@@ -152,7 +158,7 @@
 
 .pagina__subtitulo {
   color: var(--cor-texto-secundario);
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
   margin-top: var(--espaco-xs);
 }
 
@@ -199,6 +205,10 @@
     border-right: none;
     border-bottom: 1px solid var(--cor-borda);
     overflow-x: auto;
+    /* -webkit-overflow-scrolling:touch dá inércia ao arrastar a barra de
+       navegação num toque real (sem efeito em mouse/trackpad, então não
+       muda nada fora do celular). */
+    -webkit-overflow-scrolling: touch;
   }
 
   .sidebar__marca {
@@ -210,7 +220,31 @@
     flex-direction: row;
   }
 
+  /* Nessa largura, cada item vira só um ícone numa fileira horizontal, então
+     a barrinha lateral esquerda de "ativo" (pensada para uma coluna vertical)
+     ficaria colada no vizinho em vez de indicar o item certo — sinaliza
+     embaixo do próprio ícone, como abas, mesmo padrão do resto do app. */
+  .sidebar__item.ativo::before {
+    left: 18%;
+    right: 18%;
+    top: auto;
+    bottom: -6px;
+    width: auto;
+    height: 3px;
+  }
+
+  /* Sem o rótulo em texto, o alvo de toque de cada ícone fica só do tamanho
+     do ícone + o padding padrão — um pouco mais de padding aqui ajuda
+     especificamente no cenário mais provável de toque real (janela estreita). */
+  .sidebar__item {
+    padding: var(--espaco-sm) var(--espaco-md);
+  }
+
   .sidebar__rodape {
     display: none;
+  }
+
+  .conteudo {
+    padding: var(--espaco-md);
   }
 }

@@ -13,22 +13,22 @@ body {
   /* Brilho ambiente suave nos cantos — só CSS, sem imagens externas — para o
      clima "cozy"/pastel goth, discreto o bastante para não distrair da leitura. */
   background-color: var(--cor-fundo);
-  background-image: radial-gradient(ellipse 900px 550px at 10% -10%, rgba(201, 163, 245, 0.12), transparent 60%),
-    radial-gradient(ellipse 800px 550px at 100% 100%, rgba(240, 168, 216, 0.08), transparent 60%);
+  background-image: radial-gradient(ellipse 900px 550px at 10% -10%, var(--cor-acento-ambiente), transparent 60%),
+    radial-gradient(ellipse 800px 550px at 100% 100%, var(--cor-rosa-ambiente), transparent 60%);
   background-attachment: fixed;
   background-repeat: no-repeat;
   color: var(--cor-texto);
   font-family: var(--fonte);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--fonte-tamanho-base);
+  line-height: var(--linha-normal);
   -webkit-font-smoothing: antialiased;
 }
 
 h1,
 h2,
 h3 {
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-weight: var(--peso-semi);
+  letter-spacing: var(--letra-apertada-leve);
 }
 
 button {
@@ -52,7 +52,7 @@ table {
 
 ::-webkit-scrollbar-thumb {
   background-color: var(--cor-superficie-alta);
-  border-radius: 999px;
+  border-radius: var(--raio-pilula);
   border: 2px solid var(--cor-fundo);
 }
 

@@ -9,6 +9,7 @@ import {
   salvarColecaoCompleta,
   apagarTodosOsDados,
 } from "../dados/armazenamento.js";
+import { validarESanearItens } from "../dados/validacao.js";
 import { obterGanhos, recarregarGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, recarregarGastos, aoAtualizarGastos } from "./gastos.js";
 import { obterLembretes, recarregarLembretes, aoAtualizarLembretes } from "./lembretes.js";
@@ -18,13 +19,40 @@ import { filtrarGastosPrincipais } from "../carteiras.js";
 import { formatarMoeda, formatarData, carimboDataHora, escaparHtml } from "../utils/formatadores.js";
 import { rotuloMesLongo } from "../utils/datas.js";
 
+// Correção (auditoria 2026-08-09, BUG-07): "Apagar tudo", exportar,
+// restaurar e fazer backup manual podiam levar vários segundos com uma base
+// de dados grande, sem nenhum indício visual de que algo estava acontecendo
+// — o botão continuava clicável, sem spinner nem texto de "processando".
+// `comCarregando` desabilita o botão e troca o texto durante a operação
+// (sempre restaurando no `finally`, mesmo se a operação falhar) — genérico o
+// suficiente para envolver qualquer uma das ações abaixo sem duplicar lógica.
+function comCarregando(botao, textoCarregando, fn) {
+  return async (...args) => {
+    const textoOriginal = botao.textContent;
+    botao.disabled = true;
+    botao.textContent = textoCarregando;
+    try {
+      await fn(...args);
+    } finally {
+      botao.disabled = false;
+      botao.textContent = textoOriginal;
+    }
+  };
+}
+
 export async function iniciarExportacao() {
-  document.getElementById("botao-exportar-json").addEventListener("click", exportarJson);
-  document.getElementById("botao-exportar-texto").addEventListener("click", exportarTexto);
-  document.getElementById("botao-backup-manual").addEventListener("click", criarBackupManual);
-  document.getElementById("botao-restaurar-arquivo").addEventListener("click", restaurarDeArquivo);
+  const botaoExportarJson = document.getElementById("botao-exportar-json");
+  const botaoExportarTexto = document.getElementById("botao-exportar-texto");
+  const botaoBackupManual = document.getElementById("botao-backup-manual");
+  const botaoRestaurarArquivo = document.getElementById("botao-restaurar-arquivo");
+  const botaoApagarTudo = document.getElementById("botao-apagar-tudo");
+
+  botaoExportarJson.addEventListener("click", comCarregando(botaoExportarJson, "Exportando…", exportarJson));
+  botaoExportarTexto.addEventListener("click", comCarregando(botaoExportarTexto, "Exportando…", exportarTexto));
+  botaoBackupManual.addEventListener("click", comCarregando(botaoBackupManual, "Criando backup…", criarBackupManual));
+  botaoRestaurarArquivo.addEventListener("click", comCarregando(botaoRestaurarArquivo, "Restaurando…", restaurarDeArquivo));
   document.getElementById("exportacao-backups-conteudo").addEventListener("click", tratarCliqueBackups);
-  document.getElementById("botao-apagar-tudo").addEventListener("click", tratarApagarTudo);
+  botaoApagarTudo.addEventListener("click", comCarregando(botaoApagarTudo, "Apagando…", tratarApagarTudo));
 
   // Toda gravação em ganhos/gastos/lembretes cria um backup automático novo
   // (Etapa 3) — mantém esta lista sempre em dia, mesmo gravado a partir de outra página.
@@ -256,11 +284,26 @@ async function listarBackupsAutomaticos() {
     .join("");
 }
 
-function tratarCliqueBackups(evento) {
+async function tratarCliqueBackups(evento) {
   const botao = evento.target.closest("[data-acao='restaurar-backup']");
   if (!botao) return;
   const nome = botao.closest("[data-nome]").dataset.nome;
-  restaurarBackupAutomatico(nome);
+  // Mesma proteção de "sem feedback durante a operação" do BUG-07 — este
+  // botão nasce dinamicamente a cada renderização da lista, então usa a
+  // mesma ideia de `comCarregando` só que sem precisar restaurar o texto no
+  // fim: a lista inteira é re-renderizada por `listarBackupsAutomaticos()`
+  // (ou por um `return` antecipado se o nome do arquivo for inválido).
+  const textoOriginal = botao.textContent;
+  botao.disabled = true;
+  botao.textContent = "Restaurando…";
+  try {
+    await restaurarBackupAutomatico(nome);
+  } finally {
+    if (document.body.contains(botao)) {
+      botao.disabled = false;
+      botao.textContent = textoOriginal;
+    }
+  }
 }
 
 // ==================== 4. Sistema de restauração ====================
@@ -326,7 +369,18 @@ async function restaurarBackupAutomatico(nomeArquivo) {
   } else if (colecao === "carteiraMovimentacoes") {
     await salvarCarteiraMovimentacoes(conteudo);
   } else {
-    await salvarMes(colecao, anoMes, conteudo[colecao] || []);
+    // Mesma sanitização aplicada em `restaurarDeArquivo` (BUG-02): um backup
+    // automático é normalmente gerado pelo próprio app, mas nada impede o
+    // arquivo de ter sido editado à mão antes de ser restaurado, então passa
+    // pela mesma validação por segurança.
+    const { validos, descartados } = validarESanearItens(colecao, conteudo[colecao] || []);
+    await salvarMes(colecao, anoMes, validos);
+    if (descartados.length > 0) {
+      await recarregarModulo(colecao);
+      await listarBackupsAutomaticos();
+      mostrarStatus(`${rotulo}${descricaoEscopo} restaurado, mas ${descartados.length} item(ns) inválido(s) foram ignorados.`);
+      return;
+    }
   }
 
   await recarregarModulo(colecao);
@@ -358,14 +412,30 @@ async function restaurarDeArquivo() {
     return;
   }
 
+  // Correção (auditoria 2026-08-09, BUG-02): antes, qualquer item de
+  // ganhos/gastos/lembretes era aceito sem checar o formato — um `valor` em
+  // texto, uma `data` inválida ou um `id` duplicado entravam sem aviso e
+  // corrompiam cálculos daquele mês silenciosamente. Agora cada item passa
+  // por `validarESanearItens` antes de ser gravado; itens descartados são
+  // contados e informados no status final, em vez de sumirem sem explicação.
+  const ganhosValidados = validarESanearItens("ganhos", dados.ganhos);
+  const gastosValidados = validarESanearItens("gastos", dados.gastos);
+  const lembretesValidados = validarESanearItens("lembretes", dados.lembretes);
+  const totalDescartados = ganhosValidados.descartados.length + gastosValidados.descartados.length + lembretesValidados.descartados.length;
+
+  const avisoDescarte =
+    totalDescartados > 0
+      ? `\n\nAtenção: ${totalDescartados} item(ns) desse arquivo têm um formato inválido (id, título, valor ou data ausente/incorreto) e serão IGNORADOS na restauração.`
+      : "";
+
   const confirmou = confirm(
-    "Restaurar este arquivo vai SUBSTITUIR todos os seus dados atuais (ganhos, gastos, lembretes e configurações) pelos dados desse arquivo.\n\nUm backup do estado atual será criado automaticamente antes. Deseja continuar?"
+    `Restaurar este arquivo vai SUBSTITUIR todos os seus dados atuais (ganhos, gastos, lembretes e configurações) pelos dados desse arquivo.\n\nUm backup do estado atual será criado automaticamente antes. Deseja continuar?${avisoDescarte}`
   );
   if (!confirmou) return;
 
-  await salvarColecaoCompleta("ganhos", dados.ganhos);
-  await salvarColecaoCompleta("gastos", dados.gastos);
-  await salvarColecaoCompleta("lembretes", dados.lembretes);
+  await salvarColecaoCompleta("ganhos", ganhosValidados.validos);
+  await salvarColecaoCompleta("gastos", gastosValidados.validos);
+  await salvarColecaoCompleta("lembretes", lembretesValidados.validos);
   if (dados.configuracoes) {
     await salvarConfiguracoes({ versao: 1, configuracoes: dados.configuracoes });
   }
@@ -394,7 +464,11 @@ async function restaurarDeArquivo() {
   await carteirasService.recarregar();
   await carteiraEntradasService.recarregar();
 
-  mostrarStatus("Restauração concluída com sucesso.");
+  mostrarStatus(
+    totalDescartados > 0
+      ? `Restauração concluída, mas ${totalDescartados} item(ns) inválido(s) foram ignorados (não entraram nos dados restaurados).`
+      : "Restauração concluída com sucesso."
+  );
 }
 
 // ==================== 5. Apagar todos os dados ====================

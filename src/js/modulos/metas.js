@@ -1,6 +1,8 @@
 import { metasService } from "../servicos/index.js";
 import { formatarMoeda, escaparHtml } from "../utils/formatadores.js";
 import { svgEditar, svgExcluir } from "../utils/icones.js";
+import { avisarCampoInvalido, limparValidacao } from "../utils/validacaoFormulario.js";
+import { prenderFocoNoModal } from "../utils/focoModal.js";
 
 const ROTULOS_PRIORIDADE = { alta: "Alta prioridade", media: "Média prioridade", baixa: "Baixa prioridade" };
 const SELOS_PRIORIDADE = { alta: "selo--negativo", media: "selo--alerta", baixa: "selo--neutro" };
@@ -30,6 +32,7 @@ export async function iniciarPaginaMetas() {
   document.getElementById("sobreposicao-meta").addEventListener("click", (evento) => {
     if (evento.target.id === "sobreposicao-meta") fecharModal();
   });
+  prenderFocoNoModal(document.getElementById("sobreposicao-meta"));
   document.getElementById("formulario-meta").addEventListener("submit", salvarFormulario);
   document.getElementById("metas-conteudo").addEventListener("click", tratarClique);
 
@@ -70,13 +73,14 @@ function cartaoMeta(meta) {
         <span class="cartao-meta__nome">${escaparHtml(meta.nome)}</span>
         ${selo}
       </div>
-      <div class="cartao-meta__valores">
-        <span>Valor desejado: ${formatarMoeda(meta.valorDesejado)}</span>
+      <div class="cartao-meta__valor">
+        <span class="cartao-meta__valor-rotulo">Valor desejado</span>
+        <span class="cartao-meta__valor-numero">${formatarMoeda(meta.valorDesejado)}</span>
       </div>
       ${meta.observacoes ? `<p class="cartao-meta__observacoes">${escaparHtml(meta.observacoes)}</p>` : ""}
       <div class="cartao-meta__acoes">
-        <button type="button" class="botao-icone" data-acao="editar" title="Editar">${svgEditar}</button>
-        <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir" title="Excluir">${svgExcluir}</button>
+        <button type="button" class="botao-icone" data-acao="editar" title="Editar" aria-label="Editar">${svgEditar}</button>
+        <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir" title="Excluir" aria-label="Excluir">${svgExcluir}</button>
       </div>
     </div>
   `;
@@ -125,12 +129,21 @@ function fecharModal() {
 async function salvarFormulario(evento) {
   evento.preventDefault();
 
-  const nome = document.getElementById("campo-nome-meta").value.trim();
+  const campoNome = document.getElementById("campo-nome-meta");
+  limparValidacao(campoNome);
+
+  const nome = campoNome.value.trim();
   const valorDesejado = Number(document.getElementById("campo-valor-desejado-meta").value);
   const prioridade = document.getElementById("campo-prioridade-meta").value;
   const observacoes = document.getElementById("campo-observacoes-meta").value.trim();
 
-  if (!nome || !(valorDesejado > 0)) return;
+  // Correção (auditoria 2026-08-09, BUG-04): nome só com espaços passava
+  // despercebido pelo `required` do HTML e falhava em silêncio.
+  if (!nome) {
+    avisarCampoInvalido(campoNome, "Preencha o nome da meta.");
+    return;
+  }
+  if (!(valorDesejado > 0)) return;
 
   let metaSalva;
 

@@ -20,7 +20,7 @@
         <nav>
           <ul class="sidebar__nav">
             <li>
-              <button class="sidebar__item ativo" data-pagina="dashboard">
+              <button class="sidebar__item ativo" data-pagina="dashboard" aria-label="Dashboard" title="Dashboard" aria-current="page">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="3" width="7" height="7" rx="1.5" />
                   <rect x="14" y="3" width="7" height="7" rx="1.5" />
@@ -31,7 +31,7 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="ganhos">
+              <button class="sidebar__item" data-pagina="ganhos" aria-label="Ganhos" title="Ganhos">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="3 17 9 11 13 15 21 7" />
                   <polyline points="15 7 21 7 21 13" />
@@ -40,7 +40,7 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="gastos">
+              <button class="sidebar__item" data-pagina="gastos" aria-label="Gastos" title="Gastos">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="3 7 9 13 13 9 21 17" />
                   <polyline points="21 11 21 17 15 17" />
@@ -49,7 +49,7 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="ticket-alimentacao">
+              <button class="sidebar__item" data-pagina="ticket-alimentacao" aria-label="Ticket Alimentação" title="Ticket Alimentação">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="6" width="18" height="12" rx="2" />
                   <path d="M3 12h2M19 12h2" stroke-dasharray="0.1 3.2" />
@@ -60,7 +60,7 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="lembretes">
+              <button class="sidebar__item" data-pagina="lembretes" aria-label="Lembretes" title="Lembretes">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 4a4.5 4.5 0 0 0-4.5 4.5c0 5-2 6.5-2 6.5h13s-2-1.5-2-6.5A4.5 4.5 0 0 0 12 4z" />
                   <path d="M10 18a2 2 0 0 0 4 0" />
@@ -69,7 +69,7 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="historico">
+              <button class="sidebar__item" data-pagina="historico" aria-label="Histórico" title="Histórico">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="13" r="8" />
                   <polyline points="12 9 12 13 15 15" />
@@ -80,7 +80,7 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="metas">
+              <button class="sidebar__item" data-pagina="metas" aria-label="Metas" title="Metas">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="12" r="8" />
                   <circle cx="12" cy="12" r="4" />
@@ -90,7 +90,7 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="exportacao">
+              <button class="sidebar__item" data-pagina="exportacao" aria-label="Exportação" title="Exportação">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 3v11" />
                   <polyline points="7 10 12 15 17 10" />
@@ -100,7 +100,7 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="configuracoes">
+              <button class="sidebar__item" data-pagina="configuracoes" aria-label="Configurações" title="Configurações">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="4" y1="7" x2="20" y2="7" />
                   <circle cx="9" cy="7" r="2" />
@@ -131,18 +131,22 @@
           </div>
 
           <div class="seletor-mes">
-            <button type="button" class="botao-icone" id="dash-mes-anterior" title="Mês anterior">
+            <button type="button" class="botao-icone" id="dash-mes-anterior" title="Mês anterior" aria-label="Mês anterior">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
             <span class="seletor-mes__rotulo" id="dash-mes-rotulo">—</span>
-            <button type="button" class="botao-icone" id="dash-mes-seguinte" title="Próximo mês">
+            <button type="button" class="botao-icone" id="dash-mes-seguinte" title="Próximo mês" aria-label="Próximo mês">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
-            <button type="button" class="botao botao--secundario" id="dash-mes-atual" style="padding: 4px 10px; font-size: 12px; margin-left: var(--espaco-sm);">
+            <button type="button" class="botao botao--secundario botao--pequeno" id="dash-mes-atual">
               Mês atual
             </button>
           </div>
 
+          <!-- Os 3 números que respondem "quanto entrou / quanto saiu / quanto
+               sobra" ficam juntos e com o mesmo peso visual; "Saldo restante"
+               (--destaque) é o único que responde diretamente "quanto ainda
+               posso gastar", por isso se destaca dos outros dois. -->
           <div class="grade-estatisticas">
             <div class="cartao-estatistica">
               <div class="cartao-estatistica__rotulo">Total recebido</div>
@@ -152,27 +156,35 @@
               <div class="cartao-estatistica__rotulo">Total gasto</div>
               <div class="cartao-estatistica__valor cartao-estatistica__valor--negativo" id="dash-total-gasto">R$ 0,00</div>
             </div>
-            <div class="cartao-estatistica" id="dash-cartao-saldo-restante">
+            <div class="cartao-estatistica cartao-estatistica--destaque" id="dash-cartao-saldo-restante">
               <div class="cartao-estatistica__rotulo">Saldo restante</div>
               <div class="cartao-estatistica__valor" id="dash-saldo-restante">R$ 0,00</div>
               <div class="cartao-estatistica__alerta" id="dash-saldo-restante-alerta" hidden></div>
             </div>
-            <div class="cartao-estatistica" id="dash-cartao-saldo-dia15" title="Ganhos recebidos no dia 15 menos gastos pagos com salário responsável = Dia 15">
+          </div>
+
+          <!-- Detalhamento: números úteis, mas que não precisam do mesmo
+               destaque dos 3 acima — por isso um grupo visualmente mais leve
+               (cartao-estatistica--compacta), com um rótulo pequeno
+               separando as duas seções sem precisar de outro cartão. -->
+          <div class="rotulo-secao">Detalhamento do mês</div>
+          <div class="grade-estatisticas">
+            <div class="cartao-estatistica cartao-estatistica--compacta" id="dash-cartao-saldo-dia15" title="Ganhos recebidos no dia 15 menos gastos pagos com salário responsável = Dia 15">
               <div class="cartao-estatistica__rotulo">Saldo do salário (dia 15)</div>
               <div class="cartao-estatistica__valor" id="dash-saldo-dia15">R$ 0,00</div>
               <div class="cartao-estatistica__alerta" id="dash-saldo-dia15-alerta" hidden></div>
             </div>
-            <div class="cartao-estatistica" id="dash-cartao-saldo-dia30" title="Ganhos recebidos no dia 30 menos gastos pagos com salário responsável = Dia 30">
+            <div class="cartao-estatistica cartao-estatistica--compacta" id="dash-cartao-saldo-dia30" title="Ganhos recebidos no dia 30 menos gastos pagos com salário responsável = Dia 30">
               <div class="cartao-estatistica__rotulo">Saldo do salário (dia 30)</div>
               <div class="cartao-estatistica__valor" id="dash-saldo-dia30">R$ 0,00</div>
               <div class="cartao-estatistica__alerta" id="dash-saldo-dia30-alerta" hidden></div>
             </div>
-            <div class="cartao-estatistica" id="dash-cartao-saldo-previsto" title="Saldo restante menos os gastos pendentes e os lembretes com valor previsto ainda não concluídos">
+            <div class="cartao-estatistica cartao-estatistica--compacta" id="dash-cartao-saldo-previsto" title="Saldo restante menos os gastos pendentes e os lembretes com valor previsto ainda não concluídos">
               <div class="cartao-estatistica__rotulo">Previsão futura</div>
               <div class="cartao-estatistica__valor" id="dash-saldo-previsto">R$ 0,00</div>
               <div class="cartao-estatistica__alerta" id="dash-saldo-previsto-alerta" hidden></div>
             </div>
-            <div class="cartao-estatistica" title="Soma do valor previsto dos lembretes ainda não concluídos — dinheiro a reservar, não é um gasto pago">
+            <div class="cartao-estatistica cartao-estatistica--compacta" title="Soma do valor previsto dos lembretes ainda não concluídos — dinheiro a reservar, não é um gasto pago">
               <div class="cartao-estatistica__rotulo">Reservado para lembretes</div>
               <div class="cartao-estatistica__valor" id="dash-reservado-lembretes">R$ 0,00</div>
             </div>
@@ -264,14 +276,14 @@
           </div>
 
           <div class="seletor-mes">
-            <button type="button" class="botao-icone" id="ganhos-mes-anterior" title="Mês anterior">
+            <button type="button" class="botao-icone" id="ganhos-mes-anterior" title="Mês anterior" aria-label="Mês anterior">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
             <span class="seletor-mes__rotulo" id="ganhos-mes-rotulo">—</span>
-            <button type="button" class="botao-icone" id="ganhos-mes-seguinte" title="Próximo mês">
+            <button type="button" class="botao-icone" id="ganhos-mes-seguinte" title="Próximo mês" aria-label="Próximo mês">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
-            <button type="button" class="botao botao--secundario" id="ganhos-mes-atual" style="padding: 4px 10px; font-size: 12px; margin-left: var(--espaco-sm);">
+            <button type="button" class="botao botao--secundario botao--pequeno" id="ganhos-mes-atual">
               Mês atual
             </button>
           </div>
@@ -305,14 +317,14 @@
           </div>
 
           <div class="seletor-mes">
-            <button type="button" class="botao-icone" id="gastos-mes-anterior" title="Mês anterior">
+            <button type="button" class="botao-icone" id="gastos-mes-anterior" title="Mês anterior" aria-label="Mês anterior">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
             <span class="seletor-mes__rotulo" id="gastos-mes-rotulo">—</span>
-            <button type="button" class="botao-icone" id="gastos-mes-seguinte" title="Próximo mês">
+            <button type="button" class="botao-icone" id="gastos-mes-seguinte" title="Próximo mês" aria-label="Próximo mês">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
-            <button type="button" class="botao botao--secundario" id="gastos-mes-atual" style="padding: 4px 10px; font-size: 12px; margin-left: var(--espaco-sm);">
+            <button type="button" class="botao botao--secundario botao--pequeno" id="gastos-mes-atual">
               Mês atual
             </button>
           </div>
@@ -333,22 +345,24 @@
           </div>
 
           <div class="cartao">
-            <table class="tabela">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>Título</th>
-                  <th>Data</th>
-                  <th>Valor</th>
-                  <th>Categoria</th>
-                  <th>Salário responsável</th>
-                  <th>Status</th>
-                  <th>Tipo</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="gastos-corpo-tabela"></tbody>
-            </table>
+            <div class="tabela-scroll">
+              <table class="tabela">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Título</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Categoria</th>
+                    <th>Salário responsável</th>
+                    <th>Status</th>
+                    <th>Tipo</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="gastos-corpo-tabela"></tbody>
+              </table>
+            </div>
             <p class="estado-vazio" id="gastos-estado-vazio" hidden>Nenhum gasto cadastrado ainda.</p>
           </div>
         </section>
@@ -370,20 +384,20 @@
           </div>
 
           <div class="seletor-mes">
-            <button type="button" class="botao-icone" id="ticket-mes-anterior" title="Mês anterior">
+            <button type="button" class="botao-icone" id="ticket-mes-anterior" title="Mês anterior" aria-label="Mês anterior">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
             </button>
             <span class="seletor-mes__rotulo" id="ticket-mes-rotulo">—</span>
-            <button type="button" class="botao-icone" id="ticket-mes-seguinte" title="Próximo mês">
+            <button type="button" class="botao-icone" id="ticket-mes-seguinte" title="Próximo mês" aria-label="Próximo mês">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
             </button>
-            <button type="button" class="botao botao--secundario" id="ticket-mes-atual" style="padding: 4px 10px; font-size: 12px; margin-left: var(--espaco-sm);">
+            <button type="button" class="botao botao--secundario botao--pequeno" id="ticket-mes-atual">
               Mês atual
             </button>
           </div>
 
           <div class="grade-estatisticas">
-            <div class="cartao-estatistica">
+            <div class="cartao-estatistica cartao-estatistica--destaque-beneficio">
               <div class="cartao-estatistica__rotulo">Saldo atual</div>
               <div class="cartao-estatistica__valor" id="ticket-saldo-atual">R$ 0,00</div>
             </div>
@@ -417,7 +431,7 @@
 
             <div class="cartao" id="ticket-cartao-ritmo" hidden>
               <div class="cartao__titulo">Ritmo de consumo</div>
-              <p id="ticket-ritmo-status" style="font-weight: 600; margin: 0 0 var(--espaco-sm) 0;">—</p>
+              <p id="ticket-ritmo-status" style="font-weight: var(--peso-semi); margin: 0 0 var(--espaco-sm) 0;">—</p>
               <p class="pagina__subtitulo" id="ticket-ritmo-detalhe" style="margin-bottom: 0;">—</p>
             </div>
           </div>
@@ -457,7 +471,7 @@
             <div class="cartao">
               <div class="cartao__titulo">Lançar recebimento manualmente</div>
               <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
-                Use para registrar um crédito recebido — a geração automática mensal chega numa etapa futura.
+                Use para registrar um crédito avulso — o crédito mensal (se "Recorrente" estiver ligado na configuração acima) já é gerado sozinho.
               </p>
               <form id="formulario-recebimento-ticket">
                 <div class="campo">
@@ -484,18 +498,20 @@
 
           <div class="cartao">
             <div class="cartao__titulo">Movimentações deste mês</div>
-            <table class="tabela">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Descrição</th>
-                  <th>Categoria</th>
-                  <th>Valor</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="ticket-corpo-tabela"></tbody>
-            </table>
+            <div class="tabela-scroll">
+              <table class="tabela">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th>Valor</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="ticket-corpo-tabela"></tbody>
+              </table>
+            </div>
             <p class="estado-vazio" id="ticket-estado-vazio" hidden>Nenhuma movimentação neste mês.</p>
           </div>
         </section>
@@ -571,20 +587,31 @@
           </div>
 
           <div class="cartao">
-            <table class="tabela">
-              <thead>
-                <tr>
-                  <th>Tipo</th>
-                  <th>Título</th>
-                  <th>Categoria</th>
-                  <th>Data</th>
-                  <th>Valor</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody id="historico-corpo-tabela"></tbody>
-            </table>
+            <div class="tabela-scroll">
+              <table class="tabela">
+                <thead>
+                  <tr>
+                    <th>Tipo</th>
+                    <th>Título</th>
+                    <th>Categoria</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="historico-corpo-tabela"></tbody>
+              </table>
+            </div>
             <p class="estado-vazio" id="historico-estado-vazio" hidden>Nenhuma transação encontrada.</p>
+            <div class="paginacao" id="historico-paginacao" hidden>
+              <button type="button" class="botao-icone" id="historico-pagina-anterior" title="Página anterior" aria-label="Página anterior">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+              </button>
+              <span class="paginacao__rotulo" id="historico-pagina-rotulo">Página 1 de 1</span>
+              <button type="button" class="botao-icone" id="historico-pagina-seguinte" title="Próxima página" aria-label="Próxima página">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+              </button>
+            </div>
           </div>
         </section>
 
@@ -605,7 +632,7 @@
           </div>
 
           <div class="grade-metas" id="metas-conteudo"></div>
-          <p class="estado-vazio" id="metas-estado-vazio" hidden>Nenhuma meta cadastrada ainda. Crie uma meta para começar a guardar dinheiro para ela.</p>
+          <p class="estado-vazio" id="metas-estado-vazio" hidden>Sua wishlist está vazia. Adicione algo que você está de olho — dá pra organizar por prioridade e planejar a compra com calma.</p>
         </section>
 
         <!-- Exportação -->
@@ -753,7 +780,7 @@
 
     <!-- Modal de cadastro/edição de ganho -->
     <div class="sobreposicao" id="sobreposicao-ganho" hidden>
-      <div class="modal">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-ganho-titulo">
         <div class="modal__cabecalho">
           <h2 id="modal-ganho-titulo">Novo ganho</h2>
           <button type="button" class="modal__fechar" id="botao-fechar-modal-ganho" aria-label="Fechar">&times;</button>
@@ -772,21 +799,28 @@
             <input type="date" id="campo-data-ganho" required />
           </div>
           <div class="campo-checkbox">
-            <input type="checkbox" id="campo-fixo-ganho" />
-            <label for="campo-fixo-ganho" title="Gerado automaticamente todo mês">Ganho fixo</label>
-          </div>
-          <div class="campo-checkbox">
             <input type="checkbox" id="campo-recebido-ganho" />
             <label for="campo-recebido-ganho">Já recebido</label>
           </div>
-          <div class="campo">
-            <label for="campo-observacoes-ganho">Observações</label>
-            <textarea id="campo-observacoes-ganho" rows="3" placeholder="Opcional"></textarea>
-          </div>
-          <div class="campo-checkbox" id="linha-aplicar-proximas-ganho" hidden>
-            <input type="checkbox" id="campo-aplicar-proximas-ganho" />
-            <label for="campo-aplicar-proximas-ganho">Aplicar edições às próximas ocorrências desta série</label>
-          </div>
+
+          <details class="divulgacao" id="ganho-mais-opcoes">
+            <summary>Mais opções</summary>
+            <div class="divulgacao__conteudo">
+              <div class="campo-checkbox">
+                <input type="checkbox" id="campo-fixo-ganho" />
+                <label for="campo-fixo-ganho" title="Gerado automaticamente todo mês">Ganho fixo</label>
+              </div>
+              <div class="campo-checkbox" id="linha-aplicar-proximas-ganho" hidden>
+                <input type="checkbox" id="campo-aplicar-proximas-ganho" />
+                <label for="campo-aplicar-proximas-ganho">Aplicar edições às próximas ocorrências desta série</label>
+              </div>
+              <div class="campo">
+                <label for="campo-observacoes-ganho">Observações</label>
+                <textarea id="campo-observacoes-ganho" rows="3" placeholder="Opcional"></textarea>
+              </div>
+            </div>
+          </details>
+
           <div class="modal__acoes">
             <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-ganho">Cancelar</button>
             <button type="submit" class="botao botao--primario">Salvar</button>
@@ -797,15 +831,26 @@
 
     <!-- Modal de cadastro/edição de gasto -->
     <div class="sobreposicao" id="sobreposicao-gasto" hidden>
-      <div class="modal">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-gasto-titulo">
         <div class="modal__cabecalho">
           <h2 id="modal-gasto-titulo">Novo gasto</h2>
           <button type="button" class="modal__fechar" id="botao-fechar-modal-gasto" aria-label="Fechar">&times;</button>
         </div>
         <form id="formulario-gasto">
+          <!-- Campos essenciais primeiro — o que se precisa pra registrar uma
+               compra rapidamente. Carteira/salário/recorrência/observações
+               são administrativos, ficam atrás de "Mais opções". -->
           <div class="campo">
             <label for="campo-titulo-gasto">Título</label>
             <input type="text" id="campo-titulo-gasto" placeholder="Ex: Aluguel, Mercado..." required />
+          </div>
+          <div class="campo">
+            <label for="campo-valor-gasto">Valor (R$)</label>
+            <input type="number" id="campo-valor-gasto" step="0.01" min="0.01" placeholder="0,00" required />
+          </div>
+          <div class="campo">
+            <label for="campo-data-gasto">Data</label>
+            <input type="date" id="campo-data-gasto" required />
           </div>
           <div class="campo">
             <label for="seletor-categoria-gasto-botao">Categoria (opcional)</label>
@@ -820,46 +865,45 @@
               <div class="seletor-categoria__painel" id="seletor-categoria-gasto-painel" hidden></div>
             </div>
           </div>
-          <div class="campo">
-            <label for="campo-valor-gasto">Valor (R$)</label>
-            <input type="number" id="campo-valor-gasto" step="0.01" min="0.01" placeholder="0,00" required />
-          </div>
-          <div class="campo">
-            <label for="campo-data-gasto">Data</label>
-            <input type="date" id="campo-data-gasto" required />
-          </div>
-          <div class="campo">
-            <label for="campo-carteira-gasto">Carteira</label>
-            <select id="campo-carteira-gasto"></select>
-            <p class="campo__aviso" id="aviso-carteira-beneficio-gasto" hidden>Este gasto será descontado do saldo do benefício, não do seu dinheiro principal.</p>
-          </div>
-          <div class="campo" id="linha-salario-gasto">
-            <label for="campo-salario-gasto">Salário responsável pelo pagamento</label>
-            <select id="campo-salario-gasto">
-              <option value="dia15">Dia 15</option>
-              <option value="dia30">Dia 30</option>
-            </select>
-          </div>
-          <div class="campo" id="linha-mes-referencia-gasto">
-            <label for="campo-mes-referencia-gasto">Mês do salário que paga esse gasto</label>
-            <input type="month" id="campo-mes-referencia-gasto" required />
-          </div>
-          <div class="campo-checkbox" id="linha-fixo-gasto">
-            <input type="checkbox" id="campo-fixo-gasto" />
-            <label for="campo-fixo-gasto" title="Gerado automaticamente todo mês">Gasto fixo</label>
-          </div>
           <div class="campo-checkbox">
             <input type="checkbox" id="campo-pago-gasto" />
             <label for="campo-pago-gasto">Já pago</label>
           </div>
-          <div class="campo">
-            <label for="campo-observacoes-gasto">Observações</label>
-            <textarea id="campo-observacoes-gasto" rows="3" placeholder="Opcional"></textarea>
-          </div>
-          <div class="campo-checkbox" id="linha-aplicar-proximas-gasto" hidden>
-            <input type="checkbox" id="campo-aplicar-proximas-gasto" />
-            <label for="campo-aplicar-proximas-gasto">Aplicar edições às próximas ocorrências desta série</label>
-          </div>
+
+          <details class="divulgacao" id="gasto-mais-opcoes">
+            <summary>Mais opções</summary>
+            <div class="divulgacao__conteudo">
+              <div class="campo">
+                <label for="campo-carteira-gasto">Carteira</label>
+                <select id="campo-carteira-gasto"></select>
+                <p class="campo__aviso" id="aviso-carteira-beneficio-gasto" hidden>Este gasto será descontado do saldo do benefício, não do seu dinheiro principal.</p>
+              </div>
+              <div class="campo" id="linha-salario-gasto">
+                <label for="campo-salario-gasto">Salário responsável pelo pagamento</label>
+                <select id="campo-salario-gasto">
+                  <option value="dia15">Dia 15</option>
+                  <option value="dia30">Dia 30</option>
+                </select>
+              </div>
+              <div class="campo" id="linha-mes-referencia-gasto">
+                <label for="campo-mes-referencia-gasto">Mês do salário que paga esse gasto</label>
+                <input type="month" id="campo-mes-referencia-gasto" required />
+              </div>
+              <div class="campo-checkbox" id="linha-fixo-gasto">
+                <input type="checkbox" id="campo-fixo-gasto" />
+                <label for="campo-fixo-gasto" title="Gerado automaticamente todo mês">Gasto fixo</label>
+              </div>
+              <div class="campo-checkbox" id="linha-aplicar-proximas-gasto" hidden>
+                <input type="checkbox" id="campo-aplicar-proximas-gasto" />
+                <label for="campo-aplicar-proximas-gasto">Aplicar edições às próximas ocorrências desta série</label>
+              </div>
+              <div class="campo">
+                <label for="campo-observacoes-gasto">Observações</label>
+                <textarea id="campo-observacoes-gasto" rows="3" placeholder="Opcional"></textarea>
+              </div>
+            </div>
+          </details>
+
           <div class="modal__acoes">
             <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-gasto">Cancelar</button>
             <button type="submit" class="botao botao--primario">Salvar</button>
@@ -870,9 +914,9 @@
 
     <!-- Modal de novo parcelamento -->
     <div class="sobreposicao" id="sobreposicao-parcelamento" hidden>
-      <div class="modal">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-parcelamento-titulo">
         <div class="modal__cabecalho">
-          <h2>Novo parcelamento</h2>
+          <h2 id="modal-parcelamento-titulo">Novo parcelamento</h2>
           <button type="button" class="modal__fechar" id="botao-fechar-modal-parcelamento" aria-label="Fechar">&times;</button>
         </div>
         <form id="formulario-parcelamento">
@@ -901,7 +945,7 @@
           </div>
           <div class="campo">
             <label for="campo-quantidade-parcelamento">Quantidade de parcelas</label>
-            <input type="number" id="campo-quantidade-parcelamento" min="2" step="1" placeholder="Ex: 12" required />
+            <input type="number" id="campo-quantidade-parcelamento" min="2" max="120" step="1" placeholder="Ex: 12" required />
           </div>
           <div class="campo">
             <label for="campo-valor-parcelamento">Valor de cada parcela (R$)</label>
@@ -911,17 +955,31 @@
             <label for="campo-data-parcelamento">Data da primeira parcela</label>
             <input type="date" id="campo-data-parcelamento" required />
           </div>
-          <div class="campo">
-            <label for="campo-salario-parcelamento">Salário responsável pelo pagamento</label>
-            <select id="campo-salario-parcelamento">
-              <option value="dia15">Dia 15</option>
-              <option value="dia30">Dia 30</option>
-            </select>
-          </div>
-          <div class="campo">
-            <label for="campo-observacoes-parcelamento">Observações</label>
-            <textarea id="campo-observacoes-parcelamento" rows="3" placeholder="Opcional"></textarea>
-          </div>
+
+          <details class="divulgacao" id="parcelamento-mais-opcoes">
+            <summary>Mais opções</summary>
+            <div class="divulgacao__conteudo">
+              <div class="campo">
+                <label for="campo-carteira-parcelamento">Carteira</label>
+                <select id="campo-carteira-parcelamento"></select>
+                <p class="campo__aviso" id="aviso-carteira-beneficio-parcelamento" hidden>
+                  As parcelas serão descontadas do saldo do benefício, não do seu dinheiro principal.
+                </p>
+              </div>
+              <div class="campo" id="linha-salario-parcelamento">
+                <label for="campo-salario-parcelamento">Salário responsável pelo pagamento</label>
+                <select id="campo-salario-parcelamento">
+                  <option value="dia15">Dia 15</option>
+                  <option value="dia30">Dia 30</option>
+                </select>
+              </div>
+              <div class="campo">
+                <label for="campo-observacoes-parcelamento">Observações</label>
+                <textarea id="campo-observacoes-parcelamento" rows="3" placeholder="Opcional"></textarea>
+              </div>
+            </div>
+          </details>
+
           <div class="modal__acoes">
             <button type="button" class="botao botao--secundario" id="botao-cancelar-modal-parcelamento">Cancelar</button>
             <button type="submit" class="botao botao--primario">Gerar parcelas</button>
@@ -932,7 +990,7 @@
 
     <!-- Modal de cadastro/edição de lembrete -->
     <div class="sobreposicao" id="sobreposicao-lembrete" hidden>
-      <div class="modal">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-lembrete-titulo">
         <div class="modal__cabecalho">
           <h2 id="modal-lembrete-titulo">Novo lembrete</h2>
           <button type="button" class="modal__fechar" id="botao-fechar-modal-lembrete" aria-label="Fechar">&times;</button>
@@ -964,7 +1022,7 @@
 
     <!-- Modal de cadastro/edição de meta -->
     <div class="sobreposicao" id="sobreposicao-meta" hidden>
-      <div class="modal">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-meta-titulo">
         <div class="modal__cabecalho">
           <h2 id="modal-meta-titulo">Nova meta</h2>
           <button type="button" class="modal__fechar" id="botao-fechar-modal-meta" aria-label="Fechar">&times;</button>
@@ -1001,7 +1059,7 @@
     <!-- Modal compartilhado: perguntar o escopo de uma exclusão (item fixo ou
          parcela) — "somente esse", "esse e os futuros" ou "todos". -->
     <div class="sobreposicao" id="sobreposicao-escopo-exclusao" hidden>
-      <div class="modal" style="max-width: 380px;">
+      <div class="modal" style="max-width: 380px;" role="dialog" aria-modal="true" aria-labelledby="escopo-exclusao-titulo">
         <div class="modal__cabecalho">
           <h2 id="escopo-exclusao-titulo">Excluir</h2>
           <button type="button" class="modal__fechar" id="botao-fechar-escopo-exclusao" aria-label="Fechar">&times;</button>
@@ -1016,6 +1074,9 @@
 
     <!-- Tooltip compartilhado pelos gráficos do dashboard -->
     <div class="grafico-tooltip" id="grafico-tooltip"></div>
+
+    <!-- Confirmação visual ao salvar/editar/excluir uma transação (utils/toast.js) -->
+    <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
     <script type="module" src="./js/main.js"></script>
   </body>

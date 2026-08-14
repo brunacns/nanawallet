@@ -5,6 +5,7 @@ import { diaDoMes, mesDeData, chaveMesAtual, rotuloMesCurto, listaMeses } from "
 import { obterMesSelecionado, aoAtualizarMes } from "../estadoMes.js";
 import { obterCategoriaPorId } from "../categorias.js";
 import { filtrarGastosPrincipais } from "../carteiras.js";
+import { somarGastosDoMes, calcularSerieSaldoAcumulado } from "../utils/calculosFinanceiros.js";
 
 const NS = "http://www.w3.org/2000/svg";
 const LARGURA = 560;
@@ -110,7 +111,7 @@ function desenharGridY(svg, altura, minValor, maxValor) {
 function renderizarEvolucaoGastos(gastos) {
   const container = document.getElementById("grafico-evolucao-gastos");
   if (gastos.length === 0) {
-    container.innerHTML = vazioHtml("Sem gastos cadastrados ainda.");
+    container.innerHTML = vazioHtml("Cadastre um gasto para ver a evolução aqui.");
     return;
   }
 
@@ -142,7 +143,7 @@ function renderizarEvolucaoGastos(gastos) {
 function renderizarEvolucaoSaldo(ganhos, gastos) {
   const container = document.getElementById("grafico-evolucao-saldo");
   if (ganhos.length === 0 && gastos.length === 0) {
-    container.innerHTML = vazioHtml("Sem dados suficientes ainda.");
+    container.innerHTML = vazioHtml("Cadastre ganhos e gastos para ver o saldo evoluir aqui.");
     return;
   }
 
@@ -152,19 +153,17 @@ function renderizarEvolucaoSaldo(ganhos, gastos) {
   const todosMeses = [...ganhos.map((g) => mesDeData(g.data)), ...gastos.map((g) => g.mesReferencia)].sort();
   const meses = listaMeses(todosMeses[0], todosMeses[todosMeses.length - 1]);
 
-  let acumulado = 0;
-  const pontos = meses.map((chave) => {
-    const ganhoMes = somar(
-      ganhos.filter((g) => mesDeData(g.data) === chave),
-      (g) => g.valor
-    );
-    const gastoPagoMes = somar(
-      gastos.filter((g) => g.mesReferencia === chave && g.pago),
-      (g) => g.valor
-    );
-    acumulado += ganhoMes - gastoPagoMes;
-    return { chave, valor: acumulado };
-  });
+  // Correção (auditoria 2026-08-09, BUG-01): este gráfico somava só gastos
+  // PAGOS (fórmula da Etapa 10, quando "saldo restante" só descontava o que
+  // já tinha sido pago). O Dashboard mudou a fórmula na Etapa 13 para
+  // descontar TODOS os gastos do mês, pagos ou não — a maioria das compras é
+  // no cartão, então o saldo precisa refletir o que já está comprometido,
+  // não só o que já saiu da conta. O gráfico nunca foi atualizado junto, e os
+  // dois passaram a mostrar números diferentes para o mesmo mês.
+  // `calcularSerieSaldoAcumulado` usa por baixo o mesmo `somarGastosDoMes`
+  // que o Dashboard usa para "Saldo restante" (utils/calculosFinanceiros.js)
+  // — os dois nunca mais podem divergir por terem cada um a própria cópia da fórmula.
+  const pontos = calcularSerieSaldoAcumulado(ganhos, gastos, meses, mesDeData);
 
   desenharLinha(container, pontos, {
     altura: 200,
@@ -352,7 +351,7 @@ function renderizarComparacaoSalarios(ganhos, gastos) {
   );
 
   if (recebidoDia15 + recebidoDia30 + gastoDia15 + gastoDia30 === 0) {
-    container.innerHTML = vazioHtml("Sem dados suficientes ainda.");
+    container.innerHTML = vazioHtml("Sem ganhos ou gastos por dia de pagamento ainda.");
     return;
   }
 

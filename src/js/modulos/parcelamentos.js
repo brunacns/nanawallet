@@ -2,8 +2,18 @@ import { obterGastos, adicionarGastosEmLote, aoAtualizarGastos } from "./gastos.
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { somarMeses, mesDeData } from "../utils/datas.js";
 import { criarSeletorCategoria } from "../categorias.js";
+import { avisarCampoInvalido, limparValidacao } from "../utils/validacaoFormulario.js";
+import { prenderFocoNoModal } from "../utils/focoModal.js";
+import { opcoesCarteiraGasto, carteiraEhBeneficio, carteiraPrincipalPadraoId } from "../carteiras.js";
+import { mostrarToast } from "../utils/toast.js";
 
 const seletorCategoriaParcelamento = criarSeletorCategoria("parcelamento");
+
+// Acima disso, pede confirmação explícita antes de gerar as parcelas (BUG-09
+// da auditoria de 2026-08-09) — sem isso, um erro de digitação (ex: "120" em
+// vez de "12") criava dezenas de gastos de uma vez sem nenhum aviso prévio
+// mostrando o compromisso total assumido.
+const QUANTIDADE_QUE_PEDE_CONFIRMACAO = 12;
 
 export function iniciarParcelamentos() {
   document.getElementById("botao-novo-parcelamento").addEventListener("click", abrirModal);
@@ -12,16 +22,42 @@ export function iniciarParcelamentos() {
   document.getElementById("sobreposicao-parcelamento").addEventListener("click", (evento) => {
     if (evento.target.id === "sobreposicao-parcelamento") fecharModal();
   });
+  prenderFocoNoModal(document.getElementById("sobreposicao-parcelamento"));
   document.getElementById("formulario-parcelamento").addEventListener("submit", salvarFormulario);
+  document.getElementById("campo-carteira-parcelamento").addEventListener("change", atualizarCamposConformeCarteira);
   seletorCategoriaParcelamento.inicializar();
 
   aoAtualizarGastos(renderizarResumo);
   renderizarResumo(obterGastos());
 }
 
+// Mesmo padrão de gastos.js: repopula a cada abertura do modal (não só na
+// inicialização), senão ativar uma carteira nova (ex: Ticket Alimentação) só
+// apareceria como opção depois de reabrir o app.
+function atualizarOpcoesCarteira() {
+  document.getElementById("campo-carteira-parcelamento").innerHTML = opcoesCarteiraGasto();
+}
+
+// "Salário responsável" não faz sentido para parcelas pagas com uma carteira
+// de benefício (não existe "salário" que paga o Ticket Alimentação) — mesmo
+// raciocínio já aplicado ao formulário de gasto avulso.
+function atualizarCamposConformeCarteira() {
+  const carteiraId = document.getElementById("campo-carteira-parcelamento").value || null;
+  const ehBeneficio = carteiraEhBeneficio(carteiraId);
+  document.getElementById("linha-salario-parcelamento").hidden = ehBeneficio;
+  document.getElementById("aviso-carteira-beneficio-parcelamento").hidden = !ehBeneficio;
+}
+
 function abrirModal() {
   document.getElementById("formulario-parcelamento").reset();
   seletorCategoriaParcelamento.definir(null);
+  atualizarOpcoesCarteira();
+  document.getElementById("campo-carteira-parcelamento").value = carteiraPrincipalPadraoId() || "";
+  atualizarCamposConformeCarteira();
+  // Começa fechado — carteira/salário/observações são opcionais e já têm
+  // valor padrão sensato; só os campos essenciais para gerar as parcelas
+  // ficam à vista.
+  document.getElementById("parcelamento-mais-opcoes").open = false;
   document.getElementById("sobreposicao-parcelamento").hidden = false;
   document.getElementById("campo-titulo-parcelamento").focus();
 }
@@ -34,15 +70,41 @@ function fecharModal() {
 async function salvarFormulario(evento) {
   evento.preventDefault();
 
-  const titulo = document.getElementById("campo-titulo-parcelamento").value.trim();
+  const campoTitulo = document.getElementById("campo-titulo-parcelamento");
+  limparValidacao(campoTitulo);
+
+  const titulo = campoTitulo.value.trim();
   const quantidade = Number(document.getElementById("campo-quantidade-parcelamento").value);
   const valorParcela = Number(document.getElementById("campo-valor-parcelamento").value);
   const dataPrimeiraParcela = document.getElementById("campo-data-parcelamento").value;
+  const carteiraId = document.getElementById("campo-carteira-parcelamento").value || null;
+  // Igual ao formulário de gasto avulso: o campo "salário responsável" fica
+  // escondido (não gravado como null) quando a carteira é um benefício — o
+  // valor guardado nunca é lido em nenhum cálculo de carteira de benefício.
   const salarioResponsavel = document.getElementById("campo-salario-parcelamento").value;
   const categoriaId = seletorCategoriaParcelamento.obter();
   const observacoes = document.getElementById("campo-observacoes-parcelamento").value.trim();
 
-  if (!titulo || !dataPrimeiraParcela || !(valorParcela > 0) || !(quantidade >= 2)) return;
+  // Correção (auditoria 2026-08-09, BUG-04): título só com espaços passava
+  // despercebido pelo `required` do HTML e falhava em silêncio.
+  if (!titulo) {
+    avisarCampoInvalido(campoTitulo, "Preencha o título.");
+    return;
+  }
+  if (!dataPrimeiraParcela || !(valorParcela > 0) || !(quantidade >= 2)) return;
+
+  // Correção (auditoria 2026-08-09, BUG-09): quantidades grandes (que agora
+  // também têm um teto de 120 no próprio campo, ver index.html) pedem
+  // confirmação explícita mostrando o compromisso total antes de gerar.
+  if (quantidade > QUANTIDADE_QUE_PEDE_CONFIRMACAO) {
+    const dataUltimaParcela = somarMeses(dataPrimeiraParcela, quantidade - 1);
+    const confirmou = confirm(
+      `Isso vai criar ${quantidade} parcelas de ${formatarMoeda(valorParcela)} (total: ${formatarMoeda(
+        valorParcela * quantidade
+      )}), a última prevista para ${formatarData(dataUltimaParcela)}. Continuar?`
+    );
+    if (!confirmou) return;
+  }
 
   const parcelamentoId = crypto.randomUUID();
   const novosGastos = [];
@@ -63,13 +125,14 @@ async function salvarFormulario(evento) {
       pago: false,
       parcela: { numero, total: quantidade, parcelamentoId },
       categoriaId,
-      carteiraId: null,
+      carteiraId,
       observacoes,
     });
   }
 
   await adicionarGastosEmLote(novosGastos);
   fecharModal();
+  mostrarToast(`${quantidade} parcelas geradas`);
 }
 
 function agruparParcelamentos(gastos) {

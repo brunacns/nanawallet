@@ -6,6 +6,9 @@ import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtual
 import { chipCategoria, opcoesFiltroCategoria, criarSeletorCategoria } from "../categorias.js";
 import { perguntarEscopoExclusao } from "../confirmacaoExclusao.js";
 import { opcoesCarteiraGasto, carteiraEhBeneficio, carteiraPrincipalPadraoId, filtrarGastosPrincipais } from "../carteiras.js";
+import { avisarCampoInvalido, limparValidacao } from "../utils/validacaoFormulario.js";
+import { prenderFocoNoModal } from "../utils/focoModal.js";
+import { mostrarToast } from "../utils/toast.js";
 
 const seletorCategoriaGasto = criarSeletorCategoria("gasto");
 
@@ -57,8 +60,10 @@ export async function iniciarPaginaGastos() {
   document.getElementById("sobreposicao-gasto").addEventListener("click", (evento) => {
     if (evento.target.id === "sobreposicao-gasto") fecharModal();
   });
+  prenderFocoNoModal(document.getElementById("sobreposicao-gasto"));
   document.getElementById("formulario-gasto").addEventListener("submit", salvarFormulario);
   document.getElementById("gastos-corpo-tabela").addEventListener("click", tratarCliqueLista);
+  document.getElementById("gastos-corpo-tabela").addEventListener("keydown", tratarTecladoToggle);
   document.getElementById("gastos-mes-anterior").addEventListener("click", retrocederMes);
   document.getElementById("gastos-mes-seguinte").addEventListener("click", avancarMes);
   document.getElementById("gastos-mes-atual").addEventListener("click", irParaMesAtual);
@@ -152,7 +157,7 @@ function mensagemVaziaPorFiltro() {
   if (filtroTipo === "fixos") return "Nenhum gasto fixo neste mês.";
   if (filtroTipo === "parcelados") return "Nenhuma parcela neste mês.";
   if (filtroCategoria !== "todas") return "Nenhum gasto encontrado com esse filtro de categoria.";
-  return "Nenhum gasto neste mês.";
+  return "Nenhum gasto neste mês — tudo tranquilo por aqui.";
 }
 
 // Gastos fixos sempre no topo; dentro de cada grupo, do mais antigo para o mais recente.
@@ -177,7 +182,14 @@ function linhaGasto(gasto) {
   return `
     <tr data-id="${gasto.id}" class="${gasto.pago ? "linha-paga" : ""}">
       <td>
-        <div class="caixa-toggle ${gasto.pago ? "marcada" : ""}" data-acao="alternar-pago" title="Marcar como pago" style="cursor: pointer;"></div>
+        <div
+          class="caixa-toggle ${gasto.pago ? "marcada" : ""}"
+          data-acao="alternar-pago"
+          role="checkbox"
+          aria-checked="${gasto.pago}"
+          aria-label="Marcar como pago"
+          tabindex="0"
+        ></div>
       </td>
       <td>${escaparHtml(gasto.titulo)}</td>
       <td>${formatarData(gasto.data)}</td>
@@ -187,8 +199,8 @@ function linhaGasto(gasto) {
       <td>${rotuloStatus}</td>
       <td>${rotuloTipo}</td>
       <td class="tabela__acoes">
-        <button type="button" class="botao-icone" data-acao="editar" title="Editar">${svgEditar}</button>
-        <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir" title="Excluir">${svgExcluir}</button>
+        <button type="button" class="botao-icone" data-acao="editar" title="Editar" aria-label="Editar">${svgEditar}</button>
+        <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir" title="Excluir" aria-label="Excluir">${svgExcluir}</button>
       </td>
     </tr>
   `;
@@ -202,6 +214,16 @@ function tratarCliqueLista(evento) {
   if (alvo.dataset.acao === "editar") abrirModalEdicao(id);
   else if (alvo.dataset.acao === "excluir") excluirGasto(id);
   else if (alvo.dataset.acao === "alternar-pago") alternarPago(id);
+}
+
+// A caixa de marcar/desmarcar pago é um <div role="checkbox"> (não um
+// <input> nativo, para reaproveitar o visual de .caixa-toggle) — sem isso,
+// ela só respondia a clique de mouse.
+function tratarTecladoToggle(evento) {
+  if (evento.key !== "Enter" && evento.key !== " ") return;
+  if (!evento.target.closest('[data-acao="alternar-pago"]')) return;
+  evento.preventDefault();
+  tratarCliqueLista(evento);
 }
 
 async function alternarPago(id) {
@@ -252,6 +274,10 @@ function abrirModalNovo(carteiraIdPreSelecionada = null) {
   atualizarOpcoesCarteira();
   document.getElementById("campo-carteira-gasto").value = carteiraIdPreSelecionada || carteiraPrincipalPadraoId() || "";
   document.getElementById("linha-aplicar-proximas-gasto").hidden = true;
+  // Um gasto novo começa com "Mais opções" fechado (só os campos essenciais
+  // à vista) — só abre sozinho quando EDITANDO algo que já usa um desses
+  // campos (ver abrirModalEdicao), pra nada ficar escondido sem querer.
+  document.getElementById("gasto-mais-opcoes").open = false;
   seletorCategoriaGasto.definir(null);
   atualizarCamposConformeCarteira();
   abrirModal();
@@ -279,6 +305,10 @@ function abrirModalEdicao(id) {
   // parte de uma série fixa antes desta edição (senão não há "próximas" ainda).
   document.getElementById("linha-aplicar-proximas-gasto").hidden = !gasto.fixoId;
   document.getElementById("campo-aplicar-proximas-gasto").checked = false;
+  // Editar sempre abre "Mais opções" — o gasto pode já usar carteira/salário/
+  // recorrência/observações, e essa configuração não deveria ficar escondida
+  // atrás de um clique extra justo na hora de revisar/alterar.
+  document.getElementById("gasto-mais-opcoes").open = true;
   atualizarCamposConformeCarteira();
   abrirModal();
 }
@@ -297,7 +327,10 @@ function fecharModal() {
 async function salvarFormulario(evento) {
   evento.preventDefault();
 
-  const titulo = document.getElementById("campo-titulo-gasto").value.trim();
+  const campoTitulo = document.getElementById("campo-titulo-gasto");
+  limparValidacao(campoTitulo);
+
+  const titulo = campoTitulo.value.trim();
   const valor = Number(document.getElementById("campo-valor-gasto").value);
   const data = document.getElementById("campo-data-gasto").value;
   const salarioResponsavel = document.getElementById("campo-salario-gasto").value;
@@ -314,9 +347,17 @@ async function salvarFormulario(evento) {
   const fixo = ehBeneficio ? false : document.getElementById("campo-fixo-gasto").checked;
   const aplicarProximas = document.getElementById("campo-aplicar-proximas-gasto").checked;
 
-  if (!titulo || !data || !mesReferencia || !(valor > 0)) return;
+  // Correção (auditoria 2026-08-09, BUG-04): um título só com espaços passa
+  // despercebido pelo `required` do HTML — sem este aviso explícito, o
+  // formulário falhava em silêncio, sem nenhuma pista do que deu errado.
+  if (!titulo) {
+    avisarCampoInvalido(campoTitulo, "Preencha o título.");
+    return;
+  }
+  if (!data || !mesReferencia || !(valor > 0)) return;
 
   let gastoSalvo;
+  const foiEdicao = Boolean(idEmEdicao);
 
   if (idEmEdicao) {
     gastoSalvo = transacoesGastos.obterTodos().find((g) => g.id === idEmEdicao);
@@ -371,6 +412,7 @@ async function salvarFormulario(evento) {
     await transacoesGastos.salvar(gastoSalvo);
   }
   fecharModal();
+  mostrarToast(foiEdicao ? "Gasto atualizado" : "Gasto adicionado");
 }
 
 // Parcela e gasto fixo oferecem escolha de escopo (só este / este e os
@@ -399,6 +441,7 @@ async function excluirGasto(id) {
   if (!confirmou) return;
 
   await transacoesGastos.remover(id);
+  mostrarToast("Gasto excluído", "exclusao");
 }
 
 // Aplica o escopo escolhido ("somente"/"futuras"/"todas") a um grupo de itens
@@ -408,6 +451,7 @@ async function excluirGasto(id) {
 async function excluirComEscopo(escopo, item, pertenceAoGrupo) {
   if (escopo === "somente") {
     await transacoesGastos.remover(item.id);
+    mostrarToast("Gasto excluído", "exclusao");
     return;
   }
   const relacionados = transacoesGastos.obterTodos().filter(pertenceAoGrupo);
@@ -415,4 +459,5 @@ async function excluirComEscopo(escopo, item, pertenceAoGrupo) {
   for (const g of alvo) {
     await transacoesGastos.remover(g.id);
   }
+  mostrarToast(alvo.length === 1 ? "Gasto excluído" : `${alvo.length} gastos excluídos`, "exclusao");
 }

@@ -4,10 +4,10 @@
   align-items: center;
   gap: var(--espaco-sm);
   border: none;
-  border-radius: var(--raio-md);
+  border-radius: var(--raio-botao);
   padding: var(--espaco-sm) var(--espaco-md);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-sm);
+  font-weight: var(--peso-semi);
   transition: opacity var(--transicao-rapida), background-color var(--transicao-rapida), transform var(--transicao-rapida),
     box-shadow var(--transicao-rapida);
 }
@@ -15,6 +15,20 @@
 .botao svg {
   width: 16px;
   height: 16px;
+}
+
+/* Anel de foco só para navegação por teclado (:focus-visible) — clique de
+   mouse não aciona, então não polui a interface visualmente. */
+.botao:focus-visible {
+  outline: none;
+  box-shadow: var(--sombra-brilho-acento);
+}
+
+.botao:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .botao--primario {
@@ -63,13 +77,21 @@
   transform: scale(0.97);
 }
 
+/* Variante compacta (ex: "Mês atual", ao lado do seletor de mês) — antes
+   repetida como style="" idêntico em 4 páginas (Dashboard, Ganhos, Gastos,
+   Ticket Alimentação); formalizada aqui numa classe só. */
+.botao--pequeno {
+  padding: 4px var(--espaco-sm);
+  font-size: var(--fonte-tamanho-xs);
+}
+
 /* Cartões */
 .cartao {
   background-color: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-lg);
+  border-radius: var(--raio-cartao);
   padding: var(--espaco-lg);
-  box-shadow: var(--sombra-suave);
+  box-shadow: var(--sombra-cartao);
 }
 
 /* Grade de estatísticas do dashboard */
@@ -83,21 +105,21 @@
 .cartao-estatistica {
   background-color: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-lg);
+  border-radius: var(--raio-cartao);
   padding: var(--espaco-lg);
-  box-shadow: var(--sombra-suave);
+  box-shadow: var(--sombra-cartao);
 }
 
 .cartao-estatistica__rotulo {
   color: var(--cor-texto-secundario);
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
   margin-bottom: var(--espaco-sm);
 }
 
 .cartao-estatistica__valor {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
+  font-size: var(--fonte-tamanho-2xl);
+  font-weight: var(--peso-negrito);
+  letter-spacing: var(--letra-apertada);
 }
 
 .cartao-estatistica__valor--positivo {
@@ -106,6 +128,65 @@
 
 .cartao-estatistica__valor--negativo {
   color: var(--cor-negativo);
+}
+
+/* Variante "herói" (Dashboard, Etapa 4) — dá ao número mais importante da
+   tela (Saldo restante: "quanto ainda posso gastar") um peso visual
+   diferente dos outros cartões de estatística, em vez de todos competirem
+   com o mesmo tamanho. Usa --cor-superficie-elevada (adicionada na etapa de
+   tokens, sem uso até agora) — um degrau sutil acima de --cor-superficie,
+   não uma cor nova. */
+.cartao-estatistica--destaque {
+  background-color: var(--cor-superficie-elevada);
+  border-color: var(--cor-borda-acento);
+}
+
+.cartao-estatistica--destaque .cartao-estatistica__valor {
+  font-size: var(--fonte-tamanho-3xl);
+}
+
+.cartao-estatistica--destaque .cartao-estatistica__rotulo {
+  font-size: var(--fonte-tamanho-base);
+}
+
+/* Mesma receita do destaque acima (número grande, superfície elevada), mas
+   com acento rosa em vez de lilás — usado só no "Saldo atual" do Ticket
+   Alimentação/benefícios, pra ficar visualmente óbvio que é um saldo à
+   parte do dinheiro principal (que usa o destaque lilás no Dashboard). */
+.cartao-estatistica--destaque-beneficio {
+  background-color: var(--cor-superficie-elevada);
+  border-color: var(--cor-rosa-fraco);
+}
+
+.cartao-estatistica--destaque-beneficio .cartao-estatistica__valor {
+  font-size: var(--fonte-tamanho-3xl);
+  color: var(--cor-rosa);
+}
+
+.cartao-estatistica--destaque-beneficio .cartao-estatistica__rotulo {
+  font-size: var(--fonte-tamanho-base);
+}
+
+/* Variante compacta — para números de apoio/detalhe (ex: saldo por dia de
+   pagamento, previsão futura) que não precisam do mesmo destaque dos 3
+   números principais (recebido/gasto/saldo restante) logo acima. */
+.cartao-estatistica--compacta {
+  padding: var(--espaco-md);
+}
+
+.cartao-estatistica--compacta .cartao-estatistica__valor {
+  font-size: var(--fonte-tamanho-xl);
+}
+
+/* Rótulo pequeno para agrupar visualmente uma seção sem precisar de outro
+   <h2>/cartão — mesma linguagem tipográfica já usada em Configurações. */
+.rotulo-secao {
+  font-size: var(--fonte-tamanho-sm);
+  font-weight: var(--peso-semi);
+  color: var(--cor-texto-secundario);
+  text-transform: uppercase;
+  letter-spacing: var(--letra-espacada);
+  margin-bottom: var(--espaco-sm);
 }
 
 /* Alertas de saldo (amarelo/laranja/vermelho) */
@@ -126,8 +207,8 @@
 }
 
 .cartao-estatistica__alerta {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-xs);
+  font-weight: var(--peso-semi);
   margin-top: var(--espaco-sm);
 }
 
@@ -156,7 +237,7 @@
   gap: var(--espaco-sm);
   padding: var(--espaco-sm) 0;
   border-bottom: 1px solid var(--cor-borda);
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
 }
 
 .item-diagnostico:last-child {
@@ -166,7 +247,7 @@
 .item-diagnostico__ponto {
   width: 8px;
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--raio-pilula);
   margin-top: 5px;
   flex-shrink: 0;
 }
@@ -206,14 +287,18 @@
 .barra-progresso {
   height: 10px;
   background-color: var(--cor-superficie-alta);
-  border-radius: 999px;
+  border-radius: var(--raio-pilula);
   overflow: hidden;
 }
 
+/* Rosa em vez do gradiente lilás padrão — só usado na barra de utilização do
+   Ticket Alimentação, de propósito: reforça que aquele saldo é separado do
+   dinheiro principal (que usa --gradiente-acento em todo o resto do app),
+   sem precisar de uma cor nova fora da paleta já estabelecida. */
 .barra-progresso__preenchimento {
   height: 100%;
-  background: var(--gradiente-acento);
-  border-radius: 999px;
+  background: var(--cor-rosa);
+  border-radius: var(--raio-pilula);
   transition: width var(--transicao-suave);
 }
 
@@ -235,19 +320,31 @@
 }
 
 .cartao__titulo {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-md);
+  font-weight: var(--peso-semi);
   margin-bottom: var(--espaco-md);
 }
 
-/* Tabelas */
+/* Tabelas — o wrapper permite rolar horizontalmente numa janela estreita em
+   vez de estourar a largura da página inteira (a tabela de Gastos sozinha
+   tem 9 colunas). min-width garante que as colunas não fiquem ilegíveis
+   espremidas; em telas largas isso não tem efeito nenhum, porque o cartão
+   já é mais largo que o mínimo. */
+.tabela-scroll {
+  overflow-x: auto;
+}
+
+.tabela-scroll .tabela {
+  min-width: 640px;
+}
+
 .tabela th {
   text-align: left;
   color: var(--cor-texto-secundario);
-  font-weight: 500;
-  font-size: 12px;
+  font-weight: var(--peso-medio);
+  font-size: var(--fonte-tamanho-xs);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letra-espacada);
   padding: var(--espaco-sm) var(--espaco-md);
   border-bottom: 1px solid var(--cor-borda);
 }
@@ -255,7 +352,7 @@
 .tabela td {
   padding: var(--espaco-md);
   border-bottom: 1px solid var(--cor-borda);
-  font-size: 14px;
+  font-size: var(--fonte-tamanho-base);
 }
 
 .tabela tbody tr:last-child td {
@@ -272,12 +369,12 @@
 
 .tabela__valor-positivo {
   color: var(--cor-positivo);
-  font-weight: 600;
+  font-weight: var(--peso-semi);
 }
 
 .tabela__valor-negativo {
   color: var(--cor-negativo);
-  font-weight: 600;
+  font-weight: var(--peso-semi);
 }
 
 /* Badges (selos de status) — com um brilho suave da própria cor */
@@ -285,9 +382,9 @@
   display: inline-flex;
   align-items: center;
   padding: 2px var(--espaco-sm);
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: var(--raio-pilula);
+  font-size: var(--fonte-tamanho-xs);
+  font-weight: var(--peso-semi);
 }
 
 .selo--positivo {
@@ -332,8 +429,8 @@
   background: transparent;
   color: var(--cor-texto-secundario);
   padding: var(--espaco-sm) var(--espaco-md);
-  font-size: 13px;
-  font-weight: 500;
+  font-size: var(--fonte-tamanho-sm);
+  font-weight: var(--peso-medio);
   border-bottom: 2px solid transparent;
   transform: translateY(1px);
   transition: color var(--transicao-rapida), border-color var(--transicao-rapida);
@@ -341,6 +438,13 @@
 
 .aba:hover {
   color: var(--cor-texto);
+}
+
+.aba:focus-visible {
+  outline: none;
+  color: var(--cor-texto);
+  box-shadow: var(--sombra-brilho-acento);
+  border-radius: var(--raio-sm);
 }
 
 .aba.ativa {
@@ -373,14 +477,31 @@
   border-bottom: none;
 }
 
-/* Caixa de marcar/desmarcar reutilizável (lembretes, gastos, ganhos) */
+/* Caixa de marcar/desmarcar reutilizável (lembretes, gastos, ganhos) — é um
+   <div role="checkbox" tabindex="0">, não um <input>, então cursor/foco
+   precisam ser declarados aqui (antes viviam como style="" inline em cada
+   módulo). position:relative + ::before dão um alvo de toque de ~34px sem
+   aumentar o tamanho visual da caixinha (que continua 18px). */
 .caixa-toggle {
+  position: relative;
   width: 18px;
   height: 18px;
   border-radius: var(--raio-sm);
   border: 1.5px solid var(--cor-texto-fraco);
   flex-shrink: 0;
+  cursor: pointer;
   transition: background-color var(--transicao-rapida), border-color var(--transicao-rapida), box-shadow var(--transicao-rapida);
+}
+
+.caixa-toggle::before {
+  content: "";
+  position: absolute;
+  inset: -8px;
+}
+
+.caixa-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--sombra-brilho-acento);
 }
 
 .caixa-toggle.marcada {
@@ -394,7 +515,7 @@
 }
 
 .item-lembrete__titulo {
-  font-size: 14px;
+  font-size: var(--fonte-tamanho-base);
 }
 
 .item-lembrete__titulo.concluido {
@@ -403,7 +524,7 @@
 }
 
 .item-lembrete__data {
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-secundario);
 }
 
@@ -428,11 +549,11 @@
 }
 
 .lista-simples__titulo {
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
 }
 
 .lista-simples__legenda {
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-secundario);
 }
 
@@ -441,7 +562,7 @@
   text-align: center;
   padding: var(--espaco-xl);
   color: var(--cor-texto-fraco);
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
 }
 
 /* Página de configurações */
@@ -450,11 +571,11 @@
 }
 
 .grupo-config__titulo {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-sm);
+  font-weight: var(--peso-semi);
   color: var(--cor-texto-secundario);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--letra-espacada);
   margin-bottom: var(--espaco-sm);
 }
 
@@ -471,17 +592,17 @@
 }
 
 .linha-config__rotulo {
-  font-size: 14px;
+  font-size: var(--fonte-tamanho-base);
 }
 
 .linha-config__descricao {
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-secundario);
   margin-top: 2px;
 }
 
 .linha-config__valor {
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
   color: var(--cor-texto-secundario);
   font-family: "Consolas", monospace;
 }
@@ -495,8 +616,8 @@
 }
 
 .cartao__subtotal {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-base);
+  font-weight: var(--peso-semi);
   color: var(--cor-positivo);
 }
 
@@ -510,9 +631,14 @@
   border: none;
   background: transparent;
   color: var(--cor-texto-secundario);
-  padding: 5px;
+  /* 15px de ícone + 9px de padding = alvo de toque de 33px — mais perto do
+     mínimo recomendado (44px) sem inflar a altura das linhas de tabela, que
+     já é definida pelo padding de --espaco-md nas células. */
+  padding: 9px;
   border-radius: var(--raio-sm);
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: background-color var(--transicao-rapida), color var(--transicao-rapida), transform var(--transicao-rapida);
 }
 
@@ -531,6 +657,17 @@
   transform: scale(0.94);
 }
 
+.botao-icone:focus-visible {
+  outline: none;
+  box-shadow: var(--sombra-brilho-acento);
+}
+
+.botao-icone:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
 .botao-icone--perigo:hover {
   color: var(--cor-negativo);
 }
@@ -539,7 +676,7 @@
 .sobreposicao {
   position: fixed;
   inset: 0;
-  background-color: rgba(10, 8, 15, 0.65);
+  background-color: var(--cor-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -583,8 +720,8 @@
   display: flex;
   flex-direction: column;
   background-color: var(--cor-superficie);
-  border: 1px solid rgba(201, 163, 245, 0.18);
-  border-radius: var(--raio-lg);
+  border: 1px solid var(--cor-borda-acento);
+  border-radius: var(--raio-cartao);
   padding: var(--espaco-lg);
   box-shadow: var(--sombra-media);
   animation: apareceModal 220ms var(--curva-suave);
@@ -606,16 +743,16 @@
 }
 
 .modal__cabecalho h2 {
-  font-size: 17px;
+  font-size: var(--fonte-tamanho-lg);
 }
 
 .modal__fechar {
   border: none;
   background: transparent;
   color: var(--cor-texto-secundario);
-  font-size: 22px;
+  font-size: var(--fonte-tamanho-xl);
   line-height: 1;
-  padding: 2px 6px;
+  padding: 6px 10px;
   border-radius: var(--raio-sm);
   transition: background-color var(--transicao-rapida), color var(--transicao-rapida);
 }
@@ -623,6 +760,12 @@
 .modal__fechar:hover {
   color: var(--cor-texto);
   background-color: var(--cor-superficie-alta);
+}
+
+.modal__fechar:focus-visible {
+  outline: none;
+  color: var(--cor-texto);
+  box-shadow: var(--sombra-brilho-acento);
 }
 
 .modal__acoes {
@@ -649,17 +792,17 @@
 }
 
 .campo label {
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
   color: var(--cor-texto-secundario);
 }
 
 .campo input {
   background-color: var(--cor-superficie-alta);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-md);
+  border-radius: var(--raio-input);
   padding: var(--espaco-sm) var(--espaco-md);
   color: var(--cor-texto);
-  font-size: 14px;
+  font-size: var(--fonte-tamanho-base);
   font-family: inherit;
   transition: border-color var(--transicao-rapida), box-shadow var(--transicao-rapida);
 }
@@ -678,10 +821,10 @@
 .campo select {
   background-color: var(--cor-superficie-alta);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-md);
+  border-radius: var(--raio-input);
   padding: var(--espaco-sm) var(--espaco-md);
   color: var(--cor-texto);
-  font-size: 14px;
+  font-size: var(--fonte-tamanho-base);
   font-family: inherit;
   transition: border-color var(--transicao-rapida), box-shadow var(--transicao-rapida);
 }
@@ -693,7 +836,7 @@
 }
 
 .campo__aviso {
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-acento);
   margin: 0;
 }
@@ -701,10 +844,10 @@
 .campo textarea {
   background-color: var(--cor-superficie-alta);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-md);
+  border-radius: var(--raio-input);
   padding: var(--espaco-sm) var(--espaco-md);
   color: var(--cor-texto);
-  font-size: 14px;
+  font-size: var(--fonte-tamanho-base);
   font-family: inherit;
   resize: vertical;
   min-height: 60px;
@@ -737,7 +880,53 @@
 }
 
 .campo-checkbox label {
-  font-size: 14px;
+  font-size: var(--fonte-tamanho-base);
+}
+
+/* Divulgação nativa ("Mais opções") — <details>/<summary>, sem nenhum
+   JavaScript novo: aberto/fechado, foco por teclado e o triângulo indicador
+   já vêm de graça do navegador. Usado nos formulários de gasto/ganho para
+   separar os campos essenciais (pedidos com frequência) dos administrativos
+   (carteira, recorrência, observações), que ficam escondidos até serem
+   pedidos — "deixar detalhes para uma interação secundária". */
+.divulgacao {
+  margin-bottom: var(--espaco-md);
+}
+
+.divulgacao > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-xs);
+  padding: var(--espaco-sm);
+  margin: 0 calc(var(--espaco-sm) * -1) var(--espaco-xs);
+  border-radius: var(--raio-sm);
+  font-size: var(--fonte-tamanho-sm);
+  font-weight: var(--peso-semi);
+  color: var(--cor-texto-secundario);
+  transition: background-color var(--transicao-rapida), color var(--transicao-rapida);
+}
+
+.divulgacao > summary::marker {
+  color: var(--cor-texto-fraco);
+}
+
+.divulgacao > summary:hover {
+  background-color: var(--cor-superficie-alta);
+  color: var(--cor-texto);
+}
+
+.divulgacao > summary:focus-visible {
+  outline: none;
+  box-shadow: var(--sombra-brilho-acento);
+}
+
+.divulgacao[open] > summary {
+  margin-bottom: var(--espaco-sm);
+}
+
+.divulgacao__conteudo {
+  padding-top: var(--espaco-xs);
 }
 
 /* Linha de gasto já pago: riscado e levemente transparente */
@@ -774,12 +963,12 @@
 }
 
 .item-parcelamento__titulo {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-base);
+  font-weight: var(--peso-semi);
 }
 
 .item-parcelamento__detalhe {
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-secundario);
   margin-top: 2px;
 }
@@ -795,9 +984,9 @@
 .cartao-grafico {
   background-color: var(--cor-superficie);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-lg);
+  border-radius: var(--raio-cartao);
   padding: var(--espaco-lg);
-  box-shadow: var(--sombra-suave);
+  box-shadow: var(--sombra-cartao);
 }
 
 .cartao-grafico--largo {
@@ -805,13 +994,13 @@
 }
 
 .cartao-grafico__titulo {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-md);
+  font-weight: var(--peso-semi);
   margin-bottom: var(--espaco-xs);
 }
 
 .cartao-grafico__subtitulo {
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-secundario);
   margin-bottom: var(--espaco-md);
 }
@@ -829,7 +1018,7 @@
 
 .grafico-svg text {
   fill: var(--cor-texto-secundario);
-  font-size: 11px;
+  font-size: var(--fonte-tamanho-2xs);
   font-family: var(--fonte);
 }
 
@@ -838,7 +1027,7 @@
   gap: var(--espaco-md);
   flex-wrap: wrap;
   margin-top: var(--espaco-md);
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-secundario);
 }
 
@@ -862,7 +1051,7 @@
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-sm);
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto);
   box-shadow: var(--sombra-media);
   white-space: nowrap;
@@ -876,23 +1065,131 @@
 }
 
 .grafico-tooltip__valor {
-  font-weight: 700;
+  font-weight: var(--peso-negrito);
 }
 
-/* Seletor de mês (Dashboard, Gastos, Ganhos) */
+/* Toast de confirmação (salvar/editar/excluir uma transação) — pilha no
+   rodapé da tela, central, some sozinho. z-index acima do modal (100) de
+   propósito: o toast de "gasto salvo" costuma aparecer bem no instante em
+   que o modal acaba de fechar. */
+.toast-container {
+  position: fixed;
+  left: 50%;
+  bottom: var(--espaco-xl);
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--espaco-sm);
+  pointer-events: none;
+}
+
+.toast {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+  max-width: min(90vw, 360px);
+  background-color: var(--cor-superficie-elevada);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-pilula);
+  padding: var(--espaco-sm) var(--espaco-md);
+  box-shadow: var(--sombra-media);
+  font-size: var(--fonte-tamanho-sm);
+  font-weight: var(--peso-medio);
+  color: var(--cor-texto);
+  opacity: 0;
+  transform: translateY(10px) scale(0.96);
+  transition: opacity var(--transicao-suave), transform var(--transicao-suave);
+}
+
+.toast--visivel {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.toast__icone {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.toast__icone svg {
+  width: 16px;
+  height: 16px;
+}
+
+.toast__texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast--sucesso .toast__icone {
+  color: var(--cor-positivo);
+}
+
+.toast--exclusao .toast__icone {
+  color: var(--cor-negativo);
+}
+
+@media (max-width: 560px) {
+  .toast-container {
+    bottom: var(--espaco-lg);
+    left: var(--espaco-md);
+    right: var(--espaco-md);
+    transform: none;
+  }
+
+  .toast {
+    max-width: none;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Seletor de mês (Dashboard, Gastos, Ganhos, Ticket Alimentação) — flex-wrap
+   evita que a fileira (◀ rótulo ▶ "Mês atual") force scroll horizontal da
+   página numa janela estreita; o rótulo só encolhe o mínimo abaixo de 560px,
+   quando há menos espaço sobrando. */
 .seletor-mes {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--espaco-sm);
   margin-bottom: var(--espaco-md);
 }
 
 .seletor-mes__rotulo {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-base);
+  font-weight: var(--peso-semi);
   min-width: 160px;
   text-align: center;
   text-transform: capitalize;
+}
+
+@media (max-width: 560px) {
+  .seletor-mes__rotulo {
+    min-width: 132px;
+  }
+}
+
+/* Paginação (Histórico) — mesma linguagem visual do seletor de mês
+   (◀ rótulo ▶), só que abaixo da tabela em vez de acima da página. */
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-md);
+  margin-top: var(--espaco-md);
+  padding-top: var(--espaco-md);
+  border-top: 1px solid var(--cor-borda);
+}
+
+.paginacao__rotulo {
+  font-size: var(--fonte-tamanho-sm);
+  color: var(--cor-texto-secundario);
+  min-width: 140px;
+  text-align: center;
 }
 
 /* Barra de filtros (página Histórico) */
@@ -907,10 +1204,10 @@
 .barra-filtros select {
   background-color: var(--cor-superficie-alta);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-md);
+  border-radius: var(--raio-input);
   padding: var(--espaco-sm) var(--espaco-md);
   color: var(--cor-texto);
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
   font-family: inherit;
   transition: border-color var(--transicao-rapida), box-shadow var(--transicao-rapida);
 }
@@ -952,22 +1249,32 @@
 }
 
 .cartao-meta__nome {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-md);
+  font-weight: var(--peso-semi);
 }
 
-.cartao-meta__valores {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--espaco-sm);
-  font-size: 13px;
+/* Valor desejado como uma "etiqueta de preço" (rótulo pequeno + número
+   grande) em vez de uma linha de texto corrida — ajuda a comparar os itens
+   da wishlist de relance, que é o motivo de existir uma página de metas. */
+.cartao-meta__valor {
+  margin-bottom: var(--espaco-md);
+}
+
+.cartao-meta__valor-rotulo {
+  display: block;
+  font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-secundario);
-  margin-bottom: var(--espaco-sm);
+  margin-bottom: 2px;
+}
+
+.cartao-meta__valor-numero {
+  font-size: var(--fonte-tamanho-2xl);
+  font-weight: var(--peso-negrito);
+  letter-spacing: var(--letra-apertada);
 }
 
 .cartao-meta__observacoes {
-  font-size: 13px;
+  font-size: var(--fonte-tamanho-sm);
   color: var(--cor-texto-secundario);
   margin-bottom: var(--espaco-md);
 }
@@ -984,16 +1291,16 @@
   align-items: center;
   gap: 4px;
   padding: 2px var(--espaco-sm);
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  border-radius: var(--raio-pilula);
+  font-size: var(--fonte-tamanho-xs);
+  font-weight: var(--peso-semi);
   white-space: nowrap;
 }
 
 .chip-categoria--vazia {
   background-color: var(--cor-superficie-alta);
   color: var(--cor-texto-fraco);
-  font-weight: 500;
+  font-weight: var(--peso-medio);
 }
 
 /* Seletor de categoria (formulário de gasto) — botão que abre um painel com
@@ -1010,10 +1317,10 @@
   width: 100%;
   background-color: var(--cor-superficie-alta);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-md);
+  border-radius: var(--raio-input);
   padding: var(--espaco-sm) var(--espaco-md);
   color: var(--cor-texto);
-  font-size: 14px;
+  font-size: var(--fonte-tamanho-base);
   font-family: inherit;
   transition: border-color var(--transicao-rapida), box-shadow var(--transicao-rapida);
 }
@@ -1050,7 +1357,7 @@
   right: 0;
   background-color: var(--cor-superficie-alta);
   border: 1px solid var(--cor-borda);
-  border-radius: var(--raio-md);
+  border-radius: var(--raio-input);
   box-shadow: var(--sombra-media);
   padding: var(--espaco-sm);
   max-height: 220px;
@@ -1073,8 +1380,8 @@
   border: 1px solid transparent;
   border-radius: var(--raio-sm);
   padding: 6px 8px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--fonte-tamanho-sm);
+  font-weight: var(--peso-semi);
   background-color: transparent;
   text-align: left;
   transition: transform var(--transicao-rapida), border-color var(--transicao-rapida);
@@ -1088,6 +1395,11 @@
   transform: scale(0.97);
 }
 
+.opcao-categoria:focus-visible {
+  outline: none;
+  box-shadow: var(--sombra-brilho-acento);
+}
+
 .opcao-categoria.selecionada {
   border-color: currentColor;
 }
@@ -1096,4 +1408,17 @@
   grid-column: 1 / -1;
   color: var(--cor-texto-secundario);
   background-color: var(--cor-superficie);
+}
+
+/* Ajustes gerais de telas estreitas — o padding generoso dos cartões
+   (--espaco-lg = 24px de cada lado) é o "respiro" certo em telas largas, mas
+   numa janela de ~375px de largura ele sozinho já consome ~19% do espaço
+   disponível para conteúdo. Reduzido um degrau (para --espaco-md) só abaixo
+   de 560px, sem mudar nada em tablet/desktop. */
+@media (max-width: 560px) {
+  .cartao,
+  .cartao-estatistica,
+  .cartao-grafico {
+    padding: var(--espaco-md);
+  }
 }

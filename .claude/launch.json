@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "preview-static",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "4178"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["scripts/preview-estatico.js"],
       "port": 4178
     }
   ]

@@ -12,6 +12,11 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.11.0] - 2026-08-09
+
+- **Correção de bugs da auditoria de QA** (10 bugs, 2 altos/2 médios/6 baixos — ver relatório completo da auditoria): Dashboard e o gráfico "Evolução do saldo" divergiam no mesmo mês (fórmulas diferentes, unificadas em `utils/calculosFinanceiros.js`); restaurar um backup/exportação aceitava itens com id duplicado, valor não numérico ou data inválida sem nenhuma validação (novo `dados/validacao.js`); excluir dois itens fixos/parcelados em sequência rápida deixava a primeira exclusão pendurada para sempre; título só com espaços em 5 formulários (Ganhos, Gastos, Lembretes, Metas, Parcelamento) falhava em silêncio; texto desatualizado na página Ticket Alimentação; modais sem `role="dialog"`/foco preso (novo `utils/focoModal.js`); operações longas de Exportação sem indicador de carregamento; busca do Histórico sem debounce; parcelamento sem limite de quantidade/confirmação prévia; parcelamento sem seletor de carteira (agora aceita Ticket Alimentação também).
+- **Novo**: suíte de testes automatizados (`npm test`, `node --test` nativo — sem framework externo) com 58 testes cobrindo os 10 bugs corrigidos como testes de regressão, mais cobertura adicional de recorrência de itens fixos, saldo de carteira de benefício e migração automática de dados antigos. `jsdom` adicionado como dependência de desenvolvimento (só para os testes, não entra no app empacotado) para testes que exercitam formulários/modais reais a partir do próprio `src/index.html`.
+
 ## [1.10.0] - 2026-08-09
 
 - **Novo**: card "Próximo recebimento" na página Ticket Alimentação — valor, data prevista e dias restantes, só aparece para um benefício ativo e recorrente (nunca mostra uma previsão falsa).
