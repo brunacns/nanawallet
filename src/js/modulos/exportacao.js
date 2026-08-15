@@ -1,23 +1,20 @@
-import {
-  lerConfiguracoes,
-  salvarConfiguracoes,
-  salvarMetas,
-  salvarCategorias,
-  salvarCarteiras,
-  salvarCarteiraMovimentacoes,
-  salvarMes,
-  salvarColecaoCompleta,
-  apagarTodosOsDados,
-} from "../dados/armazenamento.js";
 import { validarESanearItens } from "../dados/validacao.js";
 import { obterGanhos, recarregarGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, recarregarGastos, aoAtualizarGastos } from "./gastos.js";
 import { obterLembretes, recarregarLembretes, aoAtualizarLembretes } from "./lembretes.js";
 import { obterMetas, recarregarMetas, aoAtualizarMetas } from "./metas.js";
-import { categoriasService, carteirasService, carteiraEntradasService } from "../servicos/index.js";
+import { armazenamentoAtivo, categoriasService, carteirasService, carteiraEntradasService } from "../servicos/index.js";
 import { filtrarGastosPrincipais } from "../carteiras.js";
 import { formatarMoeda, formatarData, carimboDataHora, escaparHtml } from "../utils/formatadores.js";
 import { rotuloMesLongo } from "../utils/datas.js";
+import { estaNoTauri } from "../utils/plataforma.js";
+
+// Exportar/backup/restaurar em ARQUIVO local (diálogo nativo do SO) só faz
+// sentido no Desktop (Tauri) — a Web não tem acesso ao sistema de arquivos
+// do jeito que essas ações precisam. "Apagar todos os dados" não depende de
+// arquivo nenhum (só fala com o Supabase), então continua disponível nos
+// dois. Ver Fase 6 da migração (CLAUDE.md).
+const MENSAGEM_SO_DESKTOP = "Disponível só na versão Desktop (precisa de acesso ao sistema de arquivos).";
 
 // Correção (auditoria 2026-08-09, BUG-07): "Apagar tudo", exportar,
 // restaurar e fazer backup manual podiam levar vários segundos com uma base
@@ -47,11 +44,20 @@ export async function iniciarExportacao() {
   const botaoRestaurarArquivo = document.getElementById("botao-restaurar-arquivo");
   const botaoApagarTudo = document.getElementById("botao-apagar-tudo");
 
-  botaoExportarJson.addEventListener("click", comCarregando(botaoExportarJson, "Exportando…", exportarJson));
-  botaoExportarTexto.addEventListener("click", comCarregando(botaoExportarTexto, "Exportando…", exportarTexto));
-  botaoBackupManual.addEventListener("click", comCarregando(botaoBackupManual, "Criando backup…", criarBackupManual));
-  botaoRestaurarArquivo.addEventListener("click", comCarregando(botaoRestaurarArquivo, "Restaurando…", restaurarDeArquivo));
-  document.getElementById("exportacao-backups-conteudo").addEventListener("click", tratarCliqueBackups);
+  if (estaNoTauri()) {
+    botaoExportarJson.addEventListener("click", comCarregando(botaoExportarJson, "Exportando…", exportarJson));
+    botaoExportarTexto.addEventListener("click", comCarregando(botaoExportarTexto, "Exportando…", exportarTexto));
+    botaoBackupManual.addEventListener("click", comCarregando(botaoBackupManual, "Criando backup…", criarBackupManual));
+    botaoRestaurarArquivo.addEventListener("click", comCarregando(botaoRestaurarArquivo, "Restaurando…", restaurarDeArquivo));
+    document.getElementById("exportacao-backups-conteudo").addEventListener("click", tratarCliqueBackups);
+  } else {
+    // Web: sem acesso a diálogo nativo/sistema de arquivos — desabilita em
+    // vez de esconder, para ficar claro que a função existe (só não aqui).
+    for (const botao of [botaoExportarJson, botaoExportarTexto, botaoBackupManual, botaoRestaurarArquivo]) {
+      botao.disabled = true;
+      botao.title = MENSAGEM_SO_DESKTOP;
+    }
+  }
   botaoApagarTudo.addEventListener("click", comCarregando(botaoApagarTudo, "Apagando…", tratarApagarTudo));
 
   // Toda gravação em ganhos/gastos/lembretes cria um backup automático novo
@@ -85,7 +91,7 @@ async function exportarJson() {
   });
   if (!caminho) return;
 
-  const dadosConfiguracoes = await lerConfiguracoes();
+  const dadosConfiguracoes = await armazenamentoAtivo.lerConfig("configuracoes");
   const conteudo = {
     versao: 1,
     exportadoEm: new Date().toISOString(),
@@ -242,7 +248,7 @@ async function criarBackupManual() {
     await fs.writeTextFile(destino, JSON.stringify({ versao: 1, [chave]: itens }, null, 2));
   }
 
-  const configuracoes = await lerConfiguracoes();
+  const configuracoes = await armazenamentoAtivo.lerConfig("configuracoes");
   const destinoConfig = await path.join(caminhoBackup, "configuracoes.json");
   await fs.writeTextFile(destinoConfig, JSON.stringify(configuracoes, null, 2));
 
@@ -250,9 +256,18 @@ async function criarBackupManual() {
 }
 
 async function listarBackupsAutomaticos() {
-  const { fs, path } = window.__TAURI__;
   const container = document.getElementById("exportacao-backups-conteudo");
 
+  if (!estaNoTauri()) {
+    // Backups automáticos eram gerados a cada gravação em arquivo local —
+    // desde que o Supabase passou a ser a fonte dos dados (Fase 10), nada
+    // mais escreve localmente no dia a dia, então não há nada novo pra
+    // listar aqui em nenhuma plataforma; na Web, nem a pasta existe.
+    container.innerHTML = `<li class="estado-vazio" style="padding: var(--espaco-md) 0;">${MENSAGEM_SO_DESKTOP}</li>`;
+    return;
+  }
+
+  const { fs, path } = window.__TAURI__;
   const raiz = await path.appLocalDataDir();
   const pastaBackups = await path.join(raiz, "backups");
 
@@ -359,22 +374,23 @@ async function restaurarBackupAutomatico(nomeArquivo) {
   const conteudo = JSON.parse(await fs.readTextFile(caminho));
 
   if (colecao === "configuracoes") {
-    await salvarConfiguracoes(conteudo);
-  } else if (colecao === "metas") {
-    await salvarMetas(conteudo);
-  } else if (colecao === "categorias") {
-    await salvarCategorias(conteudo);
-  } else if (colecao === "carteiras") {
-    await salvarCarteiras(conteudo);
-  } else if (colecao === "carteiraMovimentacoes") {
-    await salvarCarteiraMovimentacoes(conteudo);
+    await armazenamentoAtivo.salvarConfig("configuracoes", conteudo);
+  } else if (ehArquivoUnico) {
+    // metas/categorias/carteiras/carteiraMovimentacoes nunca foram
+    // particionadas — o backup automático é sempre uma foto da coleção
+    // inteira, então substituir tudo é o comportamento certo aqui.
+    await armazenamentoAtivo.substituirTudo(colecao, conteudo[colecao] || []);
   } else {
     // Mesma sanitização aplicada em `restaurarDeArquivo` (BUG-02): um backup
     // automático é normalmente gerado pelo próprio app, mas nada impede o
     // arquivo de ter sido editado à mão antes de ser restaurado, então passa
     // pela mesma validação por segurança.
     const { validos, descartados } = validarESanearItens(colecao, conteudo[colecao] || []);
-    await salvarMes(colecao, anoMes, validos);
+    // gastos/ganhos/lembretes: o backup automático é só de UM mês — no
+    // Supabase (tabela única, sem partição por mês) isso precisa ser um
+    // upsert (mescla, sem apagar), não um "substituir tudo", senão apagaria
+    // todos os OUTROS meses da coleção por engano.
+    await armazenamentoAtivo.salvarEmLote(colecao, validos);
     if (descartados.length > 0) {
       await recarregarModulo(colecao);
       await listarBackupsAutomaticos();
@@ -429,31 +445,31 @@ async function restaurarDeArquivo() {
       : "";
 
   const confirmou = confirm(
-    `Restaurar este arquivo vai SUBSTITUIR todos os seus dados atuais (ganhos, gastos, lembretes e configurações) pelos dados desse arquivo.\n\nUm backup do estado atual será criado automaticamente antes. Deseja continuar?${avisoDescarte}`
+    `Restaurar este arquivo vai SUBSTITUIR todos os seus dados atuais (ganhos, gastos, lembretes e configurações) pelos dados desse arquivo.\n\nEsta ação não pode ser desfeita pela interface — se quiser poder voltar atrás, exporte/faça backup dos dados atuais primeiro. Deseja continuar?${avisoDescarte}`
   );
   if (!confirmou) return;
 
-  await salvarColecaoCompleta("ganhos", ganhosValidados.validos);
-  await salvarColecaoCompleta("gastos", gastosValidados.validos);
-  await salvarColecaoCompleta("lembretes", lembretesValidados.validos);
+  await armazenamentoAtivo.substituirTudo("ganhos", ganhosValidados.validos);
+  await armazenamentoAtivo.substituirTudo("gastos", gastosValidados.validos);
+  await armazenamentoAtivo.substituirTudo("lembretes", lembretesValidados.validos);
   if (dados.configuracoes) {
-    await salvarConfiguracoes({ versao: 1, configuracoes: dados.configuracoes });
+    await armazenamentoAtivo.salvarConfig("configuracoes", { configuracoes: dados.configuracoes });
   }
   // "metas", "categorias", "carteiras" e "carteiraMovimentacoes" são
   // opcionais na validação acima: exportações feitas antes de cada
   // funcionalidade existir não têm esses campos, e restaurá-las não deve
   // apagar os dados atuais do usuário nessas coleções.
   if (Array.isArray(dados.metas)) {
-    await salvarMetas({ versao: 1, metas: dados.metas });
+    await armazenamentoAtivo.substituirTudo("metas", dados.metas);
   }
   if (Array.isArray(dados.categorias)) {
-    await salvarCategorias({ versao: 1, categorias: dados.categorias });
+    await armazenamentoAtivo.substituirTudo("categorias", dados.categorias);
   }
   if (Array.isArray(dados.carteiras)) {
-    await salvarCarteiras({ versao: 1, carteiras: dados.carteiras });
+    await armazenamentoAtivo.substituirTudo("carteiras", dados.carteiras);
   }
   if (Array.isArray(dados.carteiraMovimentacoes)) {
-    await salvarCarteiraMovimentacoes({ versao: 1, carteiraMovimentacoes: dados.carteiraMovimentacoes });
+    await armazenamentoAtivo.substituirTudo("carteiraMovimentacoes", dados.carteiraMovimentacoes);
   }
 
   await recarregarGanhos();
@@ -473,16 +489,27 @@ async function restaurarDeArquivo() {
 
 // ==================== 5. Apagar todos os dados ====================
 
+// Zera gastos/ganhos/lembretes/metas/movimentações de carteira de benefício
+// no Supabase — mesmo escopo de dados/armazenamento.js#apagarTodosOsDados
+// (a versão local, usada só pela ArmazenamentoLocalService/testes).
+// "configuracoes" e "carteiras" nunca são apagados de propósito (taxonomia/
+// configuração, não dado financeiro do usuário).
+async function apagarTodosOsDadosSupabase() {
+  for (const colecao of ["gastos", "ganhos", "lembretes", "metas", "carteiraMovimentacoes"]) {
+    await armazenamentoAtivo.substituirTudo(colecao, []);
+  }
+}
+
 async function tratarApagarTudo() {
   const primeiraConfirmacao = confirm(
-    "Isso vai apagar PERMANENTEMENTE todos os ganhos, gastos, lembretes, metas e movimentações de carteira de benefício cadastrados (de todos os meses). As configurações e as carteiras cadastradas não são afetadas.\n\nUm backup completo é criado automaticamente antes, mas essa ação não pode ser desfeita pela interface. Deseja continuar?"
+    "Isso vai apagar PERMANENTEMENTE todos os ganhos, gastos, lembretes, metas e movimentações de carteira de benefício cadastrados (de todos os meses). As configurações e as carteiras cadastradas não são afetadas.\n\nEsta ação não pode ser desfeita pela interface — se quiser poder voltar atrás, exporte/faça backup dos dados atuais primeiro (só no Desktop). Deseja continuar?"
   );
   if (!primeiraConfirmacao) return;
 
   const segundaConfirmacao = confirm('Tem certeza mesmo? Digite mentalmente "sim" e confirme para apagar todos os dados agora.');
   if (!segundaConfirmacao) return;
 
-  await apagarTodosOsDados();
+  await apagarTodosOsDadosSupabase();
 
   await recarregarGanhos();
   await recarregarGastos();
@@ -491,7 +518,7 @@ async function tratarApagarTudo() {
   await carteiraEntradasService.recarregar();
   await listarBackupsAutomaticos();
 
-  mostrarStatus("Todos os dados foram apagados. Um backup do estado anterior está disponível em \"Backups automáticos recentes\".");
+  mostrarStatus("Todos os dados foram apagados.");
 }
 
 async function recarregarModulo(chave) {
