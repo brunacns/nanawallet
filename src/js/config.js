@@ -13,4 +13,13 @@ export const CONFIG = {
     carteiras: "carteiras.json",
     carteiraMovimentacoes: "carteira_movimentacoes.json",
   },
+  // URL e chave publicável do projeto Supabase ("nanawallet"). Não são
+  // segredo: a chave publicável é protegida por Row Level Security, feita
+  // pelo próprio Supabase para ficar visível no frontend — a mesma
+  // informação aparece no DevTools de qualquer site que usa Supabase. A
+  // "service_role key" (essa sim secreta) nunca deve ser colocada aqui.
+  supabase: {
+    url: "https://hqrigzitalqgdrelmxja.supabase.co",
+    publishableKey: "sb_publishable_tLvybNB99mLvKHnFlQ87vg_QKVKTFpA",
+  },
 };
