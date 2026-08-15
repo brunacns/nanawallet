@@ -1,3 +1,16 @@
 node_modules/
 src-tauri/target/
 src-tauri/gen/
+
+# Segredos e ambiente (Supabase URL/chaves)
+.env
+.env.local
+.env.*.local
+
+# Configuracao pessoal do Claude Code (nao compartilhada)
+.claude/settings.local.json
+
+# Artefatos e temporarios de editor/SO
+*.log
+.DS_Store
+Thumbs.db
