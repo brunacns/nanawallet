@@ -1,14 +1,14 @@
 import { armazenamentoAtivo, categoriasService, carteirasService, carteiraEntradasService } from "./servicos/index.js";
 import { configurarNavegacao } from "./navegacao.js";
-import { iniciarPaginaGanhos } from "./modulos/ganhos.js";
-import { iniciarPaginaGastos } from "./modulos/gastos.js";
+import { iniciarPaginaGanhos, recarregarGanhos } from "./modulos/ganhos.js";
+import { iniciarPaginaGastos, recarregarGastos } from "./modulos/gastos.js";
 import { iniciarPaginaTicketAlimentacao } from "./modulos/ticketAlimentacao.js";
 import { iniciarParcelamentos } from "./modulos/parcelamentos.js";
-import { iniciarPaginaLembretes } from "./modulos/lembretes.js";
+import { iniciarPaginaLembretes, recarregarLembretes } from "./modulos/lembretes.js";
 import { iniciarDashboard } from "./modulos/dashboard.js";
 import { iniciarGraficos } from "./modulos/graficos.js";
 import { iniciarHistorico } from "./modulos/historico.js";
-import { iniciarPaginaMetas } from "./modulos/metas.js";
+import { iniciarPaginaMetas, recarregarMetas } from "./modulos/metas.js";
 import { iniciarExportacao } from "./modulos/exportacao.js";
 import { iniciarPaginaConfiguracoes } from "./modulos/configuracoes.js";
 import { iniciarConfirmacaoExclusao } from "./confirmacaoExclusao.js";
@@ -18,6 +18,10 @@ import { iniciarTelaLogin, exibirPortao, esconderPortao } from "./auth/telaLogin
 function mostrarStatusArmazenamento(texto) {
   const el = document.getElementById("status-armazenamento");
   if (el) el.textContent = texto;
+}
+
+function horaCurta() {
+  return new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 }
 
 // Roda uma etapa de inicialização isolada: se uma página falhar ao carregar
@@ -33,6 +37,36 @@ async function iniciarEtapa(nome, fn) {
   }
 }
 
+// true só depois que iniciarAppAutenticado() termina — evita que o listener
+// de visibilitychange (ligado no fim dela) dispare uma sincronização antes
+// de tudo estar pronto, ou depois de logout/antes de logar de novo.
+let appAutenticado = false;
+
+// Busca de novo o estado de cada coleção no Supabase e notifica as telas já
+// abertas — é o mecanismo de sincronização entre Desktop e Web (Fase 8):
+// sem fila, sem realtime, só "buscar de novo quando a usuária volta a
+// olhar pro app". Chamado ao voltar o foco da janela/aba e no clique manual
+// no indicador de status.
+async function sincronizarAgora() {
+  if (!appAutenticado) return;
+  mostrarStatusArmazenamento("Sincronizando…");
+  try {
+    await Promise.all([
+      categoriasService.listar(),
+      carteirasService.listar(),
+      carteiraEntradasService.listar(),
+      recarregarGanhos(),
+      recarregarGastos(),
+      recarregarLembretes(),
+      recarregarMetas(),
+    ]);
+    mostrarStatusArmazenamento(`Sincronizado às ${horaCurta()}`);
+  } catch (erro) {
+    mostrarStatusArmazenamento("Erro ao sincronizar");
+    console.error("Erro ao sincronizar com o Supabase:", erro);
+  }
+}
+
 // Tudo que depende de haver uma sessão válida — chamado depois do login (ou
 // direto, se já havia uma sessão persistida). Separado de iniciarApp() para
 // o portão de autenticação poder bloquear só esta parte, sem impedir a
@@ -45,7 +79,7 @@ async function iniciarAppAutenticado() {
     // em vez de falar com o Supabase direto — é essa indireção que mantém as
     // telas desacopladas da implementação concreta de armazenamento.
     await armazenamentoAtivo.inicializar();
-    mostrarStatusArmazenamento("Conectado");
+    mostrarStatusArmazenamento(`Sincronizado às ${horaCurta()}`);
   } catch (erro) {
     mostrarStatusArmazenamento("Erro de conexão com o Supabase");
     console.error("Erro ao inicializar o armazenamento:", erro);
@@ -67,6 +101,12 @@ async function iniciarAppAutenticado() {
   await iniciarEtapa("histórico", iniciarHistorico);
   await iniciarEtapa("metas", iniciarPaginaMetas);
   await iniciarEtapa("exportação", iniciarExportacao);
+
+  appAutenticado = true;
+  document.getElementById("status-armazenamento")?.addEventListener("click", sincronizarAgora);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") sincronizarAgora();
+  });
 }
 
 async function iniciarApp() {

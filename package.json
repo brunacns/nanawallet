@@ -6,6 +6,7 @@
   "scripts": {
     "tauri": "tauri",
     "preparar-build": "node scripts/preparar-build.js",
+    "dev:web": "node scripts/preview-estatico.js",
     "test": "node --test",
     "test:coverage": "node --test --experimental-test-coverage"
   },

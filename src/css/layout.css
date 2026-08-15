@@ -111,6 +111,26 @@
   padding-top: var(--espaco-md);
 }
 
+/* #status-armazenamento é um <button> (clicável, sincroniza na hora) mas
+   deve parecer texto simples, igual ao resto do rodapé da sidebar — reset
+   das propriedades que o navegador aplica por padrão em <button>. */
+#status-armazenamento {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+#status-armazenamento:hover,
+#status-armazenamento:focus-visible {
+  color: var(--cor-texto);
+}
+
 /* Conteúdo principal */
 .conteudo {
   overflow-y: auto;
