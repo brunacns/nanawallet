@@ -10,6 +10,7 @@ import { mkdtemp, rm, mkdir, readFile, writeFile, readdir, copyFile as copyFileF
 import { existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { ArmazenamentoLocalService } from "../../src/js/servicos/ArmazenamentoLocalService.js";
 
 export function criarMockTauri(raizAppData) {
   // Config mutável para os testes que precisam simular a escolha do usuário
@@ -58,6 +59,13 @@ export async function criarAmbienteTauri() {
   const raiz = await mkdtemp(path.join(tmpdir(), "nanawallet-test-"));
   if (!globalThis.window) globalThis.window = {};
   globalThis.window.__TAURI__ = criarMockTauri(raiz);
+  // Desde a migração para Supabase (Fase 10), servicos/index.js usa
+  // ArmazenamentoSupabaseService por padrão — sem este hook, todo teste que
+  // importa os serviços reais (transacoesGastos, carteirasService etc.)
+  // passaria a bater no Supabase de verdade, sem sessão, em vez de usar os
+  // arquivos JSON da pasta temporária acima. Só existe em ambiente de teste;
+  // o app real nunca define essa variável.
+  globalThis.__armazenamentoParaTestes = new ArmazenamentoLocalService();
   return {
     raiz,
     // maxRetries/retryDelay: no Windows, remover a pasta logo após uma
@@ -65,7 +73,10 @@ export async function criarAmbienteTauri() {
     // o SO ainda não liberou o handle do arquivo recém-fechado — sem isso, um
     // teste que salva duas vezes em sequência rápida (ex: criar um item e
     // depois alternar seu status) falha na limpeza mesmo com as asserções OK.
-    limpar: () => rm(raiz, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }),
+    limpar: () => {
+      delete globalThis.__armazenamentoParaTestes;
+      return rm(raiz, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    },
   };
 }
 

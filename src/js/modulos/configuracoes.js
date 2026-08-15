@@ -1,8 +1,29 @@
 import { formatarData, formatarDataHora } from "../utils/formatadores.js";
+import { sair } from "../auth/AuthService.js";
+import { obterSessao } from "../supabase/sessao.js";
 
-// Página Configurações: informações de versão/build (lidas automaticamente).
+// Página Configurações: informações de versão/build (lidas automaticamente)
+// e a conta autenticada (e-mail + sair).
 export async function iniciarPaginaConfiguracoes() {
   await preencherInformacoesDeVersao();
+  preencherContaEEncerrarSessao();
+}
+
+function preencherContaEEncerrarSessao() {
+  const emailEl = document.getElementById("config-email-usuaria");
+  const botaoSair = document.getElementById("botao-sair-config");
+  if (emailEl) emailEl.textContent = obterSessao()?.user?.email ?? "—";
+
+  botaoSair?.addEventListener("click", async () => {
+    botaoSair.disabled = true;
+    botaoSair.textContent = "Saindo…";
+    await sair();
+    // Recarrega a página inteira em vez de tentar desmontar o estado em
+    // memória de cada tela na mão — mais simples e confiável: o app volta a
+    // rodar exatamente o mesmo fluxo de inicialização, que já sabe mostrar o
+    // portão de login quando não há sessão.
+    window.location.reload();
+  });
 }
 
 async function preencherInformacoesDeVersao() {

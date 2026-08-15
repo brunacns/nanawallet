@@ -12,6 +12,8 @@ import { iniciarPaginaMetas } from "./modulos/metas.js";
 import { iniciarExportacao } from "./modulos/exportacao.js";
 import { iniciarPaginaConfiguracoes } from "./modulos/configuracoes.js";
 import { iniciarConfirmacaoExclusao } from "./confirmacaoExclusao.js";
+import { garantirSessaoValida } from "./auth/AuthService.js";
+import { iniciarTelaLogin, exibirPortao, esconderPortao } from "./auth/telaLogin.js";
 
 function mostrarStatusArmazenamento(texto) {
   const el = document.getElementById("status-armazenamento");
@@ -19,9 +21,9 @@ function mostrarStatusArmazenamento(texto) {
 }
 
 // Roda uma etapa de inicialização isolada: se uma página falhar ao carregar
-// (ex: um arquivo de mês corrompido), as demais ainda são tentadas — antes,
-// todas as páginas ficavam dentro de um único try/catch e uma falha isolada
-// (ex: só em gastos) impedia até páginas sem nenhum problema (ex: metas) de
+// (ex: um erro de rede pontual), as demais ainda são tentadas — antes, todas
+// as páginas ficavam dentro de um único try/catch e uma falha isolada (ex:
+// só em gastos) impedia até páginas sem nenhum problema (ex: metas) de
 // inicializar.
 async function iniciarEtapa(nome, fn) {
   try {
@@ -31,22 +33,21 @@ async function iniciarEtapa(nome, fn) {
   }
 }
 
-async function iniciarApp() {
-  configurarNavegacao();
-  // Não dependem do armazenamento (fs) — rodam fora do try/catch de baixo
-  // para continuar funcionando mesmo se o armazenamento falhar.
-  iniciarConfirmacaoExclusao();
+// Tudo que depende de haver uma sessão válida — chamado depois do login (ou
+// direto, se já havia uma sessão persistida). Separado de iniciarApp() para
+// o portão de autenticação poder bloquear só esta parte, sem impedir a
+// navegação/sidebar de existir no DOM por trás dele.
+async function iniciarAppAutenticado() {
   await iniciarPaginaConfiguracoes();
 
   try {
-    // Passa pelo StorageService ativo (hoje: armazenamento local em
-    // arquivos JSON) em vez de chamar dados/armazenamento.js direto — é
-    // essa indireção que mantém as telas desacopladas da implementação
-    // concreta de armazenamento.
+    // Passa pelo StorageService ativo (Desktop e Web: ArmazenamentoSupabaseService)
+    // em vez de falar com o Supabase direto — é essa indireção que mantém as
+    // telas desacopladas da implementação concreta de armazenamento.
     await armazenamentoAtivo.inicializar();
-    mostrarStatusArmazenamento("Armazenamento OK");
+    mostrarStatusArmazenamento("Conectado");
   } catch (erro) {
-    mostrarStatusArmazenamento("Erro no armazenamento");
+    mostrarStatusArmazenamento("Erro de conexão com o Supabase");
     console.error("Erro ao inicializar o armazenamento:", erro);
     return;
   }
@@ -66,6 +67,28 @@ async function iniciarApp() {
   await iniciarEtapa("histórico", iniciarHistorico);
   await iniciarEtapa("metas", iniciarPaginaMetas);
   await iniciarEtapa("exportação", iniciarExportacao);
+}
+
+async function iniciarApp() {
+  configurarNavegacao();
+  iniciarConfirmacaoExclusao();
+
+  iniciarTelaLogin({
+    aoAutenticar: async () => {
+      esconderPortao();
+      await iniciarAppAutenticado();
+    },
+  });
+
+  // Sessão persistente: se já havia login válido (ou renovável via
+  // refresh_token) guardado de uma vez anterior, entra direto, sem mostrar
+  // o portão — em qualquer outro caso, pede login.
+  const sessao = await garantirSessaoValida();
+  if (sessao) {
+    await iniciarAppAutenticado();
+  } else {
+    exibirPortao();
+  }
 }
 
 window.addEventListener("DOMContentLoaded", iniciarApp);

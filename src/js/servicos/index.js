@@ -1,4 +1,4 @@
-import { ArmazenamentoLocalService } from "./ArmazenamentoLocalService.js";
+import { ArmazenamentoSupabaseService } from "./ArmazenamentoSupabaseService.js";
 import { TransactionService } from "./TransactionService.js";
 import { ReminderService } from "./ReminderService.js";
 import { GoalService } from "./GoalService.js";
@@ -9,13 +9,42 @@ import { mesDeData } from "../utils/datas.js";
 
 // ---------------------------------------------------------------------------
 // Composition root: único lugar do app que monta os serviços de domínio por
-// cima do StorageService ativo (hoje: ArmazenamentoLocalService, arquivos
-// JSON locais). Todo o resto do app (TransactionService, ReminderService,
+// cima do StorageService ativo (Desktop e Web: ArmazenamentoSupabaseService
+// — os dois exigem conexão com o Supabase, sem fallback local; ver Fase 6/8
+// da migração). Todo o resto do app (TransactionService, ReminderService,
 // GoalService, e as telas em modulos/*.js) só conhece o contrato de
-// StorageService — trocar a implementação concreta no futuro é mudar só
-// este arquivo.
-// ---------------------------------------------------------------------------
-export const armazenamentoAtivo = new ArmazenamentoLocalService();
+// StorageService — trocar a implementação concreta é mudar só este arquivo.
+//
+// `globalThis.__armazenamentoParaTestes`: hook usado SÓ pelos testes
+// automatizados (tests/helpers/tauriFsMock.js o define antes de cada
+// teste) — sem ele, os ~13 arquivos de teste que exercitam a lógica de
+// negócio real (recorrências, parcelamentos, validação) através destes
+// serviços passariam a bater no Supabase de verdade, sem sessão, a cada
+// teste. O app de verdade nunca define essa variável, então o fallback
+// (ArmazenamentoSupabaseService) é sempre o que roda fora de teste.
+//
+// Resolvido de forma PREGUIÇOSA (Proxy), não numa constante fixa: este
+// módulo é um singleton ES (avaliado uma única vez por processo) e é
+// importado, de forma transitiva, por módulos que nada têm a ver com teste
+// (ex: src/js/carteiras.js, para usar `carteirasService`). Se um desses
+// imports acontecesse ANTES do primeiro `criarAmbienteTauri()` de uma
+// suíte de testes, `armazenamentoAtivo` ficaria "congelado" na decisão
+// errada para o resto do processo — mesmo bug de fundo que o Proxy de
+// `fs`/`path` em dados/armazenamento.js já evita para `window.__TAURI__`.
+const instanciaPadrao = new ArmazenamentoSupabaseService();
+function armazenamentoAlvo() {
+  return globalThis.__armazenamentoParaTestes ?? instanciaPadrao;
+}
+export const armazenamentoAtivo = new Proxy(
+  {},
+  {
+    get: (_alvo, propriedade) => {
+      const alvo = armazenamentoAlvo();
+      const valor = alvo[propriedade];
+      return typeof valor === "function" ? valor.bind(alvo) : valor;
+    },
+  }
+);
 
 // ---- Transações (gastos) ----
 // Migração: gastos salvos antes da Etapa 13 não tinham mesReferencia/fixoId;

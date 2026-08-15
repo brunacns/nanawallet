@@ -754,21 +754,38 @@
           </div>
 
           <div class="grupo-config">
+            <div class="grupo-config__titulo">Conta</div>
+            <div class="cartao">
+              <div class="linha-config">
+                <span class="linha-config__rotulo">E-mail</span>
+                <span class="linha-config__valor" id="config-email-usuaria">—</span>
+              </div>
+              <div class="linha-config">
+                <div>
+                  <div class="linha-config__rotulo">Sessão</div>
+                  <div class="linha-config__descricao">Encerra o login neste dispositivo</div>
+                </div>
+                <button type="button" class="botao botao--secundario botao--pequeno" id="botao-sair-config">Sair</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grupo-config">
             <div class="grupo-config__titulo">Armazenamento</div>
             <div class="cartao">
               <div class="linha-config">
                 <div>
-                  <div class="linha-config__rotulo">Local dos dados</div>
-                  <div class="linha-config__descricao">Pasta onde ganhos, gastos e lembretes são salvos</div>
+                  <div class="linha-config__rotulo">Fonte dos dados</div>
+                  <div class="linha-config__descricao">Ganhos, gastos e lembretes ficam no Supabase, sincronizados entre Desktop e Web</div>
                 </div>
-                <span class="linha-config__valor">%LOCALAPPDATA%\com.financeiro.desktop\dados</span>
+                <span class="linha-config__valor">Supabase</span>
               </div>
               <div class="linha-config">
                 <div>
-                  <div class="linha-config__rotulo">Backups automáticos</div>
-                  <div class="linha-config__descricao">Cópia de segurança criada a cada alteração</div>
+                  <div class="linha-config__rotulo">Backup local</div>
+                  <div class="linha-config__descricao">Exportação/backup manual (página Exportação) continuam salvando um arquivo no seu computador</div>
                 </div>
-                <span class="linha-config__valor">últimos 15 por arquivo</span>
+                <span class="linha-config__valor">Desktop apenas</span>
               </div>
             </div>
           </div>
@@ -1068,6 +1085,37 @@
         <div class="modal__acoes">
           <button type="button" class="botao botao--secundario" id="botao-cancelar-escopo-exclusao">Cancelar</button>
           <button type="button" class="botao botao--perigo" id="botao-confirmar-escopo-exclusao">Excluir</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Portão de autenticação (Supabase Auth) — sem sessão válida, isto
+         cobre a tela inteira (auth/telaLogin.js). Sem botão de fechar de
+         propósito: não é dispensável, sem login não há o que mostrar por
+         trás. Ainda não é exibido por main.js (isso liga na Fase 10,
+         passo 3) — hoje fica sempre `hidden`. -->
+    <div class="sobreposicao" id="portao-autenticacao" hidden>
+      <div class="modal" style="max-width: 380px" role="dialog" aria-modal="true" aria-labelledby="autenticacao-titulo">
+        <div class="modal__cabecalho">
+          <h2 id="autenticacao-titulo">Entrar no NanaWallet</h2>
+        </div>
+        <form id="formulario-autenticacao">
+          <div class="campo">
+            <label for="campo-email-autenticacao">E-mail</label>
+            <input type="email" id="campo-email-autenticacao" required autocomplete="email" />
+          </div>
+          <div class="campo" id="grupo-senha-autenticacao">
+            <label for="campo-senha-autenticacao">Senha</label>
+            <input type="password" id="campo-senha-autenticacao" required autocomplete="current-password" minlength="6" />
+          </div>
+          <p class="autenticacao__mensagem" id="mensagem-autenticacao" hidden></p>
+          <div class="modal__acoes">
+            <button type="submit" class="botao botao--primario" id="botao-enviar-autenticacao">Entrar</button>
+          </div>
+        </form>
+        <div class="autenticacao__rodape">
+          <button type="button" class="botao botao--secundario botao--pequeno" id="botao-esqueci-senha">Esqueci minha senha</button>
+          <button type="button" class="botao botao--secundario botao--pequeno" id="botao-alternar-modo-autenticacao">Criar uma conta</button>
         </div>
       </div>
     </div>

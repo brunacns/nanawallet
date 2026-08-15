@@ -783,6 +783,35 @@
   padding-bottom: var(--espaco-xs);
 }
 
+/* Portão de autenticação (Supabase Auth) — mensagem de erro/sucesso e o
+   par de links secundários (esqueci a senha / criar conta), abaixo do
+   formulário. Reaproveita as mesmas cores "-fraco" já usadas nos selos
+   positivo/negativo, só que como fundo de um bloco de texto em vez de badge. */
+.autenticacao__mensagem {
+  font-size: var(--fonte-tamanho-sm);
+  padding: var(--espaco-sm) var(--espaco-md);
+  border-radius: var(--raio-sm);
+  margin: 0 0 var(--espaco-md);
+}
+
+.autenticacao__mensagem--erro {
+  background-color: var(--cor-negativo-fraco);
+  color: var(--cor-negativo);
+}
+
+.autenticacao__mensagem--sucesso {
+  background-color: var(--cor-positivo-fraco);
+  color: var(--cor-positivo);
+}
+
+.autenticacao__rodape {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--espaco-sm);
+  margin-top: var(--espaco-md);
+  flex-shrink: 0;
+}
+
 /* Campos de formulário */
 .campo {
   display: flex;
