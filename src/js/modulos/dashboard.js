@@ -332,7 +332,7 @@ function renderizarBeneficios(mes) {
       const { saldoAtual } = calcularSaldoCarteira(carteira, todasEntradas, todosGastos, mes);
       return `
         <li class="lista-simples__item">
-          <span class="lista-simples__titulo">${carteira.emoji} ${escaparHtml(carteira.nome)}</span>
+          <span class="lista-simples__titulo">${escaparHtml(carteira.emoji)} ${escaparHtml(carteira.nome)}</span>
           <span class="lista-simples__legenda">${formatarMoeda(saldoAtual)}</span>
         </li>
       `;

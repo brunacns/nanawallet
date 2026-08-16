@@ -251,7 +251,7 @@ function renderizarGastosPorCategoria(gastosDoMes, gastoMes) {
       return `
         <li class="item-diagnostico">
           <span class="item-diagnostico__ponto item-diagnostico__ponto--neutro"></span>
-          <span>${r.emoji} ${escaparHtml(r.nome)}: ${formatarMoeda(r.valor)} (${pct}%)</span>
+          <span>${escaparHtml(r.emoji)} ${escaparHtml(r.nome)}: ${formatarMoeda(r.valor)} (${pct}%)</span>
         </li>
       `;
     })

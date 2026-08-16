@@ -3,7 +3,7 @@
 // modulos/, para uma coisa usada por várias telas sem virar um serviço de
 // domínio (a leitura/escrita de verdade continua em categoriasService).
 import { categoriasService } from "./servicos/index.js";
-import { escaparHtml, corComOpacidade } from "./utils/formatadores.js";
+import { escaparHtml, corComOpacidade, corSegura } from "./utils/formatadores.js";
 
 export function obterCategorias() {
   return categoriasService.obterTodos();
@@ -24,7 +24,7 @@ export function obterCategoriaPorId(id) {
 export function opcoesFiltroCategoria() {
   const opcoes = categoriasService
     .obterTodos()
-    .map((c) => `<option value="${c.id}">${c.emoji} ${escaparHtml(c.nome)}</option>`)
+    .map((c) => `<option value="${c.id}">${escaparHtml(c.emoji)} ${escaparHtml(c.nome)}</option>`)
     .join("");
   return `<option value="todas">Todas as categorias</option><option value="sem">Sem categoria</option>${opcoes}`;
 }
@@ -34,9 +34,10 @@ export function chipCategoria(categoriaId) {
   if (!categoria) {
     return '<span class="chip-categoria chip-categoria--vazia">Sem categoria</span>';
   }
-  return `<span class="chip-categoria" style="background-color: ${corComOpacidade(categoria.cor, 0.18)}; color: ${categoria.cor};">${
+  const cor = corSegura(categoria.cor);
+  return `<span class="chip-categoria" style="background-color: ${corComOpacidade(cor, 0.18)}; color: ${cor};">${escaparHtml(
     categoria.emoji
-  } ${escaparHtml(categoria.nome)}</span>`;
+  )} ${escaparHtml(categoria.nome)}</span>`;
 }
 
 // ---------- Seletor de categoria (componente de formulário) ----------
@@ -66,10 +67,11 @@ export function criarSeletorCategoria(nome) {
     const opcoes = obterCategorias()
       .map((categoria) => {
         const selecionada = categoria.id === categoriaIdSelecionada ? "selecionada" : "";
+        const cor = corSegura(categoria.cor);
         return `<button type="button" class="opcao-categoria ${selecionada}" data-categoria-id="${categoria.id}" style="background-color: ${corComOpacidade(
-          categoria.cor,
+          cor,
           0.16
-        )}; color: ${categoria.cor};">${categoria.emoji} ${escaparHtml(categoria.nome)}</button>`;
+        )}; color: ${cor};">${escaparHtml(categoria.emoji)} ${escaparHtml(categoria.nome)}</button>`;
       })
       .join("");
 

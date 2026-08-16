@@ -3,6 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Content-Security-Policy (auditoria de segurança 2026-08-16): o app
+         Desktop já tem uma CSP equivalente aplicada nativamente pelo Tauri
+         (src-tauri/tauri.conf.json), mas isso não cobre a versão Web — o
+         GitHub Pages é hospedagem estática pura, sem como configurar
+         cabeçalhos HTTP customizados, então a tag <meta> é a única forma
+         disponível de aplicar uma CSP aqui. script-src sem 'unsafe-inline'
+         bloqueia handlers de evento inline (ex: onerror="...") mesmo que
+         acabem injetados via innerHTML — uma camada a mais de defesa além do
+         escape de HTML já feito no JavaScript. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://hqrigzitalqgdrelmxja.supabase.co; base-uri 'self'; form-action 'self'; object-src 'none'"
+    />
     <title>NanaWallet</title>
     <!-- Ícones extraídos de src-tauri/icons/icon.ico (mesmo ícone do app Desktop) —
          favicon da aba do navegador e ícone do atalho ao adicionar à tela de

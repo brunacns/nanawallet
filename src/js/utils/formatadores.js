@@ -22,6 +22,19 @@ export function formatarDataHora(dataHoraISO) {
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+// Valida que uma cor é um hex de 6 dígitos antes dela entrar num atributo
+// style="" interpolado (auditoria de segurança 2026-08-16) — categoria.cor e
+// carteira.cor vêm de linhas gravadas pela própria usuária, mas a RLS só
+// garante QUEM pode gravar (auth.uid() = user_id), nunca O QUE é gravado no
+// campo: uma chamada direta à API do Supabase (fora da interface, que só
+// oferece um seletor de cores fixo) poderia gravar `cor` como
+// `"><script>...` e quebrar para fora do atributo quando essa string fosse
+// interpolada sem verificação. Qualquer valor que não seja um hex válido cai
+// num cinza neutro seguro, sem quebrar a tela.
+export function corSegura(cor) {
+  return typeof cor === "string" && /^#[0-9a-fA-F]{6}$/.test(cor) ? cor : "#9386a9";
+}
+
 // Converte uma cor hex ("#F2A65A") para rgba com a opacidade dada — usado
 // para aplicar a cor pastel de cada categoria como fundo suave (estilo dos
 // selos existentes), sem precisar de uma classe CSS fixa por categoria.

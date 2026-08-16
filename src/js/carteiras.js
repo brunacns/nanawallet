@@ -47,7 +47,7 @@ export function opcoesCarteiraGasto() {
   const dinheiro = ativas.filter((c) => c.tipo === "dinheiro");
   const beneficios = ativas.filter((c) => c.tipo === "beneficio");
 
-  const opcao = (c) => `<option value="${c.id}">${c.emoji} ${escaparHtml(c.nome)}</option>`;
+  const opcao = (c) => `<option value="${c.id}">${escaparHtml(c.emoji)} ${escaparHtml(c.nome)}</option>`;
 
   return [...dinheiro.map(opcao), ...beneficios.map(opcao)].join("");
 }
