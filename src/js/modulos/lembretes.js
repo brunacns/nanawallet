@@ -31,9 +31,7 @@ export async function iniciarPaginaLembretes() {
   document.getElementById("botao-novo-lembrete").addEventListener("click", abrirModalNovo);
   document.getElementById("botao-fechar-modal-lembrete").addEventListener("click", fecharModal);
   document.getElementById("botao-cancelar-modal-lembrete").addEventListener("click", fecharModal);
-  document.getElementById("sobreposicao-lembrete").addEventListener("click", (evento) => {
-    if (evento.target.id === "sobreposicao-lembrete") fecharModal();
-  });
+  // De propósito, sem fechar ao tocar fora do modal — ver mesma nota em gastos.js.
   prenderFocoNoModal(document.getElementById("sobreposicao-lembrete"));
   document.getElementById("formulario-lembrete").addEventListener("submit", salvarFormulario);
   document.getElementById("lembretes-conteudo").addEventListener("click", tratarClique);

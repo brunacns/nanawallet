@@ -29,9 +29,7 @@ export async function iniciarPaginaMetas() {
   document.getElementById("botao-nova-meta").addEventListener("click", abrirModalNovo);
   document.getElementById("botao-fechar-modal-meta").addEventListener("click", fecharModal);
   document.getElementById("botao-cancelar-modal-meta").addEventListener("click", fecharModal);
-  document.getElementById("sobreposicao-meta").addEventListener("click", (evento) => {
-    if (evento.target.id === "sobreposicao-meta") fecharModal();
-  });
+  // De propósito, sem fechar ao tocar fora do modal — ver mesma nota em gastos.js.
   prenderFocoNoModal(document.getElementById("sobreposicao-meta"));
   document.getElementById("formulario-meta").addEventListener("submit", salvarFormulario);
   document.getElementById("metas-conteudo").addEventListener("click", tratarClique);

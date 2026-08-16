@@ -12,6 +12,19 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.12.0] - 2026-08-15
+
+- **Auditoria e correção de responsividade mobile** (foco no iPhone 11, 390×844): a versão Web (GitHub Pages) agora se comporta como um app pensado para celular, não um desktop espremido.
+  - **Navegação inferior fixa** (≤560px) substitui a barra de ícones horizontal (que exigia arrastar pra ver os itens fora da tela, sem nenhuma pista visual de que havia mais): Dashboard/Gastos/Ganhos/Histórico sempre visíveis + "Mais" abre uma folha com Ticket Alimentação/Lembretes/Metas/Exportação/Configurações.
+  - **Modais viram folha inferior** ("bottom sheet") no celular — ancorados embaixo, largura cheia, cantos superiores arredondados, mais fáceis de alcançar com o polegar. Continuam com scroll interno e botões de ação sempre visíveis (herdado da etapa anterior). Não fecham mais ao tocar fora *nos formulários* (gasto, ganho, parcelamento, lembrete, meta) — só um toque sem querer não descarta mais o que já foi digitado.
+  - **Tabelas (Gastos, Ganhos, Histórico, Ticket Alimentação) viram cartões empilhados** em telas estreitas (≤700px), em vez de rolar na horizontal.
+  - **Campos de formulário em 16px no mobile** — evita o zoom automático do iOS Safari ao focar um input.
+  - **Gráficos legíveis sem dar zoom**: o texto dos 6 gráficos SVG do Dashboard é redimensionado no mobile pra compensar a escala do `viewBox`, que antes deixava os rótulos ilegíveis (~6px na tela) num card estreito.
+  - `100vh` → `100dvh` (com fallback) e uso de `env(safe-area-inset-*)` na navegação inferior, no rodapé dos modais e no toast — evita cortes/vãos causados pela barra de endereço retrátil e pelo notch/indicador de home do iPhone.
+  - Alvo de toque ampliado nos ícones de editar/excluir (mobile) e no painel do seletor de categoria (1 coluna abaixo de 400px).
+  - **Bug real corrigido**: a tabela de Ganhos não tinha o wrapper `.tabela-scroll` que as outras 3 tabelas já tinham — podia vazar para fora do cartão e causar scroll horizontal da página inteira em telas estreitas.
+  - Testado nos breakpoints 320/360/375/390/414/768/1024/desktop com dados reais (mock temporário de Supabase só para a sessão de auditoria, sem sobrar no código) — sem nenhum scroll horizontal de página em nenhuma largura, e o desktop (sidebar, tabelas, modais centralizados) sem nenhuma mudança de comportamento.
+
 ## [1.11.0] - 2026-08-09
 
 - **Correção de bugs da auditoria de QA** (10 bugs, 2 altos/2 médios/6 baixos — ver relatório completo da auditoria): Dashboard e o gráfico "Evolução do saldo" divergiam no mesmo mês (fórmulas diferentes, unificadas em `utils/calculosFinanceiros.js`); restaurar um backup/exportação aceitava itens com id duplicado, valor não numérico ou data inválida sem nenhuma validação (novo `dados/validacao.js`); excluir dois itens fixos/parcelados em sequência rápida deixava a primeira exclusão pendurada para sempre; título só com espaços em 5 formulários (Ganhos, Gastos, Lembretes, Metas, Parcelamento) falhava em silêncio; texto desatualizado na página Ticket Alimentação; modais sem `role="dialog"`/foco preso (novo `utils/focoModal.js`); operações longas de Exportação sem indicador de carregamento; busca do Histórico sem debounce; parcelamento sem limite de quantidade/confirmação prévia; parcelamento sem seletor de carteira (agora aceita Ticket Alimentação também).

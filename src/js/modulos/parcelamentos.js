@@ -19,9 +19,7 @@ export function iniciarParcelamentos() {
   document.getElementById("botao-novo-parcelamento").addEventListener("click", abrirModal);
   document.getElementById("botao-fechar-modal-parcelamento").addEventListener("click", fecharModal);
   document.getElementById("botao-cancelar-modal-parcelamento").addEventListener("click", fecharModal);
-  document.getElementById("sobreposicao-parcelamento").addEventListener("click", (evento) => {
-    if (evento.target.id === "sobreposicao-parcelamento") fecharModal();
-  });
+  // De propósito, sem fechar ao tocar fora do modal — ver mesma nota em gastos.js.
   prenderFocoNoModal(document.getElementById("sobreposicao-parcelamento"));
   document.getElementById("formulario-parcelamento").addEventListener("submit", salvarFormulario);
   document.getElementById("campo-carteira-parcelamento").addEventListener("change", atualizarCamposConformeCarteira);

@@ -191,12 +191,12 @@ function linhaTransacao(t) {
 
   return `
     <tr>
-      <td>${rotuloTipo}</td>
-      <td>${escaparHtml(t.titulo)}</td>
-      <td>${categoria}</td>
-      <td>${formatarData(t.data)}</td>
-      <td class="${classeValor}">${formatarMoeda(t.valor)}</td>
-      <td>${rotuloStatus}</td>
+      <td data-rotulo="Tipo">${rotuloTipo}</td>
+      <td class="tabela__titulo-celula" data-rotulo="Título">${escaparHtml(t.titulo)}</td>
+      <td data-rotulo="Categoria">${categoria}</td>
+      <td data-rotulo="Data">${formatarData(t.data)}</td>
+      <td class="${classeValor}" data-rotulo="Valor">${formatarMoeda(t.valor)}</td>
+      <td data-rotulo="Status">${rotuloStatus}</td>
     </tr>
   `;
 }

@@ -282,10 +282,10 @@ function linhaMovimentacao(m) {
     const descricao = m.observacoes ? escaparHtml(m.observacoes) : "Recebimento";
     return `
       <tr data-id="${m.id}" data-tipo="entrada">
-        <td>${formatarData(m.data)}</td>
-        <td>${descricao}</td>
-        <td>—</td>
-        <td class="tabela__valor-positivo">+ ${formatarMoeda(m.valor)}</td>
+        <td data-rotulo="Data">${formatarData(m.data)}</td>
+        <td class="tabela__titulo-celula" data-rotulo="Descrição">${descricao}</td>
+        <td data-rotulo="Categoria">—</td>
+        <td class="tabela__valor-positivo" data-rotulo="Valor">+ ${formatarMoeda(m.valor)}</td>
         <td class="tabela__acoes">
           <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir-entrada" title="Excluir" aria-label="Excluir">${svgExcluir}</button>
         </td>
@@ -295,10 +295,10 @@ function linhaMovimentacao(m) {
 
   return `
     <tr data-id="${m.id}" data-tipo="gasto">
-      <td>${formatarData(m.data)}</td>
-      <td>${escaparHtml(m.titulo)}</td>
-      <td>${chipCategoria(m.categoriaId)}</td>
-      <td class="tabela__valor-negativo">- ${formatarMoeda(m.valor)}</td>
+      <td data-rotulo="Data">${formatarData(m.data)}</td>
+      <td class="tabela__titulo-celula" data-rotulo="Descrição">${escaparHtml(m.titulo)}</td>
+      <td data-rotulo="Categoria">${chipCategoria(m.categoriaId)}</td>
+      <td class="tabela__valor-negativo" data-rotulo="Valor">- ${formatarMoeda(m.valor)}</td>
       <td class="tabela__acoes">
         <button type="button" class="botao-icone" data-acao="editar-gasto" title="Editar" aria-label="Editar">${svgEditar}</button>
         <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir-gasto" title="Excluir" aria-label="Excluir">${svgExcluir}</button>

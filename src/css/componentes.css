@@ -338,6 +338,101 @@
   min-width: 640px;
 }
 
+/* Em telas de celular, rolar uma tabela larga na horizontal funciona mas não
+   é uma boa experiência (pedido explícito: cartões em vez de scroll lateral).
+   Cada <tr> vira um cartão e cada <td> vira uma linha "rótulo: valor" via
+   data-rotulo (atributo já emitido pelos módulos que renderizam essas
+   tabelas — gastos.js, ganhos.js, historico.js, ticketAlimentacao.js). A
+   célula de título (.tabela__titulo-celula) vira o cabeçalho do cartão, sem
+   rótulo; a de ações (.tabela__acoes, já existente) vira o rodapé, também
+   sem rótulo — os ícones + aria-label já são autoexplicativos. */
+@media (max-width: 700px) {
+  .tabela-scroll {
+    overflow-x: visible;
+  }
+
+  .tabela-scroll .tabela {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .tabela-scroll .tabela thead {
+    display: none;
+  }
+
+  .tabela-scroll .tabela,
+  .tabela-scroll .tabela tbody,
+  .tabela-scroll .tabela tr,
+  .tabela-scroll .tabela td {
+    display: block;
+    width: 100%;
+  }
+
+  .tabela-scroll .tabela tr {
+    margin-bottom: var(--espaco-sm);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-md);
+    padding: var(--espaco-sm) var(--espaco-md);
+    background-color: var(--cor-superficie-elevada);
+  }
+
+  .tabela-scroll .tabela tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .tabela-scroll .tabela td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espaco-sm);
+    padding: var(--espaco-xs) 0;
+    border-bottom: 1px solid var(--cor-borda);
+    font-size: var(--fonte-tamanho-sm);
+    text-align: right;
+  }
+
+  .tabela-scroll .tabela td:last-child {
+    border-bottom: none;
+  }
+
+  .tabela-scroll .tabela td::before {
+    content: attr(data-rotulo);
+    text-align: left;
+    font-size: var(--fonte-tamanho-xs);
+    font-weight: var(--peso-medio);
+    color: var(--cor-texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: var(--letra-espacada);
+    flex-shrink: 0;
+  }
+
+  /* Título: cabeçalho do cartão — maior, em negrito, sem rótulo/borda. */
+  .tabela-scroll .tabela td.tabela__titulo-celula {
+    justify-content: flex-start;
+    font-size: var(--fonte-tamanho-base);
+    font-weight: var(--peso-semi);
+    border-bottom: none;
+    padding-bottom: var(--espaco-xs);
+  }
+
+  .tabela-scroll .tabela td.tabela__titulo-celula::before {
+    content: none;
+  }
+
+  /* Ações: rodapé do cartão — ícones alinhados à direita, sem rótulo. */
+  .tabela-scroll .tabela td.tabela__acoes {
+    justify-content: flex-end;
+    border-bottom: none;
+    border-top: 1px solid var(--cor-borda);
+    margin-top: var(--espaco-xs);
+    padding-top: var(--espaco-sm);
+  }
+
+  .tabela-scroll .tabela td.tabela__acoes::before {
+    content: none;
+  }
+}
+
 .tabela th {
   text-align: left;
   color: var(--cor-texto-secundario);
@@ -628,18 +723,30 @@
 }
 
 .botao-icone {
+  position: relative;
   border: none;
   background: transparent;
   color: var(--cor-texto-secundario);
   /* 15px de ícone + 9px de padding = alvo de toque de 33px — mais perto do
      mínimo recomendado (44px) sem inflar a altura das linhas de tabela, que
-     já é definida pelo padding de --espaco-md nas células. */
+     já é definida pelo padding de --espaco-md nas células. Em telas de toque
+     (≤700px), um ::after invisível amplia a área clicável sem mudar o
+     tamanho visual do ícone nem a altura da linha — mesma técnica já usada
+     em .caixa-toggle::before. */
   padding: 9px;
   border-radius: var(--raio-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   transition: background-color var(--transicao-rapida), color var(--transicao-rapida), transform var(--transicao-rapida);
+}
+
+@media (max-width: 700px) {
+  .botao-icone::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+  }
 }
 
 .botao-icone svg {
@@ -717,6 +824,7 @@
      lá dentro (não o .modal inteiro) que rola, para o cabeçalho e os botões
      de ação continuarem sempre visíveis. */
   max-height: calc(100vh - var(--espaco-xl) * 2);
+  max-height: calc(100dvh - var(--espaco-xl) * 2);
   display: flex;
   flex-direction: column;
   background-color: var(--cor-superficie);
@@ -725,6 +833,16 @@
   padding: var(--espaco-lg);
   box-shadow: var(--sombra-media);
   animation: apareceModal 220ms var(--curva-suave);
+}
+
+/* Variante mais estreita — modais de confirmação/lista simples (escolha de
+   escopo de exclusão, portão de autenticação, folha "Mais" da navegação),
+   sem os campos de um formulário completo. Vira uma classe (antes era
+   style="max-width:380px" inline em cada um) só pra poder ser sobrescrita
+   pela regra de folha inferior do mobile abaixo — um estilo inline nunca
+   perderia para uma regra de classe, nem dentro de @media. */
+.modal--estreito {
+  max-width: 380px;
 }
 
 .modal > form {
@@ -781,6 +899,46 @@
   background-color: var(--cor-superficie);
   padding-top: var(--espaco-sm);
   padding-bottom: var(--espaco-xs);
+}
+
+/* Modal em modo "folha inferior" (bottom sheet) no celular — todo modal do
+   app (formulário de gasto/ganho/parcelamento/lembrete/meta, portão de
+   autenticação, escolha de escopo de exclusão, folha "Mais" da navegação)
+   usa a mesma estrutura .sobreposicao/.modal, então esta regra cobre todos
+   de uma vez, sem precisar de HTML/JS por modal. Ancorado embaixo em vez de
+   centralizado: mais fácil de alcançar com o polegar, e o formulário fica
+   "grudado" na borda inferior real da tela em vez de flutuar no meio dela.
+   Mesma paleta/raio/sombra de sempre — só a ancoragem e a animação mudam. */
+@media (max-width: 560px) {
+  .sobreposicao {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal {
+    max-width: none;
+    width: 100%;
+    border-radius: var(--raio-lg) var(--raio-lg) 0 0;
+    max-height: calc(100vh - var(--espaco-2xl));
+    max-height: calc(100dvh - var(--espaco-2xl));
+    padding-bottom: calc(var(--espaco-lg) + env(safe-area-inset-bottom));
+    animation: apareceFolha 220ms var(--curva-suave);
+  }
+
+  .modal__acoes {
+    padding-bottom: calc(var(--espaco-xs) + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes apareceFolha {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Portão de autenticação (Supabase Auth) — mensagem de erro/sucesso e o
@@ -1045,10 +1203,27 @@
   display: block;
 }
 
+.grafico-svg {
+  --grafico-fonte-eixo: var(--fonte-tamanho-2xs);
+}
+
 .grafico-svg text {
   fill: var(--cor-texto-secundario);
-  font-size: var(--fonte-tamanho-2xs);
+  font-size: var(--grafico-fonte-eixo);
   font-family: var(--fonte);
+}
+
+/* Os gráficos usam um viewBox largo fixo (LARGURA=560 em graficos.js) e são
+   escalados pra caber no card via width:100% — em um card mobile de
+   ~320-340px isso reduz o texto a ~0,58× do tamanho original (viewBox
+   scaling), ficando ilegível sem dar zoom. Redefinindo as variáveis de fonte
+   do gráfico ~1,7× maiores só nesse breakpoint compensa a escala e devolve
+   o tamanho *na tela* que o texto já tinha no desktop, em vez de diminuir. */
+@media (max-width: 700px) {
+  .grafico-svg {
+    --grafico-fonte-eixo: 19px;
+    --grafico-fonte-destaque: 21px;
+  }
 }
 
 .grafico-legenda {
@@ -1163,7 +1338,9 @@
 
 @media (max-width: 560px) {
   .toast-container {
-    bottom: var(--espaco-lg);
+    /* Sobe o suficiente pra não ficar atrás da navegação inferior fixa
+       (~48px de altura + respiro + safe area do indicador de home). */
+    bottom: calc(64px + env(safe-area-inset-bottom) + var(--espaco-sm));
     left: var(--espaco-md);
     right: var(--espaco-md);
     transform: none;
@@ -1439,6 +1616,51 @@
   background-color: var(--cor-superficie);
 }
 
+/* Em telas bem estreitas, 2 colunas apertam demais nomes de categoria mais
+   longos ("Comer fora", "Imprevistos") — 1 coluna só nesse caso. */
+@media (max-width: 400px) {
+  .seletor-categoria__painel {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Navegação inferior (mobile) — folha "Mais" com os destinos que não cabem
+   na barra fixa de 4 itens. Mesma linguagem visual de .sidebar__item (ícone
+   + rótulo, alvo de toque generoso), em lista vertical dentro do modal. */
+.menu-mais {
+  gap: 2px;
+}
+
+.menu-mais__item {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-md);
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--cor-texto);
+  padding: var(--espaco-sm) var(--espaco-sm);
+  border-radius: var(--raio-md);
+  font-size: var(--fonte-tamanho-base);
+  font-weight: var(--peso-medio);
+  text-align: left;
+  min-height: 48px;
+  transition: background-color var(--transicao-rapida);
+}
+
+.menu-mais__item svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--cor-texto-secundario);
+}
+
+.menu-mais__item:hover,
+.menu-mais__item:focus-visible {
+  outline: none;
+  background-color: var(--cor-superficie-alta);
+}
+
 /* Ajustes gerais de telas estreitas — o padding generoso dos cartões
    (--espaco-lg = 24px de cada lado) é o "respiro" certo em telas largas, mas
    numa janela de ~375px de largura ele sozinho já consome ~19% do espaço
@@ -1449,5 +1671,18 @@
   .cartao-estatistica,
   .cartao-grafico {
     padding: var(--espaco-md);
+  }
+
+  /* iOS Safari dá zoom automático ao focar um campo com font-size < 16px —
+     esses campos estavam todos em --fonte-tamanho-base (14px). Escopado ao
+     mobile de propósito, pra não alterar a densidade visual no desktop
+     (onde esse zoom não acontece e 14px já era a escolha certa). */
+  .campo input,
+  .campo select,
+  .campo textarea,
+  .barra-filtros input,
+  .barra-filtros select,
+  .seletor-categoria__botao {
+    font-size: 16px;
   }
 }

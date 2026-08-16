@@ -57,9 +57,9 @@ export async function iniciarPaginaGastos() {
   document.getElementById("botao-novo-gasto").addEventListener("click", abrirModalNovo);
   document.getElementById("botao-fechar-modal-gasto").addEventListener("click", fecharModal);
   document.getElementById("botao-cancelar-modal-gasto").addEventListener("click", fecharModal);
-  document.getElementById("sobreposicao-gasto").addEventListener("click", (evento) => {
-    if (evento.target.id === "sobreposicao-gasto") fecharModal();
-  });
+  // De propósito, sem fechar ao tocar fora do modal: é um formulário — tocar
+  // fora sem querer (fácil de acontecer no celular) não pode descartar o que
+  // já foi digitado. "Cancelar"/"X" continuam sendo as únicas saídas sem salvar.
   prenderFocoNoModal(document.getElementById("sobreposicao-gasto"));
   document.getElementById("formulario-gasto").addEventListener("submit", salvarFormulario);
   document.getElementById("gastos-corpo-tabela").addEventListener("click", tratarCliqueLista);
@@ -181,7 +181,7 @@ function linhaGasto(gasto) {
 
   return `
     <tr data-id="${gasto.id}" class="${gasto.pago ? "linha-paga" : ""}">
-      <td>
+      <td data-rotulo="Pago">
         <div
           class="caixa-toggle ${gasto.pago ? "marcada" : ""}"
           data-acao="alternar-pago"
@@ -191,13 +191,13 @@ function linhaGasto(gasto) {
           tabindex="0"
         ></div>
       </td>
-      <td>${escaparHtml(gasto.titulo)}</td>
-      <td>${formatarData(gasto.data)}</td>
-      <td class="tabela__valor-negativo">${formatarMoeda(gasto.valor)}</td>
-      <td>${chipCategoria(gasto.categoriaId)}</td>
-      <td>${rotuloSalario} (${rotuloMesLongo(gasto.mesReferencia)})</td>
-      <td>${rotuloStatus}</td>
-      <td>${rotuloTipo}</td>
+      <td class="tabela__titulo-celula" data-rotulo="Título">${escaparHtml(gasto.titulo)}</td>
+      <td data-rotulo="Data">${formatarData(gasto.data)}</td>
+      <td class="tabela__valor-negativo" data-rotulo="Valor">${formatarMoeda(gasto.valor)}</td>
+      <td data-rotulo="Categoria">${chipCategoria(gasto.categoriaId)}</td>
+      <td data-rotulo="Salário responsável">${rotuloSalario} (${rotuloMesLongo(gasto.mesReferencia)})</td>
+      <td data-rotulo="Status">${rotuloStatus}</td>
+      <td data-rotulo="Tipo">${rotuloTipo}</td>
       <td class="tabela__acoes">
         <button type="button" class="botao-icone" data-acao="editar" title="Editar" aria-label="Editar">${svgEditar}</button>
         <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir" title="Excluir" aria-label="Excluir">${svgExcluir}</button>

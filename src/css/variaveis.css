@@ -111,6 +111,13 @@
   --fonte-tamanho-2xl: 26px; /* valor financeiro em destaque (cartão de estatística) */
   --fonte-tamanho-3xl: 34px; /* número "herói" do Dashboard (Saldo restante) — Etapa 4 */
 
+  /* Fonte usada em rótulos de destaque dentro dos gráficos SVG (valor de
+     barra, nome de segmento) — token à parte de --fonte-tamanho-* porque é
+     redefinida só dentro do escopo do gráfico no breakpoint mobile (ver
+     componentes.css), compensando o fator de escala do viewBox quando o
+     card do gráfico é bem mais estreito que os 560px do desenho original. */
+  --grafico-fonte-destaque: 12px;
+
   --peso-regular: 400;
   --peso-medio: 500;
   --peso-semi: 600;
@@ -141,5 +148,9 @@
      var() dentro de @media sem um pré-processador, que este projeto não usa
      de propósito). Mantidos aqui como fonte única da verdade "de leitura":
      860px = sidebar recolhe para só ícones
-     560px = sidebar vira barra superior horizontal (empilhamento mobile) */
+     700px = tabelas viram cartões empilhados; grades de 2 colunas viram 1
+     560px = sidebar desaparece, dá lugar à navegação inferior fixa; modais
+             viram folha inferior ("bottom sheet"); campos de formulário
+             passam a 16px (evita zoom automático do iOS ao focar)
+     400px = painel do seletor de categoria vira 1 coluna */
 }

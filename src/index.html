@@ -796,6 +796,115 @@
       </main>
     </div>
 
+    <!-- Navegação inferior (mobile, <=560px) — substitui a sidebar nessa
+         largura. Os 4 destinos mais usados no dia a dia ficam sempre
+         visíveis; "Mais" abre uma folha com o resto (mesmo padrão visual dos
+         outros modais). Sincronizada com a sidebar por data-pagina, em
+         navegacao.js. -->
+    <nav class="navinferior" id="navinferior">
+      <button type="button" class="navinferior__item" data-pagina="dashboard" aria-label="Dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+        <span>Dashboard</span>
+      </button>
+      <button type="button" class="navinferior__item" data-pagina="gastos" aria-label="Gastos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 7 9 13 13 9 21 17" />
+          <polyline points="21 11 21 17 15 17" />
+        </svg>
+        <span>Gastos</span>
+      </button>
+      <button type="button" class="navinferior__item" data-pagina="ganhos" aria-label="Ganhos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 17 9 11 13 15 21 7" />
+          <polyline points="15 7 21 7 21 13" />
+        </svg>
+        <span>Ganhos</span>
+      </button>
+      <button type="button" class="navinferior__item" data-pagina="historico" aria-label="Histórico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="13" r="8" />
+          <polyline points="12 9 12 13 15 15" />
+          <path d="M5 3 3 5" />
+          <path d="M19 3l2 2" />
+        </svg>
+        <span>Histórico</span>
+      </button>
+      <button type="button" class="navinferior__item" id="botao-abrir-mais" aria-label="Mais opções" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="5" cy="12" r="1.6" fill="currentColor" stroke="none" />
+          <circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none" />
+          <circle cx="19" cy="12" r="1.6" fill="currentColor" stroke="none" />
+        </svg>
+        <span>Mais</span>
+      </button>
+    </nav>
+
+    <!-- Folha "Mais" (mobile) — destinos que não cabem na navegação inferior. -->
+    <div class="sobreposicao" id="sobreposicao-mais" hidden>
+      <div class="modal modal--estreito" role="dialog" aria-modal="true" aria-labelledby="mais-titulo">
+        <div class="modal__cabecalho">
+          <h2 id="mais-titulo">Mais</h2>
+          <button type="button" class="modal__fechar" id="botao-fechar-mais" aria-label="Fechar">&times;</button>
+        </div>
+        <ul class="lista-simples menu-mais">
+          <li>
+            <button type="button" class="menu-mais__item" data-pagina="ticket-alimentacao">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="6" width="18" height="12" rx="2" />
+                <path d="M3 12h2M19 12h2" stroke-dasharray="0.1 3.2" />
+                <circle cx="9" cy="12" r="2.2" />
+                <path d="M14 9.5v5M17 9.5v5" />
+              </svg>
+              <span>Ticket Alimentação</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="menu-mais__item" data-pagina="lembretes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4a4.5 4.5 0 0 0-4.5 4.5c0 5-2 6.5-2 6.5h13s-2-1.5-2-6.5A4.5 4.5 0 0 0 12 4z" />
+                <path d="M10 18a2 2 0 0 0 4 0" />
+              </svg>
+              <span>Lembretes</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="menu-mais__item" data-pagina="metas">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="8" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="12" cy="12" r="0.6" fill="currentColor" />
+              </svg>
+              <span>Metas</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="menu-mais__item" data-pagina="exportacao">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v11" /><polyline points="7 10 12 15 17 10" /><path d="M4 18h16" />
+              </svg>
+              <span>Exportação</span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="menu-mais__item" data-pagina="configuracoes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="7" x2="20" y2="7" />
+                <circle cx="9" cy="7" r="2" />
+                <line x1="4" y1="17" x2="20" y2="17" />
+                <circle cx="15" cy="17" r="2" />
+              </svg>
+              <span>Configurações</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+
     <!-- Modal de cadastro/edição de ganho -->
     <div class="sobreposicao" id="sobreposicao-ganho" hidden>
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-ganho-titulo">
@@ -1077,7 +1186,7 @@
     <!-- Modal compartilhado: perguntar o escopo de uma exclusão (item fixo ou
          parcela) — "somente esse", "esse e os futuros" ou "todos". -->
     <div class="sobreposicao" id="sobreposicao-escopo-exclusao" hidden>
-      <div class="modal" style="max-width: 380px;" role="dialog" aria-modal="true" aria-labelledby="escopo-exclusao-titulo">
+      <div class="modal modal--estreito" role="dialog" aria-modal="true" aria-labelledby="escopo-exclusao-titulo">
         <div class="modal__cabecalho">
           <h2 id="escopo-exclusao-titulo">Excluir</h2>
           <button type="button" class="modal__fechar" id="botao-fechar-escopo-exclusao" aria-label="Fechar">&times;</button>
@@ -1096,7 +1205,7 @@
          trás. Ainda não é exibido por main.js (isso liga na Fase 10,
          passo 3) — hoje fica sempre `hidden`. -->
     <div class="sobreposicao" id="portao-autenticacao" hidden>
-      <div class="modal" style="max-width: 380px" role="dialog" aria-modal="true" aria-labelledby="autenticacao-titulo">
+      <div class="modal modal--estreito" role="dialog" aria-modal="true" aria-labelledby="autenticacao-titulo">
         <div class="modal__cabecalho">
           <h2 id="autenticacao-titulo">Entrar no NanaWallet</h2>
         </div>

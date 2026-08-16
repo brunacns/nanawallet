@@ -31,9 +31,7 @@ export async function iniciarPaginaGanhos() {
   document.getElementById("botao-novo-ganho").addEventListener("click", abrirModalNovo);
   document.getElementById("botao-fechar-modal-ganho").addEventListener("click", fecharModal);
   document.getElementById("botao-cancelar-modal-ganho").addEventListener("click", fecharModal);
-  document.getElementById("sobreposicao-ganho").addEventListener("click", (evento) => {
-    if (evento.target.id === "sobreposicao-ganho") fecharModal();
-  });
+  // De propósito, sem fechar ao tocar fora do modal — ver mesma nota em gastos.js.
   prenderFocoNoModal(document.getElementById("sobreposicao-ganho"));
   document.getElementById("formulario-ganho").addEventListener("submit", salvarFormulario);
   document.getElementById("ganhos-conteudo").addEventListener("click", tratarCliqueLista);
@@ -120,20 +118,22 @@ function criarCartaoGrupo(grupo) {
       <span class="cartao__titulo" style="margin-bottom:0">${grupo.titulo}</span>
       <span class="cartao__subtotal">${formatarMoeda(subtotal)}</span>
     </div>
-    <table class="tabela">
-      <thead>
-        <tr>
-          <th></th>
-          <th>Título</th>
-          <th>Data</th>
-          <th>Valor</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${grupo.itens.map(linhaGanho).join("")}
-      </tbody>
-    </table>
+    <div class="tabela-scroll">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th></th>
+            <th>Título</th>
+            <th>Data</th>
+            <th>Valor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${grupo.itens.map(linhaGanho).join("")}
+        </tbody>
+      </table>
+    </div>
   `;
   return cartao;
 }
@@ -142,7 +142,7 @@ function linhaGanho(ganho) {
   const rotuloTipo = ganho.fixo ? '<span class="selo selo--alerta">Fixo</span>' : "";
   return `
     <tr data-id="${ganho.id}" class="${ganho.recebido ? "linha-paga" : ""}">
-      <td>
+      <td data-rotulo="Recebido">
         <div
           class="caixa-toggle ${ganho.recebido ? "marcada" : ""}"
           data-acao="alternar-recebido"
@@ -152,9 +152,9 @@ function linhaGanho(ganho) {
           tabindex="0"
         ></div>
       </td>
-      <td>${escaparHtml(ganho.titulo)} ${rotuloTipo}</td>
-      <td>${formatarData(ganho.data)}</td>
-      <td class="tabela__valor-positivo">${formatarMoeda(ganho.valor)}</td>
+      <td class="tabela__titulo-celula" data-rotulo="Título">${escaparHtml(ganho.titulo)} ${rotuloTipo}</td>
+      <td data-rotulo="Data">${formatarData(ganho.data)}</td>
+      <td class="tabela__valor-positivo" data-rotulo="Valor">${formatarMoeda(ganho.valor)}</td>
       <td class="tabela__acoes">
         <button type="button" class="botao-icone" data-acao="editar" title="Editar" aria-label="Editar">${svgEditar}</button>
         <button type="button" class="botao-icone botao-icone--perigo" data-acao="excluir" title="Excluir" aria-label="Excluir">${svgExcluir}</button>

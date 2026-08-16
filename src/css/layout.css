@@ -2,6 +2,11 @@
   display: grid;
   grid-template-columns: var(--largura-sidebar) 1fr;
   height: 100vh;
+  /* Fallback em cascata: navegadores sem suporte a dvh usam a linha acima
+     (100vh); os que suportam (todo mobile relevante) usam esta, que
+     acompanha a barra de endereço retrátil do Safari em vez de deixar um
+     vão ou cortar conteúdo quando ela aparece/some. */
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -212,59 +217,83 @@
   }
 }
 
+/* Nessa largura a sidebar (mesmo em modo só-ícones) já não é a melhor forma
+   de navegar — exigia scroll horizontal pra alcançar os 9 itens, sem nenhuma
+   pista visual de que havia mais itens fora da tela. É substituída por
+   .navinferior (nav fixa no rodapé, ver abaixo), que é o padrão mais "app
+   nativo" para telas de celular — os 4 destinos mais usados no dia a dia
+   ficam sempre visíveis, e "Mais" abre uma folha com o resto. */
 @media (max-width: 560px) {
   .app {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: 1fr;
   }
 
   .sidebar {
-    flex-direction: row;
-    align-items: center;
-    padding: var(--espaco-sm) var(--espaco-md);
-    border-right: none;
-    border-bottom: 1px solid var(--cor-borda);
-    overflow-x: auto;
-    /* -webkit-overflow-scrolling:touch dá inércia ao arrastar a barra de
-       navegação num toque real (sem efeito em mouse/trackpad, então não
-       muda nada fora do celular). */
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .sidebar__marca {
-    margin-bottom: 0;
-    margin-right: var(--espaco-sm);
-  }
-
-  .sidebar__nav {
-    flex-direction: row;
-  }
-
-  /* Nessa largura, cada item vira só um ícone numa fileira horizontal, então
-     a barrinha lateral esquerda de "ativo" (pensada para uma coluna vertical)
-     ficaria colada no vizinho em vez de indicar o item certo — sinaliza
-     embaixo do próprio ícone, como abas, mesmo padrão do resto do app. */
-  .sidebar__item.ativo::before {
-    left: 18%;
-    right: 18%;
-    top: auto;
-    bottom: -6px;
-    width: auto;
-    height: 3px;
-  }
-
-  /* Sem o rótulo em texto, o alvo de toque de cada ícone fica só do tamanho
-     do ícone + o padding padrão — um pouco mais de padding aqui ajuda
-     especificamente no cenário mais provável de toque real (janela estreita). */
-  .sidebar__item {
-    padding: var(--espaco-sm) var(--espaco-md);
-  }
-
-  .sidebar__rodape {
     display: none;
   }
 
   .conteudo {
     padding: var(--espaco-md);
+    /* Sem cabeçalho fixo nessa largura (a sidebar some por completo), o
+       conteúdo começa colado no topo real da tela — soma a safe area do
+       notch pra não ficar embaixo dela. O padding-bottom abre espaço pra
+       nav inferior fixa (~56px de altura + respiro) não cobrir o fim da
+       página, mais a safe area do indicador de home. */
+    padding-top: calc(var(--espaco-md) + env(safe-area-inset-top));
+    padding-bottom: calc(var(--espaco-2xl) + var(--espaco-md) + env(safe-area-inset-bottom));
+  }
+}
+
+.navinferior {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .navinferior {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    background: linear-gradient(180deg, var(--cor-superficie) 0%, var(--cor-fundo) 130%);
+    border-top: 1px solid var(--cor-borda);
+    padding: var(--espaco-xs) var(--espaco-xs) calc(var(--espaco-xs) + env(safe-area-inset-bottom));
+  }
+
+  .navinferior__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    /* Altura mínima de ~48px de alvo de toque (padding + ícone + rótulo),
+       mesmo espírito do alvo ampliado de .botao-icone/.caixa-toggle. */
+    min-height: 48px;
+    border: none;
+    background: transparent;
+    color: var(--cor-texto-secundario);
+    padding: var(--espaco-xs) 2px;
+    border-radius: var(--raio-sm);
+    font-size: 10px;
+    font-weight: var(--peso-medio);
+    transition: color var(--transicao-rapida);
+  }
+
+  .navinferior__item svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .navinferior__item.ativo {
+    color: var(--cor-acento);
+  }
+
+  .navinferior__item:focus-visible {
+    outline: none;
+    box-shadow: var(--sombra-brilho-acento);
   }
 }

@@ -393,7 +393,7 @@ function renderizarComparacaoSalarios(ganhos, gastos) {
       rect.addEventListener("pointerleave", esconderTooltip);
 
       if (valor > 0) {
-        const rotuloValor = svgEl("text", { x: x + larguraBarra / 2, y: yTopo - 6, "text-anchor": "middle", style: "font-size: 10px;" });
+        const rotuloValor = svgEl("text", { x: x + larguraBarra / 2, y: yTopo - 6, "text-anchor": "middle", style: "font-size: var(--grafico-fonte-destaque);" });
         rotuloValor.textContent = formatarValorEixo(valor);
         svg.appendChild(rotuloValor);
       }
@@ -550,7 +550,7 @@ function desenharBarrasCategoria(container, segmentos, totalMes) {
   segmentos.forEach((seg, i) => {
     const centroY = i * alturaLinha + alturaLinha / 2;
 
-    const rotulo = svgEl("text", { x: 0, y: centroY + 4, "text-anchor": "start", style: "font-size: 12px;" });
+    const rotulo = svgEl("text", { x: 0, y: centroY + 4, "text-anchor": "start", style: "font-size: var(--grafico-fonte-destaque);" });
     rotulo.textContent = seg.nome;
     svg.appendChild(rotulo);
 
@@ -562,7 +562,7 @@ function desenharBarrasCategoria(container, segmentos, totalMes) {
       x: colunaRotulo + larguraBarra + 8,
       y: centroY + 4,
       "text-anchor": "end",
-      style: "font-size: 11px; font-weight: 600; fill: var(--cor-texto-secundario);",
+      style: "font-size: var(--grafico-fonte-destaque); font-weight: 600; fill: var(--cor-texto-secundario);",
     });
     rotuloValor.textContent = formatarMoeda(seg.valor);
     svg.appendChild(rotuloValor);
