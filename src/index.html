@@ -4,6 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>NanaWallet</title>
+    <!-- Ícones extraídos de src-tauri/icons/icon.ico (mesmo ícone do app Desktop) —
+         favicon da aba do navegador e ícone do atalho ao adicionar à tela de
+         início no iPhone (Safari exige um PNG de verdade para isso, .ico não
+         funciona). Só o ícone, sem manifest.webmanifest/service worker — não é
+         um PWA, é apenas o favicon + apple-touch-icon padrão do HTML. -->
+    <link rel="icon" type="image/png" href="./icones/favicon.png" />
+    <link rel="apple-touch-icon" href="./icones/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="NanaWallet" />
     <link rel="stylesheet" href="./css/variaveis.css" />
     <link rel="stylesheet" href="./css/base.css" />
     <link rel="stylesheet" href="./css/layout.css" />
@@ -1225,7 +1233,6 @@
         </form>
         <div class="autenticacao__rodape">
           <button type="button" class="botao botao--secundario botao--pequeno" id="botao-esqueci-senha">Esqueci minha senha</button>
-          <button type="button" class="botao botao--secundario botao--pequeno" id="botao-alternar-modo-autenticacao">Criar uma conta</button>
         </div>
       </div>
     </div>

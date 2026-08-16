@@ -14,8 +14,6 @@ const MARGEM_RENOVACAO_MS = 60_000;
 const MENSAGENS_POR_CODIGO = {
   invalid_credentials: "E-mail ou senha incorretos.",
   email_not_confirmed: "Confirme seu e-mail antes de entrar (verifique sua caixa de entrada).",
-  user_already_exists: "Já existe uma conta com este e-mail.",
-  email_exists: "Já existe uma conta com este e-mail.",
   weak_password: "Senha muito fraca — use pelo menos 6 caracteres.",
   over_request_rate_limit: "Muitas tentativas em pouco tempo — aguarde um momento e tente de novo.",
 };
@@ -45,21 +43,6 @@ function comoSessao(corpo) {
     expires_at: Date.now() + corpo.expires_in * 1000,
     user: corpo.user,
   };
-}
-
-/** Cria a conta. Devolve { sessaoIniciada: boolean } — false quando o projeto exige confirmação por e-mail antes do primeiro login. */
-export async function cadastrar(email, senha) {
-  const corpo = await chamarGoTrue("signup", {
-    method: "POST",
-    headers: cabecalhos(),
-    body: JSON.stringify({ email, password: senha }),
-  });
-
-  if (corpo?.access_token) {
-    definirSessao(comoSessao(corpo));
-    return { sessaoIniciada: true, usuario: corpo.user };
-  }
-  return { sessaoIniciada: false, usuario: null };
 }
 
 /** Login por e-mail/senha. Guarda a sessão em localStorage e devolve o usuário. */

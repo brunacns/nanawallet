@@ -1,26 +1,30 @@
-// Portão de autenticação — um form só (#formulario-autenticacao) com 3
-// modos (entrar/cadastrar/recuperar senha), reaproveitando os mesmos campos
-// de e-mail/senha em vez de 3 formulários separados. Segue o mesmo padrão
-// visual dos outros modais (.sobreposicao/.modal), mas sem botão de fechar —
-// não é dispensável: sem sessão, não há o que mostrar por trás.
-import { cadastrar, entrar, recuperarSenha } from "./AuthService.js";
+// Portão de autenticação — um form só (#formulario-autenticacao) com 2 modos
+// (entrar/recuperar senha), reaproveitando os mesmos campos de e-mail/senha
+// em vez de formulários separados. Segue o mesmo padrão visual dos outros
+// modais (.sobreposicao/.modal), mas sem botão de fechar — não é dispensável:
+// sem sessão, não há o que mostrar por trás.
+//
+// De propósito, sem modo de cadastro: o NanaWallet é um app pessoal, de uso
+// só da própria dona — a criação de conta pela interface foi removida a
+// pedido explícito (ver AuthService.js, que também não exporta mais
+// `cadastrar`). A conta já existe e é criada manualmente no painel do
+// Supabase quando necessário, não por quem abrir a página publicamente.
+import { entrar, recuperarSenha } from "./AuthService.js";
 import { prenderFocoNoModal } from "../utils/focoModal.js";
 import { avisarCampoInvalido, limparValidacao } from "../utils/validacaoFormulario.js";
 
 const MODOS = {
-  entrar: { titulo: "Entrar no NanaWallet", rotuloBotao: "Entrar", rotuloAlternar: "Criar uma conta", mostrarSenha: true },
-  cadastrar: { titulo: "Criar conta no NanaWallet", rotuloBotao: "Criar conta", rotuloAlternar: "Já tenho conta", mostrarSenha: true },
-  recuperar: { titulo: "Recuperar senha", rotuloBotao: "Enviar e-mail de recuperação", rotuloAlternar: "Voltar para o login", mostrarSenha: false },
+  entrar: { titulo: "Entrar no NanaWallet", rotuloBotao: "Entrar", mostrarSenha: true },
+  recuperar: { titulo: "Recuperar senha", rotuloBotao: "Enviar e-mail de recuperação", mostrarSenha: false },
 };
 
 /**
  * Liga os listeners do portão de autenticação. `aoAutenticar(usuario)` é
- * chamado assim que uma sessão válida é obtida (login, ou cadastro com
- * confirmação de e-mail desligada) — quem chama `iniciarTelaLogin` decide o
- * que fazer depois disso (ex: esconder o portão e inicializar o resto do
- * app). Não faz nada sozinho além de ligar os listeners — mostrar/esconder o
- * portão é responsabilidade de `exibirPortao`/`esconderPortao`, chamadas de
- * fora (main.js, numa etapa futura).
+ * chamado assim que uma sessão válida é obtida (login) — quem chama
+ * `iniciarTelaLogin` decide o que fazer depois disso (ex: esconder o portão
+ * e inicializar o resto do app). Não faz nada sozinho além de ligar os
+ * listeners — mostrar/esconder o portão é responsabilidade de
+ * `exibirPortao`/`esconderPortao`, chamadas de fora (main.js).
  */
 export function iniciarTelaLogin({ aoAutenticar } = {}) {
   const elPortao = document.getElementById("portao-autenticacao");
@@ -33,7 +37,6 @@ export function iniciarTelaLogin({ aoAutenticar } = {}) {
   const elMensagem = document.getElementById("mensagem-autenticacao");
   const elTitulo = document.getElementById("autenticacao-titulo");
   const elBotaoEnviar = document.getElementById("botao-enviar-autenticacao");
-  const elBotaoAlternar = document.getElementById("botao-alternar-modo-autenticacao");
   const elBotaoEsqueciSenha = document.getElementById("botao-esqueci-senha");
 
   prenderFocoNoModal(elPortao);
@@ -55,16 +58,12 @@ export function iniciarTelaLogin({ aoAutenticar } = {}) {
     const def = MODOS[modo];
     elTitulo.textContent = def.titulo;
     elBotaoEnviar.textContent = def.rotuloBotao;
-    elBotaoAlternar.textContent = def.rotuloAlternar;
     elGrupoSenha.hidden = !def.mostrarSenha;
     elSenha.required = def.mostrarSenha;
     elBotaoEsqueciSenha.hidden = modo !== "entrar";
     esconderMensagem();
   }
 
-  elBotaoAlternar.addEventListener("click", () => {
-    aplicarModo(modoAtual === "cadastrar" ? "entrar" : "cadastrar");
-  });
   elBotaoEsqueciSenha.addEventListener("click", () => aplicarModo("recuperar"));
 
   elForm.addEventListener("submit", async (evento) => {
@@ -88,18 +87,6 @@ export function iniciarTelaLogin({ aoAutenticar } = {}) {
         const usuario = await entrar(email, senha);
         esconderMensagem();
         aoAutenticar?.(usuario);
-      } else if (modoAtual === "cadastrar") {
-        const resultado = await cadastrar(email, senha);
-        if (resultado.sessaoIniciada) {
-          aoAutenticar?.(resultado.usuario);
-        } else {
-          // aplicarModo() esconde a mensagem (é o comportamento certo ao
-          // TROCAR de modo por ação da usuária) — por isso precisa rodar
-          // ANTES de mostrarMensagem() aqui, senão a mensagem de sucesso
-          // apareceria e desapareceria no mesmo instante.
-          aplicarModo("entrar");
-          mostrarMensagem("Conta criada! Confira seu e-mail para confirmar antes de entrar.", "sucesso");
-        }
       } else {
         // recuperar
         await recuperarSenha(email, `${window.location.origin}${window.location.pathname}`);

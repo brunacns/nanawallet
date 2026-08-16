@@ -12,6 +12,11 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.12.1] - 2026-08-15
+
+- **Novo**: favicon e ícone de atalho na tela de início do iPhone — usa o mesmo ícone do app Desktop (`src-tauri/icons/icon.ico`, extraído e convertido para PNG em `src/icones/`), via `<link rel="icon">`/`<link rel="apple-touch-icon">` e `apple-mobile-web-app-title` no `<head>`. Não é um PWA (sem manifest/service worker) — só os metadados de ícone padrão do HTML.
+- **Segurança/privacidade**: removido o botão "Criar uma conta" e o modo de cadastro da tela de login — o NanaWallet é um app pessoal de uso individual, sem necessidade de autocadastro público. `AuthService.js` não exporta mais `cadastrar`. **Importante**: essa mudança impede o cadastro *pela interface do app*, mas não bloqueia sozinha uma chamada direta à API do Supabase (a chave publicável é, por definição, pública) — para fechar de vez, é necessário desligar "Allow new users to sign up" nas configurações de Auth do projeto no painel do Supabase (Authentication → Providers → Email).
+
 ## [1.12.0] - 2026-08-15
 
 - **Auditoria e correção de responsividade mobile** (foco no iPhone 11, 390×844): a versão Web (GitHub Pages) agora se comporta como um app pensado para celular, não um desktop espremido.

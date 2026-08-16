@@ -36,13 +36,9 @@ describe("Portão de autenticação — modos e navegação", () => {
     assert.equal(document.getElementById("botao-esqueci-senha").hidden, false);
   });
 
-  test("clicar em 'Criar uma conta' muda para o modo cadastro", () => {
+  test("não existe botão de criar conta — app pessoal, sem autocadastro", () => {
     iniciarTelaLogin({});
-    clicar(document.getElementById("botao-alternar-modo-autenticacao"));
-
-    assert.equal(document.getElementById("autenticacao-titulo").textContent, "Criar conta no NanaWallet");
-    assert.equal(document.getElementById("botao-enviar-autenticacao").textContent, "Criar conta");
-    assert.equal(document.getElementById("botao-alternar-modo-autenticacao").textContent, "Já tenho conta");
+    assert.equal(document.getElementById("botao-alternar-modo-autenticacao"), null);
   });
 
   test("clicar em 'Esqueci minha senha' esconde o campo de senha e o próprio link", () => {
