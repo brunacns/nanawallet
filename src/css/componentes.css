@@ -1430,10 +1430,19 @@
   box-shadow: var(--sombra-brilho-acento);
 }
 
-/* Grade de cartões de metas (página Metas) */
+/* Grade de cartões de metas (página Metas). `auto-fill` (não `auto-fit`) é a
+   escolha certa aqui: as duas encaixam o mesmo número de colunas, mas
+   `auto-fit` COLAPSA as colunas vazias e estica as que sobraram pra ocupar o
+   espaço livre — numa fileira incompleta (ex: só 1 card sozinho na última
+   linha, ou poucos itens cadastrados), esse card acaba esticado até quase a
+   largura da tela inteira, e a imagem em destaque junto dele. `auto-fill`
+   mantém as colunas "vazias" reservadas (só sem conteúdo visível), então
+   cada card fica sempre do tamanho normal de uma coluna — no máximo (dentro
+   de .pagina, 1100px) 4 colunas médias/pequenas por linha, sobrando um
+   respiro em branco na última linha em vez de um card gigante. */
 .grade-metas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: var(--espaco-md);
 }
 
@@ -1452,11 +1461,17 @@
   justify-content: space-between;
   gap: var(--espaco-sm);
   margin-bottom: var(--espaco-sm);
+  /* Deixa o selo de prioridade cair pra linha de baixo em vez de espremer
+     (ou vazar) quando o nome do produto + o selo não cabem lado a lado —
+     acontece principalmente com "Sem prioridade definida", o mais longo. */
+  flex-wrap: wrap;
 }
 
 .cartao-meta__nome {
   font-size: var(--fonte-tamanho-md);
   font-weight: var(--peso-semi);
+  text-transform: uppercase;
+  letter-spacing: var(--letra-espacada);
 }
 
 /* Valor desejado como uma "etiqueta de preço" (rótulo pequeno + número
@@ -1684,5 +1699,237 @@
   .barra-filtros select,
   .seletor-categoria__botao {
     font-size: 16px;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Wishlist (Metas): campos de produto (preço opcional, loja, link,
+   imagem) e as duas visualizações — cards (.grade-metas/.cartao-meta) e
+   lista compacta (.lista-metas/.item-meta). Ver src/js/modulos/metas.js.
+   Colocado ao final do arquivo (em vez de junto de .cartao-meta, lá em
+   cima) de propósito: a regra de padding responsivo de ".cartao" no bloco
+   @media acima também casa com ".cartao-meta" (que usa as duas classes), e
+   a ordem de declaração é quem decide o empate — ficando depois, o
+   ".cartao-meta { padding: 0 }" abaixo vale em qualquer largura de tela. */
+.cartao-meta {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.cartao-meta__corpo {
+  padding: var(--espaco-lg);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+@media (max-width: 560px) {
+  .cartao-meta__corpo {
+    padding: var(--espaco-md);
+  }
+}
+
+.cartao-meta__imagem,
+.cartao-meta__imagem--vazio {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background-color: var(--cor-superficie-alta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.cartao-meta__imagem {
+  position: relative;
+}
+
+/* Emoji de placeholder — só aparece sozinho (sem imagem) ou dentro de
+   .cartao-meta__imagem-placeholder (fallback de erro); nunca junto da foto
+   de verdade, que fica opaca/nítida. */
+.cartao-meta__imagem--vazio,
+.cartao-meta__imagem-placeholder {
+  font-size: 40px;
+  opacity: 0.6;
+}
+
+.cartao-meta__imagem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cartao-meta__imagem-placeholder {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--cor-superficie-alta);
+}
+
+/* Imagem que falhou ao carregar (URL fora do ar, 404, conteúdo que não é
+   imagem...) — a classe é ligada em JS (utils/formatadores.js:urlSegura +
+   metas.js:prepararFallbackDeImagens), nunca via onerror="" inline, que a
+   CSP do app bloqueia (script-src 'self' sem 'unsafe-inline'). */
+.erro-imagem img {
+  display: none;
+}
+
+.erro-imagem .cartao-meta__imagem-placeholder,
+.erro-imagem .item-meta__miniatura-placeholder {
+  display: flex;
+}
+
+.cartao-meta__loja {
+  font-size: var(--fonte-tamanho-sm);
+  color: var(--cor-texto-secundario);
+  margin-bottom: var(--espaco-sm);
+}
+
+.cartao-meta__link {
+  align-self: flex-start;
+  font-size: var(--fonte-tamanho-sm);
+  font-weight: var(--peso-medio);
+  color: var(--cor-acento);
+  margin-bottom: var(--espaco-md);
+}
+
+.cartao-meta__link:hover {
+  text-decoration: underline;
+}
+
+/* Selo de prioridade "não definida" — precisa ser visualmente diferente de
+   .selo--neutro (usado por "Baixa prioridade"), senão as duas ficam
+   indistinguíveis numa leitura rápida da tela. */
+.selo--tracejado {
+  background-color: transparent;
+  border: 1px dashed var(--cor-borda);
+  color: var(--cor-texto-fraco);
+  box-shadow: none;
+  /* "Sem prioridade definida" é o texto mais longo dos 4 selos de
+     prioridade — um degrau menor de fonte/padding (só nesta variante, os
+     outros 3 selos continuam do tamanho padrão) evita que ele estoure a
+     largura de um card estreito. */
+  font-size: var(--fonte-tamanho-2xs);
+  padding: 1px var(--espaco-xs);
+}
+
+/* Visualização em lista — uma linha compacta por item, ocupando bem menos
+   altura que a grade de cards. */
+.lista-metas__itens {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-cartao);
+  box-shadow: var(--sombra-cartao);
+  overflow: hidden;
+}
+
+.item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-md);
+  padding: var(--espaco-sm) var(--espaco-md);
+  border-bottom: 1px solid var(--cor-borda);
+  transition: background-color var(--transicao-rapida);
+}
+
+.item-meta:last-child {
+  border-bottom: none;
+}
+
+.item-meta:hover {
+  background-color: var(--cor-superficie-alta);
+}
+
+.item-meta__miniatura,
+.item-meta__miniatura--vazio {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--raio-sm);
+  background-color: var(--cor-superficie-alta);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.item-meta__miniatura--vazio,
+.item-meta__miniatura-placeholder {
+  font-size: var(--fonte-tamanho-md);
+  opacity: 0.6;
+}
+
+.item-meta__miniatura img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.item-meta__miniatura-placeholder {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--cor-superficie-alta);
+}
+
+.item-meta__texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-meta__cabecalho {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-sm);
+  flex-wrap: wrap;
+}
+
+.item-meta__nome {
+  font-size: var(--fonte-tamanho-base);
+  font-weight: var(--peso-medio);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: var(--letra-espacada);
+}
+
+.item-meta__detalhes {
+  display: block;
+  font-size: var(--fonte-tamanho-xs);
+  color: var(--cor-texto-secundario);
+}
+
+.item-meta__acoes {
+  display: flex;
+  gap: var(--espaco-xs);
+  flex-shrink: 0;
+}
+
+/* Link "Ver produto" da lista é um .botao-icone solto (sem wrapper) entre o
+   texto e as ações — precisa do mesmo flex-shrink:0 para não ser espremido
+   quando o nome do produto é longo. */
+.item-meta > .botao-icone {
+  flex-shrink: 0;
+}
+
+/* Em telas bem estreitas, a miniatura da lista perde espaço para o texto —
+   some primeiro que qualquer outra informação. */
+@media (max-width: 420px) {
+  .item-meta__miniatura,
+  .item-meta__miniatura--vazio {
+    display: none;
   }
 }

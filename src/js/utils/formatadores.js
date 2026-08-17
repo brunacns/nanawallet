@@ -35,6 +35,23 @@ export function corSegura(cor) {
   return typeof cor === "string" && /^#[0-9a-fA-F]{6}$/.test(cor) ? cor : "#9386a9";
 }
 
+// Valida que um link/imagem é uma URL http(s) antes de entrar em href="" ou
+// src="" (mesmo cuidado de corSegura) — bloqueia esquemas perigosos
+// (javascript:, data:, etc.) mesmo se algo além do formulário (ex: uma
+// chamada direta à API do Supabase) gravar um valor malicioso num item da
+// Wishlist. Devolve a URL normalizada (já com caracteres como `"`/`<`
+// percent-encoded pelo próprio parser de URL) ou `null` quando inválida —
+// nesse caso a tela trata como "sem link"/"sem imagem", sem quebrar o layout.
+export function urlSegura(url) {
+  if (typeof url !== "string" || !url.trim()) return null;
+  try {
+    const analisada = new URL(url.trim());
+    return analisada.protocol === "http:" || analisada.protocol === "https:" ? analisada.href : null;
+  } catch {
+    return null;
+  }
+}
+
 // Converte uma cor hex ("#F2A65A") para rgba com a opacidade dada — usado
 // para aplicar a cor pastel de cada categoria como fundo suave (estilo dos
 // selos existentes), sem precisar de uma classe CSS fixa por categoria.

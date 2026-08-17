@@ -207,14 +207,17 @@ Campos de cada lembrete, conforme especificado na Etapa 11:
 
 ## `metas.json` (página Metas)
 
-Meta é uma **wishlist simples**, sem acompanhamento de progresso — não existe campo de "quanto já foi guardado" nem aporte automático (removidos a pedido do usuário; ver `CHANGELOG.md`).
+Meta é uma **wishlist simples de produtos**, sem acompanhamento de progresso — não existe campo de "quanto já foi guardado" nem aporte automático (removidos a pedido do usuário; ver `CHANGELOG.md`).
 
 | Campo | Tipo | Descrição |
 |---|---|---|
 | `id` | string (uuid) | identificador único |
-| `nome` | string | nome da meta/item da wishlist |
-| `valorDesejado` | number | quanto custa/quanto se quer juntar |
-| `prioridade` | `"alta"` \| `"media"` \| `"baixa"` | usada para ordenar os cartões na tela |
+| `nome` | string | **único campo obrigatório** — nome do produto/item da wishlist |
+| `valorDesejado` | number \| `null` | preço do produto — opcional; `null` = "não informado" (nunca exibido como R$ 0,00) |
+| `loja` | string \| `null` | onde pretende comprar — opcional |
+| `link` | string \| `null` | link da página do produto — opcional; validado como URL http(s) antes de renderizar (`urlSegura` em `utils/formatadores.js`), tanto na hora de salvar (`type="url"` do navegador) quanto na hora de exibir (defesa contra dado gravado fora da interface) |
+| `imagemUrl` | string \| `null` | URL de uma imagem do produto — opcional; mesma validação de `link`. Se a imagem não carregar (URL fora do ar, 404 etc.), a tela cai num placeholder neutro em vez de mostrar um ícone de imagem quebrada |
+| `prioridade` | `"alta"` \| `"media"` \| `"baixa"` \| `"sem_definida"` | usada para ordenar os cartões na tela. `"sem_definida"` é o valor padrão de uma meta nova e é uma opção distinta de `"baixa"` (selo tracejado, não confundir as duas) |
 | `observacoes` | string | texto livre, opcional |
 
 ```json
@@ -223,10 +226,13 @@ Meta é uma **wishlist simples**, sem acompanhamento de progresso — não exist
   "metas": [
     {
       "id": "a1b2c3d4-7777-4a2b-9c3d-000000000001",
-      "nome": "Viagem para a praia",
-      "valorDesejado": 2000.00,
-      "prioridade": "baixa",
-      "observacoes": "Ir em janeiro"
+      "nome": "Fone de ouvido sem fio",
+      "valorDesejado": 350.00,
+      "loja": "Amazon",
+      "link": "https://exemplo.com/produto",
+      "imagemUrl": "https://exemplo.com/produto.jpg",
+      "prioridade": "media",
+      "observacoes": "Esperar a Black Friday"
     }
   ]
 }
@@ -234,7 +240,9 @@ Meta é uma **wishlist simples**, sem acompanhamento de progresso — não exist
 
 **Não é particionado por mês** (diferente de ganhos/gastos/lembretes): uma meta não tem uma data/ocorrência mensal, é um item que o usuário edita diretamente ao longo do tempo — continua sendo um arquivo único, como `configuracoes.json`.
 
-**Compatibilidade com dados antigos**: metas salvas antes desta etapa podem ter `valorGuardado`/`aporteMensal`/`ultimoAporteAplicado` no arquivo (funcionalidade removida) — esses campos ficam inofensivamente ali sem uso, nada é migrado/apagado automaticamente, e o app nunca mais lê nem grava neles.
+**Visualização (Cards/Lista)**: não é um campo do item — é uma preferência de interface só, guardada em `localStorage` (chave `nanawallet:metas:visualizacao`), não em `metas.json`/Supabase. Cada aparelho lembra sua própria escolha.
+
+**Compatibilidade com dados antigos**: metas salvas antes desta etapa podem ter `valorGuardado`/`aporteMensal`/`ultimoAporteAplicado` no arquivo (funcionalidade removida) — esses campos ficam inofensivamente ali sem uso, nada é migrado/apagado automaticamente, e o app nunca mais lê nem grava neles. Metas salvas antes dos campos de produto (`loja`/`link`/`imagemUrl`) simplesmente não têm essas colunas preenchidas (`null`) — continuam funcionando normalmente, só sem essas informações extras até serem editadas.
 
 ## `categorias.json` (sistema de categorias de despesas)
 

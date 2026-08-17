@@ -90,16 +90,24 @@ const REGISTRO = {
     paraLinha: (m) => ({
       id: m.id,
       nome: m.nome,
-      valor_desejado: m.valorDesejado,
+      valor_desejado: m.valorDesejado ?? null,
       prioridade: m.prioridade,
       observacoes: m.observacoes,
+      loja: m.loja ?? null,
+      link: m.link ?? null,
+      imagem_url: m.imagemUrl ?? null,
     }),
     paraItem: (r) => ({
       id: r.id,
       nome: r.nome,
-      valorDesejado: Number(r.valor_desejado),
+      // Preço é opcional (Wishlist) — null continua null, nunca vira 0
+      // (Number(null) seria 0, o que pareceria "preço R$ 0,00" na tela).
+      valorDesejado: r.valor_desejado != null ? Number(r.valor_desejado) : null,
       prioridade: r.prioridade,
       observacoes: r.observacoes,
+      loja: r.loja,
+      link: r.link,
+      imagemUrl: r.imagem_url,
     }),
   },
   categorias: {

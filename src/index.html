@@ -11,10 +11,14 @@
          disponível de aplicar uma CSP aqui. script-src sem 'unsafe-inline'
          bloqueia handlers de evento inline (ex: onerror="...") mesmo que
          acabem injetados via innerHTML — uma camada a mais de defesa além do
-         escape de HTML já feito no JavaScript. -->
+         escape de HTML já feito no JavaScript. img-src ganhou "https:" na
+         Wishlist (Metas): a imagem de um produto pode vir de qualquer loja,
+         um domínio impossível de prever com antecedência — carregar a
+         imagem em si não executa nada, então isso não reabre o que
+         script-src continua bloqueando. -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://hqrigzitalqgdrelmxja.supabase.co; base-uri 'self'; form-action 'self'; object-src 'none'"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://hqrigzitalqgdrelmxja.supabase.co; base-uri 'self'; form-action 'self'; object-src 'none'"
     />
     <title>NanaWallet</title>
     <!-- Ícones extraídos de src-tauri/icons/icon.ico (mesmo ícone do app Desktop) —
@@ -653,6 +657,11 @@
             </button>
           </div>
 
+          <div class="abas" id="metas-visualizacao" hidden>
+            <button type="button" class="aba" data-visualizacao="cards">Cards</button>
+            <button type="button" class="aba" data-visualizacao="lista">Lista</button>
+          </div>
+
           <div class="grade-metas" id="metas-conteudo"></div>
           <p class="estado-vazio" id="metas-estado-vazio" hidden>Sua wishlist está vazia. Adicione algo que você está de olho — dá pra organizar por prioridade e planejar a compra com calma.</p>
         </section>
@@ -1177,16 +1186,29 @@
         </div>
         <form id="formulario-meta">
           <div class="campo">
-            <label for="campo-nome-meta">Nome</label>
-            <input type="text" id="campo-nome-meta" placeholder="Ex: Viagem para a praia" required />
+            <label for="campo-nome-meta">Nome do produto</label>
+            <input type="text" id="campo-nome-meta" placeholder="Ex: Fone de ouvido sem fio" required />
           </div>
           <div class="campo">
-            <label for="campo-valor-desejado-meta">Valor desejado (R$)</label>
-            <input type="number" id="campo-valor-desejado-meta" step="0.01" min="0.01" placeholder="0,00" required />
+            <label for="campo-valor-desejado-meta">Preço (R$, opcional)</label>
+            <input type="number" id="campo-valor-desejado-meta" step="0.01" min="0" placeholder="0,00" />
+          </div>
+          <div class="campo">
+            <label for="campo-loja-meta">Loja (opcional)</label>
+            <input type="text" id="campo-loja-meta" placeholder="Ex: Amazon, Mercado Livre..." />
+          </div>
+          <div class="campo">
+            <label for="campo-link-meta">Link do produto (opcional)</label>
+            <input type="url" id="campo-link-meta" placeholder="https://..." />
+          </div>
+          <div class="campo">
+            <label for="campo-imagem-meta">Imagem do produto (opcional)</label>
+            <input type="url" id="campo-imagem-meta" placeholder="URL da imagem (https://...)" />
           </div>
           <div class="campo">
             <label for="campo-prioridade-meta">Prioridade</label>
             <select id="campo-prioridade-meta">
+              <option value="sem_definida">Sem prioridade definida</option>
               <option value="alta">Alta</option>
               <option value="media">Média</option>
               <option value="baixa">Baixa</option>

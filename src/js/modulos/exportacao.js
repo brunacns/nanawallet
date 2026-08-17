@@ -190,17 +190,23 @@ function gerarTextoParaIA(ganhos, gastos, lembretes, metas) {
   }
   linhas.push("");
 
-  const ROTULOS_PRIORIDADE_TEXTO = { alta: "alta", media: "média", baixa: "baixa" };
+  const ROTULOS_PRIORIDADE_TEXTO = { alta: "alta", media: "média", baixa: "baixa", sem_definida: "sem prioridade definida" };
   linhas.push(`=== METAS/WISHLIST (${metas.length} cadastrada${metas.length === 1 ? "" : "s"}) ===`);
   if (metas.length === 0) {
     linhas.push("(nenhuma meta cadastrada)");
   } else {
     metas.forEach((m) => {
-      linhas.push(
-        `- ${m.nome} | valor desejado: ${formatarMoeda(m.valorDesejado)} | prioridade ${ROTULOS_PRIORIDADE_TEXTO[m.prioridade]}${
-          m.observacoes ? ` | obs: ${m.observacoes}` : ""
-        }`
-      );
+      // Preço é opcional (Wishlist) — omitido do texto quando não informado,
+      // em vez de aparecer como "R$ 0,00".
+      const partes = [
+        m.nome,
+        m.valorDesejado != null ? `preço: ${formatarMoeda(m.valorDesejado)}` : null,
+        m.loja ? `loja: ${m.loja}` : null,
+        `prioridade ${ROTULOS_PRIORIDADE_TEXTO[m.prioridade] || ROTULOS_PRIORIDADE_TEXTO.sem_definida}`,
+        m.link ? `link: ${m.link}` : null,
+        m.observacoes ? `obs: ${m.observacoes}` : null,
+      ].filter(Boolean);
+      linhas.push(`- ${partes.join(" | ")}`);
     });
   }
   linhas.push("");

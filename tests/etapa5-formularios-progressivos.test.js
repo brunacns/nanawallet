@@ -132,7 +132,7 @@ describe("Wishlist (Metas): valor desejado como etiqueta de preço", () => {
       const numero = cartao.querySelector(".cartao-meta__valor-numero");
       assert.ok(rotulo, "esperava um .cartao-meta__valor-rotulo");
       assert.ok(numero, "esperava um .cartao-meta__valor-numero");
-      assert.equal(rotulo.textContent.trim(), "Valor desejado");
+      assert.equal(rotulo.textContent.trim(), "Preço");
       assert.match(numero.textContent, /2\.500,00/);
     } finally {
       await limpar();

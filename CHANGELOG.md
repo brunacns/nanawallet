@@ -12,6 +12,32 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.14.2] - 2026-08-16
+
+4 correções na Wishlist, a pedido explícito.
+
+- **Corrigido**: no Desktop, clicar em "Ver produto" não fazia nada — um `<a target="_blank">` comum não abre nada dentro do WebView do Tauri (a navegação é interceptada e descartada, silenciosamente). Adicionado o plugin oficial `tauri-plugin-opener` (mesmo padrão já usado para `fs`/`dialog`: acessado via `window.__TAURI__.opener`, sem SDK/bundler); o clique no link agora é interceptado e delega para `openUrl()`, que abre no navegador padrão do sistema. Na Web, o link continua funcionando normalmente (comportamento nativo do `<a>`, sem Tauri para interceptar).
+- **Novo**: nome do produto sempre em CAIXA ALTA (`text-transform: uppercase`), nos cards e na lista.
+- **Corrigido**: o selo "Sem prioridade definida" (o texto mais longo dos 4 de prioridade) ficava grande/apertado nos cards — reduzido para um tamanho de fonte menor (só essa variante; os outros 3 selos de prioridade continuam do tamanho padrão), e o cabeçalho do card agora permite o selo cair pra linha de baixo em vez de espremer contra um nome de produto longo.
+- **Sobre "no celular/web a imagem não aparece e aparece 'undefined'"**: não é um bug nesta versão — é porque nada deste conjunto de mudanças da Wishlist foi ainda publicado na versão Web (GitHub Pages). O app Web ainda está rodando o código de antes desta etapa, que não tem campo de imagem nem a opção "Sem prioridade definida" — e por não reconhecer esse valor de prioridade (criado a partir do Desktop, já atualizado, salvando no mesmo banco Supabase), o código antigo imprime literalmente `undefined` no lugar do selo. Publicar esta versão na Web resolve os três sintomas de uma vez (imagem, selo, e o alternador Cards/Lista, que também é novo).
+
+## [1.14.1] - 2026-08-16
+
+- **Corrigido**: na grade de cards da Wishlist, uma fileira incompleta (ex: só 1 item sobrando na última linha, ou poucos itens cadastrados no total) fazia esse card esticar até quase a largura inteira da tela — a imagem em destaque junto dele ficava enorme. Causa: `.grade-metas` usava `grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))` — `auto-fit` colapsa colunas vazias e estica as que sobraram para preencher o espaço livre. Trocado para `auto-fill` (que mantém as colunas vazias reservadas, sem esticar o conteúdo) com `minmax(240px, 1fr)`, resultando em 3-4 cards por linha, de tamanho médio/pequeno, em telas maiores — e continua 1 coluna cheia no celular, como antes.
+
+## [1.14.0] - 2026-08-16
+
+Melhorias na Wishlist (página Metas), a pedido explícito: cada item agora é tratado como um produto de verdade (preço, loja, link e imagem, além de nome e prioridade), com duas formas de visualizar a lista.
+
+- **Novo**: cada item da Wishlist ganhou 4 campos opcionais — preço (o já existente "valor desejado", que deixou de ser obrigatório), loja, link do produto e URL de uma imagem. **Nome continua o único campo obrigatório.**
+- **Novo**: visualização em **cards** (imagem em destaque, ou um placeholder neutro quando não há imagem/ela falha ao carregar) e em **lista** compacta (uma linha por item, com miniatura pequena). Um alternador na página troca entre as duas; a escolha fica salva no navegador (não sincroniza entre aparelhos, é só uma preferência de tela).
+- **Novo**: prioridade ganhou a opção **"Sem prioridade definida"** — diferente de "Baixa" (selo tracejado em vez do selo cinza sólido de "Baixa"), e é o valor padrão de uma meta nova, em vez de assumir uma prioridade por conta própria.
+- Campos vazios nunca aparecem de forma estranha: sem preço não mostra "R$ 0,00" (o card/linha simplesmente omite o preço); sem loja/link/imagem, essas informações somem do card em vez de deixar um espaço em branco.
+- Link e imagem são validados como URL (nativamente pelo navegador ao salvar, e de novo na hora de exibir — `urlSegura()`, novo em `utils/formatadores.js`) — protege contra um valor malicioso gravado fora da interface (mesmo cuidado já aplicado a emoji/cor de categorias na auditoria de segurança anterior). Uma imagem que não carrega cai num placeholder, sem quebrar o layout do card.
+- Responsivo: grade de cards já se ajusta para 1 coluna no celular (o `minmax` da grade já cobria isso); a visualização em lista também se adapta, escondendo a miniatura em telas bem estreitas para dar espaço ao texto.
+- **Banco de dados** (Supabase, tabela `metas`): `valor_desejado` deixou de ser `NOT NULL`; novas colunas `loja`, `link`, `imagem_url` (todas `text`, opcionais); a restrição de `prioridade` passou a aceitar `"sem_definida"` além de `"alta"/"media"/"baixa"`. Itens já cadastrados não são afetados (colunas novas nascem `null`).
+- CSP (`index.html` e `src-tauri/tauri.conf.json`): `img-src` passou a aceitar `https:` além de `'self'`/`data:` — necessário para a imagem de um produto poder vir de qualquer loja, um domínio impossível de prever com antecedência. Carregar uma imagem não executa nada, então isso não reabre o que `script-src` continua bloqueando.
+
 ## [1.13.0] - 2026-08-15
 
 - **Auditoria completa de segurança** (autenticação, RLS/isolamento entre usuárias, configuração do Supabase, GitHub, frontend/XSS, exportação/exclusão de dados, CSRF/sessão, CORS/rate limiting — relatório completo entregue à parte). Achados corrigidos nesta versão:
