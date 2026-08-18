@@ -4,7 +4,6 @@ import { somarMeses, mesDeData } from "../utils/datas.js";
 import { criarSeletorCategoria } from "../categorias.js";
 import { avisarCampoInvalido, limparValidacao } from "../utils/validacaoFormulario.js";
 import { prenderFocoNoModal } from "../utils/focoModal.js";
-import { opcoesCarteiraGasto, carteiraEhBeneficio, carteiraPrincipalPadraoId } from "../carteiras.js";
 import { mostrarToast } from "../utils/toast.js";
 
 const seletorCategoriaParcelamento = criarSeletorCategoria("parcelamento");
@@ -22,39 +21,18 @@ export function iniciarParcelamentos() {
   // De propósito, sem fechar ao tocar fora do modal — ver mesma nota em gastos.js.
   prenderFocoNoModal(document.getElementById("sobreposicao-parcelamento"));
   document.getElementById("formulario-parcelamento").addEventListener("submit", salvarFormulario);
-  document.getElementById("campo-carteira-parcelamento").addEventListener("change", atualizarCamposConformeCarteira);
   seletorCategoriaParcelamento.inicializar();
 
   aoAtualizarGastos(renderizarResumo);
   renderizarResumo(obterGastos());
 }
 
-// Mesmo padrão de gastos.js: repopula a cada abertura do modal (não só na
-// inicialização), senão ativar uma carteira nova (ex: Ticket Alimentação) só
-// apareceria como opção depois de reabrir o app.
-function atualizarOpcoesCarteira() {
-  document.getElementById("campo-carteira-parcelamento").innerHTML = opcoesCarteiraGasto();
-}
-
-// "Salário responsável" não faz sentido para parcelas pagas com uma carteira
-// de benefício (não existe "salário" que paga o Ticket Alimentação) — mesmo
-// raciocínio já aplicado ao formulário de gasto avulso.
-function atualizarCamposConformeCarteira() {
-  const carteiraId = document.getElementById("campo-carteira-parcelamento").value || null;
-  const ehBeneficio = carteiraEhBeneficio(carteiraId);
-  document.getElementById("linha-salario-parcelamento").hidden = ehBeneficio;
-  document.getElementById("aviso-carteira-beneficio-parcelamento").hidden = !ehBeneficio;
-}
-
 function abrirModal() {
   document.getElementById("formulario-parcelamento").reset();
   seletorCategoriaParcelamento.definir(null);
-  atualizarOpcoesCarteira();
-  document.getElementById("campo-carteira-parcelamento").value = carteiraPrincipalPadraoId() || "";
-  atualizarCamposConformeCarteira();
-  // Começa fechado — carteira/salário/observações são opcionais e já têm
-  // valor padrão sensato; só os campos essenciais para gerar as parcelas
-  // ficam à vista.
+  // Começa fechado — salário/observações são opcionais e já têm valor
+  // padrão sensato; só os campos essenciais para gerar as parcelas ficam à
+  // vista.
   document.getElementById("parcelamento-mais-opcoes").open = false;
   document.getElementById("sobreposicao-parcelamento").hidden = false;
   document.getElementById("campo-titulo-parcelamento").focus();
@@ -75,10 +53,6 @@ async function salvarFormulario(evento) {
   const quantidade = Number(document.getElementById("campo-quantidade-parcelamento").value);
   const valorParcela = Number(document.getElementById("campo-valor-parcelamento").value);
   const dataPrimeiraParcela = document.getElementById("campo-data-parcelamento").value;
-  const carteiraId = document.getElementById("campo-carteira-parcelamento").value || null;
-  // Igual ao formulário de gasto avulso: o campo "salário responsável" fica
-  // escondido (não gravado como null) quando a carteira é um benefício — o
-  // valor guardado nunca é lido em nenhum cálculo de carteira de benefício.
   const salarioResponsavel = document.getElementById("campo-salario-parcelamento").value;
   const categoriaId = seletorCategoriaParcelamento.obter();
   const observacoes = document.getElementById("campo-observacoes-parcelamento").value.trim();
@@ -123,7 +97,6 @@ async function salvarFormulario(evento) {
       pago: false,
       parcela: { numero, total: quantidade, parcelamentoId },
       categoriaId,
-      carteiraId,
       observacoes,
     });
   }

@@ -2,11 +2,11 @@ import { StorageService } from "./StorageService.js";
 import { postgrestSelect, postgrestUpsert, postgrestDelete } from "../supabase/clienteSupabase.js";
 
 // Mapeamento entre o formato usado pelas telas/serviços de domínio (JS,
-// camelCase, alguns campos aninhados como `parcela`/`beneficio`) e as
-// colunas reais das tabelas no Postgres (snake_case, achatadas). Cada
-// coleção tem seu próprio par paraLinha/paraItem porque as diferenças não
-// são uniformes o suficiente para um conversor genérico (ex: `parcela` vira
-// 3 colunas, `beneficio` vira 5, e várias colunas têm nome igual ao campo).
+// camelCase, alguns campos aninhados como `parcela`) e as colunas reais das
+// tabelas no Postgres (snake_case, achatadas). Cada coleção tem seu próprio
+// par paraLinha/paraItem porque as diferenças não são uniformes o suficiente
+// para um conversor genérico (ex: `parcela` vira 3 colunas, e várias colunas
+// têm nome igual ao campo).
 const REGISTRO = {
   gastos: {
     tabela: "gastos",
@@ -24,7 +24,6 @@ const REGISTRO = {
       parcela_total: g.parcela?.total ?? null,
       parcelamento_id: g.parcela?.parcelamentoId ?? null,
       categoria_id: g.categoriaId,
-      carteira_id: g.carteiraId,
       observacoes: g.observacoes,
     }),
     paraItem: (r) => ({
@@ -39,7 +38,6 @@ const REGISTRO = {
       fixoId: r.fixo_id,
       parcela: r.parcela_numero != null ? { numero: r.parcela_numero, total: r.parcela_total, parcelamentoId: r.parcelamento_id } : null,
       categoriaId: r.categoria_id,
-      carteiraId: r.carteira_id,
       observacoes: r.observacoes,
     }),
   },
@@ -114,59 +112,6 @@ const REGISTRO = {
     tabela: "categorias",
     paraLinha: (c) => ({ id: c.id, nome: c.nome, emoji: c.emoji, cor: c.cor }),
     paraItem: (r) => ({ id: r.id, nome: r.nome, emoji: r.emoji, cor: r.cor }),
-  },
-  carteiras: {
-    tabela: "carteiras",
-    paraLinha: (c) => ({
-      id: c.id,
-      nome: c.nome,
-      tipo: c.tipo,
-      emoji: c.emoji,
-      cor: c.cor,
-      ativa: c.ativa,
-      beneficio_valor_mensal: c.beneficio?.valorMensal ?? null,
-      beneficio_dia_recebimento: c.beneficio?.diaRecebimento ?? null,
-      beneficio_recorrente: c.beneficio?.recorrente ?? null,
-      beneficio_acumula_saldo: c.beneficio?.acumulaSaldo ?? null,
-      beneficio_ativo_desde: c.beneficio?.ativoDesde ?? null,
-    }),
-    paraItem: (r) => ({
-      id: r.id,
-      nome: r.nome,
-      tipo: r.tipo,
-      emoji: r.emoji,
-      cor: r.cor,
-      ativa: r.ativa,
-      beneficio:
-        r.tipo === "beneficio"
-          ? {
-              valorMensal: Number(r.beneficio_valor_mensal),
-              diaRecebimento: r.beneficio_dia_recebimento,
-              recorrente: r.beneficio_recorrente,
-              acumulaSaldo: r.beneficio_acumula_saldo,
-              ativoDesde: r.beneficio_ativo_desde,
-            }
-          : null,
-    }),
-  },
-  carteiraMovimentacoes: {
-    tabela: "carteira_movimentacoes",
-    paraLinha: (m) => ({
-      id: m.id,
-      carteira_id: m.carteiraId,
-      valor: m.valor,
-      data: m.data,
-      automatica: m.automatica,
-      observacoes: m.observacoes,
-    }),
-    paraItem: (r) => ({
-      id: r.id,
-      carteiraId: r.carteira_id,
-      valor: Number(r.valor),
-      data: r.data,
-      automatica: r.automatica,
-      observacoes: r.observacoes,
-    }),
   },
 };
 

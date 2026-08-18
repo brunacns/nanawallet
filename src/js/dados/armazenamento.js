@@ -293,32 +293,10 @@ const CATEGORIAS_PADRAO = [
   { nome: "Mimos", emoji: "❤️", cor: "#F497D6" },
 ].map((c) => ({ id: crypto.randomUUID(), ...c }));
 
-// Carteiras padrão, carregadas automaticamente só na primeira inicialização
-// (arquivo `carteiras.json` ainda não existe) — 2 carteiras de dinheiro
-// (rótulo/organização apenas, não têm saldo próprio calculado, continuam
-// entrando normalmente em todos os cálculos financeiros principais) + o
-// Ticket Alimentação, uma carteira de benefício (isolada de salário/renda/
-// saldo em todos os cálculos), criada INATIVA até você preencher a
-// configuração (valor mensal, dia de recebimento etc.) na Etapa 2.
-const CARTEIRAS_PADRAO = [
-  { nome: "Conta bancária", tipo: "dinheiro", emoji: "🏦", cor: "#9EC5FE", ativa: true, beneficio: null },
-  { nome: "Dinheiro", tipo: "dinheiro", emoji: "💵", cor: "#8FD694", ativa: true, beneficio: null },
-  {
-    nome: "Ticket Alimentação",
-    tipo: "beneficio",
-    emoji: "🍽️",
-    cor: "#F7C873",
-    ativa: false,
-    beneficio: { valorMensal: 0, diaRecebimento: 1, recorrente: false, acumulaSaldo: true, ativoDesde: null },
-  },
-].map((c) => ({ id: crypto.randomUUID(), ...c }));
-
 const PADRAO_ARQUIVO_UNICO = {
   configuracoes: { versao: CONFIG.versaoSchema, configuracoes: {} },
   metas: { versao: CONFIG.versaoSchema, metas: [] },
   categorias: { versao: CONFIG.versaoSchema, categorias: CATEGORIAS_PADRAO },
-  carteiras: { versao: CONFIG.versaoSchema, carteiras: CARTEIRAS_PADRAO },
-  carteiraMovimentacoes: { versao: CONFIG.versaoSchema, carteiraMovimentacoes: [] },
 };
 
 async function caminhoArquivoUnico(nome) {
@@ -368,42 +346,15 @@ export async function salvarCategorias(conteudo) {
   await salvarArquivoUnico("categorias", conteudo);
 }
 
-// Carteiras (conta bancária, dinheiro, benefícios como Ticket Alimentação):
-// nome, tipo, aparência e (só benefícios) configuração de recorrência. Não
-// particionado por mês pelo mesmo motivo de metas/categorias — lista pequena
-// e estável, editada diretamente pelo usuário.
-export async function lerCarteiras() {
-  return lerArquivoUnico("carteiras");
-}
-
-export async function salvarCarteiras(conteudo) {
-  await salvarArquivoUnico("carteiras", conteudo);
-}
-
-// Movimentações de carteira de benefício: só as ENTRADAS (créditos, ex: o
-// Ticket Alimentação mensal) — nunca um ganho, de propósito (regra de ouro:
-// dinheiro do benefício não é renda). Gastos feitos com uma carteira de
-// benefício continuam em `gastos.json` normalmente, só marcados com
-// `carteiraId` — não duplicados aqui.
-export async function lerCarteiraMovimentacoes() {
-  return lerArquivoUnico("carteiraMovimentacoes");
-}
-
-export async function salvarCarteiraMovimentacoes(conteudo) {
-  await salvarArquivoUnico("carteiraMovimentacoes", conteudo);
-}
-
 // ---------- Apagar todos os dados ----------
-// Zera gastos, ganhos, lembretes (todos os meses), metas e as movimentações
-// de carteira de benefício — usado pelo botão "Apagar todos os dados"
-// (Exportação). "configuracoes" e "carteiras" nunca são apagados por essa
-// função de propósito (não são dado financeiro do usuário, são taxonomia/config).
+// Zera gastos, ganhos, lembretes (todos os meses) e metas — usado pelo botão
+// "Apagar todos os dados" (Exportação). "configuracoes" nunca é apagado por
+// essa função de propósito (não é dado financeiro do usuário, é config).
 export async function apagarTodosOsDados() {
   for (const colecao of COLECOES_PARTICIONADAS) {
     await salvarColecaoCompleta(colecao, []);
   }
   await salvarMetas({ versao: CONFIG.versaoSchema, metas: [] });
-  await salvarCarteiraMovimentacoes({ versao: CONFIG.versaoSchema, carteiraMovimentacoes: [] });
 }
 
 // ---------- Migração automática do formato antigo (um JSON só por coleção) ----------

@@ -7,15 +7,8 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { gerarOcorrenciasFaltantes } from "../src/js/utils/recorrencias.js";
-import { dataDoMes, gerarEntradasFaltantes } from "../src/js/utils/recorrenciaCarteira.js";
 import { somarMeses } from "../src/js/utils/datas.js";
 import { criarAmbienteTauri } from "./helpers/tauriFsMock.js";
-
-function somaIndependente(itens, campo = "valor") {
-  let total = 0;
-  for (const item of itens) total += item[campo];
-  return total;
-}
 
 describe("Cobertura — recorrência de item fixo no dia 31 (vencimento no fim do mês)", () => {
   test("atravessando fevereiro (não bissexto), depois março: nunca fica preso no dia 28", () => {
@@ -63,73 +56,6 @@ describe("Cobertura — recorrência de item fixo no dia 31 (vencimento no fim d
   });
 });
 
-describe("Cobertura — recorrência de crédito de carteira de benefício (Ticket Alimentação)", () => {
-  test("gera um crédito por mês entre a ativação e o mês alvo, sem duplicar um mês que já tem lançamento manual", () => {
-    const carteira = {
-      id: "ticket",
-      tipo: "beneficio",
-      ativa: true,
-      beneficio: { valorMensal: 600, diaRecebimento: 5, recorrente: true, acumulaSaldo: true, ativoDesde: "2027-01-05" },
-    };
-    const entradasExistentes = [{ id: "manual-1", carteiraId: "ticket", data: "2027-02-05", valor: 600, automatica: false, observacoes: "lançado na mão" }];
-
-    const novas = gerarEntradasFaltantes([carteira], entradasExistentes, "2027-04");
-    const meses = novas.map((n) => n.data.slice(0, 7)).sort();
-
-    // Janeiro, março e abril precisam ser gerados; fevereiro NÃO (já tem lançamento manual).
-    assert.deepEqual(meses, ["2027-01", "2027-03", "2027-04"]);
-    assert.ok(novas.every((n) => n.valor === 600 && n.automatica === true));
-  });
-
-  test("dia de recebimento 31 é ajustado para o último dia real de cada mês (dataDoMes)", () => {
-    assert.equal(dataDoMes("2027-02", 31), "2027-02-28");
-    assert.equal(dataDoMes("2028-02", 31), "2028-02-29"); // bissexto
-    assert.equal(dataDoMes("2027-04", 31), "2027-04-30");
-    assert.equal(dataDoMes("2027-01", 31), "2027-01-31");
-  });
-
-  test("carteira inativa ou não recorrente não gera nenhuma entrada automática", () => {
-    const inativa = { id: "x", tipo: "beneficio", ativa: false, beneficio: { valorMensal: 500, diaRecebimento: 1, recorrente: true, ativoDesde: "2027-01-01" } };
-    const naoRecorrente = { id: "y", tipo: "beneficio", ativa: true, beneficio: { valorMensal: 500, diaRecebimento: 1, recorrente: false, ativoDesde: "2027-01-01" } };
-    assert.deepEqual(gerarEntradasFaltantes([inativa, naoRecorrente], [], "2027-06"), []);
-  });
-});
-
-describe("Cobertura — cálculo de saldo acumulado de carteira de benefício", () => {
-  test("com acumulaSaldo=true, o saldo não gasto num mês soma ao mês seguinte (verificação independente)", async () => {
-    const { calcularSaldoCarteira } = await import("../src/js/carteiras.js");
-    const carteira = { id: "ticket", beneficio: { acumulaSaldo: true } };
-    const entradas = [
-      { carteiraId: "ticket", data: "2027-01-05", valor: 600 },
-      { carteiraId: "ticket", data: "2027-02-05", valor: 600 },
-    ];
-    const gastos = [{ carteiraId: "ticket", data: "2027-01-10", valor: 450 }];
-
-    const resultado = calcularSaldoCarteira(carteira, entradas, gastos, "2027-02");
-
-    // Cálculo independente: saldo de janeiro = 600 - 450 = 150.
-    // Fevereiro: 150 (anterior) + 600 (recebido) - 0 (gasto) = 750.
-    const saldoJaneiroEsperado = somaIndependente(entradas.filter((e) => e.data < "2027-02")) - somaIndependente(gastos.filter((g) => g.data < "2027-02"));
-    assert.equal(saldoJaneiroEsperado, 150);
-    assert.equal(resultado.saldoAnterior, 150);
-    assert.equal(resultado.saldoAtual, 750);
-  });
-
-  test("com acumulaSaldo=false, cada mês começa zerado (saldo do mês anterior nunca soma)", async () => {
-    const { calcularSaldoCarteira } = await import("../src/js/carteiras.js");
-    const carteira = { id: "ticket", beneficio: { acumulaSaldo: false } };
-    const entradas = [
-      { carteiraId: "ticket", data: "2027-01-05", valor: 600 },
-      { carteiraId: "ticket", data: "2027-02-05", valor: 600 },
-    ];
-    const gastos = [{ carteiraId: "ticket", data: "2027-01-10", valor: 100 }];
-
-    const resultado = calcularSaldoCarteira(carteira, entradas, gastos, "2027-02");
-    assert.equal(resultado.saldoAnterior, 0);
-    assert.equal(resultado.saldoAtual, 600); // só o recebido de fevereiro, gasto de janeiro não conta
-  });
-});
-
 describe("Cobertura — migração automática de campos antigos (retrocompatibilidade)", () => {
   test("gasto salvo antes da mudança de dia de salário (dia10/dia25) migra para dia15/dia30 ao carregar", async () => {
     const { limpar } = await criarAmbienteTauri();
@@ -147,7 +73,6 @@ describe("Cobertura — migração automática de campos antigos (retrocompatibi
 
       assert.equal(migrado.salarioResponsavel, "dia15", "salarioResponsavel antigo 'dia10' deveria virar 'dia15'");
       assert.equal(migrado.categoriaId, null, "campo categoriaId ausente deveria migrar para null, não undefined");
-      assert.equal(migrado.carteiraId, null, "campo carteiraId ausente deveria migrar para null (carteira principal)");
       assert.equal(migrado.observacoes, "", "campo observacoes ausente deveria migrar para string vazia");
     } finally {
       await limpar();

@@ -30,7 +30,6 @@ async function prepararComNGastos(quantidade) {
     pago: false,
     parcela: null,
     categoriaId: null,
-    carteiraId: null,
     observacoes: "",
   }));
   await adicionarGastosEmLote(gastos);

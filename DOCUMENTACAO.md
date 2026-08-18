@@ -122,7 +122,7 @@ Toda vez que qualquer tela salva dados (`armazenamento.salvar()`), o app primeir
 **b) Backup manual** (Exportação → "Criar backup manual agora")
 Você escolhe uma pasta (pendrive, OneDrive, Desktop, etc.) e o app cria ali uma subpasta com os 4 arquivos de dados, sem depender da pasta interna do app.
 
-**Restauração** (Exportação → lista "Backups automáticos recentes", botão "Restaurar", ou "Restaurar de um arquivo"):
+**Restauração** (Exportação → "Restaurar de um arquivo"):
 Sempre passa por `armazenamento.salvar()` — ou seja, mesmo restaurar cria um backup do estado atual antes de sobrescrever. É praticamente impossível perder dados por engano usando as telas do próprio app.
 
 ---

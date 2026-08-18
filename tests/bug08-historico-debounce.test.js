@@ -59,8 +59,8 @@ describe("BUG-08 — busca do Histórico usa debounce (comportamento observável
       const { transacoesGastos } = await import("../src/js/servicos/index.js");
       await transacoesGastos.listar();
       await transacoesGastos.salvarEmLote([
-        { id: "g1", titulo: "Mercado Extra", valor: 50, data: "2027-01-05", mesReferencia: "2027-01", salarioResponsavel: "dia15", fixo: false, fixoId: null, pago: false, parcela: null, categoriaId: null, carteiraId: null, observacoes: "" },
-        { id: "g2", titulo: "Farmácia", valor: 30, data: "2027-01-06", mesReferencia: "2027-01", salarioResponsavel: "dia15", fixo: false, fixoId: null, pago: false, parcela: null, categoriaId: null, carteiraId: null, observacoes: "" },
+        { id: "g1", titulo: "Mercado Extra", valor: 50, data: "2027-01-05", mesReferencia: "2027-01", salarioResponsavel: "dia15", fixo: false, fixoId: null, pago: false, parcela: null, categoriaId: null, observacoes: "" },
+        { id: "g2", titulo: "Farmácia", valor: 30, data: "2027-01-06", mesReferencia: "2027-01", salarioResponsavel: "dia15", fixo: false, fixoId: null, pago: false, parcela: null, categoriaId: null, observacoes: "" },
       ]);
 
       const { iniciarHistorico } = await import("../src/js/modulos/historico.js");

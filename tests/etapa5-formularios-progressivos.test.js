@@ -1,7 +1,7 @@
 // Etapa de refinamento visual/UX (2026-08-13): os formulários de gasto,
 // ganho e parcelamento reordenaram os campos por prioridade (valor,
 // descrição, data, categoria primeiro) e moveram os campos administrativos
-// (carteira, salário responsável, recorrência, observações) para dentro de
+// (salário responsável, recorrência, observações) para dentro de
 // um <details class="divulgacao"> "Mais opções" — sem JavaScript novo de
 // abrir/fechar (é nativo do HTML). Cada módulo só decide o ESTADO inicial:
 // fechado ao criar um item novo (formulário simples), aberto ao editar um

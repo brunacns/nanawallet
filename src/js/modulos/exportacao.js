@@ -3,10 +3,8 @@ import { obterGanhos, recarregarGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, recarregarGastos, aoAtualizarGastos } from "./gastos.js";
 import { obterLembretes, recarregarLembretes, aoAtualizarLembretes } from "./lembretes.js";
 import { obterMetas, recarregarMetas, aoAtualizarMetas } from "./metas.js";
-import { armazenamentoAtivo, categoriasService, carteirasService, carteiraEntradasService } from "../servicos/index.js";
-import { filtrarGastosPrincipais } from "../carteiras.js";
-import { formatarMoeda, formatarData, carimboDataHora, escaparHtml } from "../utils/formatadores.js";
-import { rotuloMesLongo } from "../utils/datas.js";
+import { armazenamentoAtivo, categoriasService } from "../servicos/index.js";
+import { formatarMoeda, formatarData, carimboDataHora } from "../utils/formatadores.js";
 import { estaNoTauri } from "../utils/plataforma.js";
 
 // Exportar/backup/restaurar em ARQUIVO local (diálogo nativo do SO) só faz
@@ -49,7 +47,6 @@ export async function iniciarExportacao() {
     botaoExportarTexto.addEventListener("click", comCarregando(botaoExportarTexto, "Exportando…", exportarTexto));
     botaoBackupManual.addEventListener("click", comCarregando(botaoBackupManual, "Criando backup…", criarBackupManual));
     botaoRestaurarArquivo.addEventListener("click", comCarregando(botaoRestaurarArquivo, "Restaurando…", restaurarDeArquivo));
-    document.getElementById("exportacao-backups-conteudo").addEventListener("click", tratarCliqueBackups);
   } else {
     // Web: sem acesso a diálogo nativo/sistema de arquivos — desabilita em
     // vez de esconder, para ficar claro que a função existe (só não aqui).
@@ -59,18 +56,6 @@ export async function iniciarExportacao() {
     }
   }
   botaoApagarTudo.addEventListener("click", comCarregando(botaoApagarTudo, "Apagando…", tratarApagarTudo));
-
-  // Toda gravação em ganhos/gastos/lembretes cria um backup automático novo
-  // (Etapa 3) — mantém esta lista sempre em dia, mesmo gravado a partir de outra página.
-  aoAtualizarGanhos(listarBackupsAutomaticos);
-  aoAtualizarGastos(listarBackupsAutomaticos);
-  aoAtualizarLembretes(listarBackupsAutomaticos);
-  aoAtualizarMetas(listarBackupsAutomaticos);
-  categoriasService.aoAtualizar(listarBackupsAutomaticos);
-  carteirasService.aoAtualizar(listarBackupsAutomaticos);
-  carteiraEntradasService.aoAtualizar(listarBackupsAutomaticos);
-
-  await listarBackupsAutomaticos();
 }
 
 function mostrarStatus(texto, ehErro = false) {
@@ -100,8 +85,6 @@ async function exportarJson() {
     lembretes: obterLembretes(),
     metas: obterMetas(),
     categorias: categoriasService.obterTodos(),
-    carteiras: carteirasService.obterTodos(),
-    carteiraMovimentacoes: carteiraEntradasService.obterTodos(),
     configuracoes: dadosConfiguracoes.configuracoes,
   };
 
@@ -120,11 +103,7 @@ async function exportarTexto() {
   });
   if (!caminho) return;
 
-  // Gastos pagos com uma carteira de benefício (ex: Ticket Alimentação) não
-  // são "financeiro principal" — excluídos do resumo (regra de ouro do
-  // sistema de carteiras). O benefício ganha sua própria seção no resumo
-  // numa etapa futura, quando tiver saldo/histórico próprios.
-  const texto = gerarTextoParaIA(obterGanhos(), filtrarGastosPrincipais(obterGastos()), obterLembretes(), obterMetas());
+  const texto = gerarTextoParaIA(obterGanhos(), obterGastos(), obterLembretes(), obterMetas());
   await fs.writeTextFile(caminho, texto);
   mostrarStatus(`Exportado com sucesso em: ${caminho}`);
 }
@@ -246,8 +225,6 @@ async function criarBackupManual() {
     lembretes: obterLembretes(),
     metas: obterMetas(),
     categorias: categoriasService.obterTodos(),
-    carteiras: carteirasService.obterTodos(),
-    carteiraMovimentacoes: carteiraEntradasService.obterTodos(),
   };
   for (const [chave, itens] of Object.entries(colecoes)) {
     const destino = await path.join(caminhoBackup, `${chave}.json`);
@@ -261,154 +238,7 @@ async function criarBackupManual() {
   mostrarStatus(`Backup criado em: ${caminhoBackup}`);
 }
 
-async function listarBackupsAutomaticos() {
-  const container = document.getElementById("exportacao-backups-conteudo");
-
-  if (!estaNoTauri()) {
-    // Backups automáticos eram gerados a cada gravação em arquivo local —
-    // desde que o Supabase passou a ser a fonte dos dados (Fase 10), nada
-    // mais escreve localmente no dia a dia, então não há nada novo pra
-    // listar aqui em nenhuma plataforma; na Web, nem a pasta existe.
-    container.innerHTML = `<li class="estado-vazio" style="padding: var(--espaco-md) 0;">${MENSAGEM_SO_DESKTOP}</li>`;
-    return;
-  }
-
-  const { fs, path } = window.__TAURI__;
-  const raiz = await path.appLocalDataDir();
-  const pastaBackups = await path.join(raiz, "backups");
-
-  if (!(await fs.exists(pastaBackups))) {
-    container.innerHTML = `<li class="estado-vazio" style="padding: var(--espaco-md) 0;">Nenhum backup automático ainda.</li>`;
-    return;
-  }
-
-  const entradas = await fs.readDir(pastaBackups);
-  const arquivos = entradas
-    .filter((e) => e.name && e.name.endsWith(".json"))
-    .sort((a, b) => b.name.localeCompare(a.name))
-    .slice(0, 20);
-
-  if (arquivos.length === 0) {
-    container.innerHTML = `<li class="estado-vazio" style="padding: var(--espaco-md) 0;">Nenhum backup automático ainda.</li>`;
-    return;
-  }
-
-  container.innerHTML = arquivos
-    .map(
-      (a) => `
-    <li class="lista-simples__item" data-nome="${escaparHtml(a.name)}">
-      <span class="lista-simples__titulo">${escaparHtml(a.name)}</span>
-      <button type="button" class="botao botao--secundario" data-acao="restaurar-backup" style="padding: 4px 10px; font-size: 12px;">Restaurar</button>
-    </li>
-  `
-    )
-    .join("");
-}
-
-async function tratarCliqueBackups(evento) {
-  const botao = evento.target.closest("[data-acao='restaurar-backup']");
-  if (!botao) return;
-  const nome = botao.closest("[data-nome]").dataset.nome;
-  // Mesma proteção de "sem feedback durante a operação" do BUG-07 — este
-  // botão nasce dinamicamente a cada renderização da lista, então usa a
-  // mesma ideia de `comCarregando` só que sem precisar restaurar o texto no
-  // fim: a lista inteira é re-renderizada por `listarBackupsAutomaticos()`
-  // (ou por um `return` antecipado se o nome do arquivo for inválido).
-  const textoOriginal = botao.textContent;
-  botao.disabled = true;
-  botao.textContent = "Restaurando…";
-  try {
-    await restaurarBackupAutomatico(nome);
-  } finally {
-    if (document.body.contains(botao)) {
-      botao.disabled = false;
-      botao.textContent = textoOriginal;
-    }
-  }
-}
-
 // ==================== 4. Sistema de restauração ====================
-
-const ROTULOS_COLECAO = {
-  ganhos: "Ganhos",
-  gastos: "Gastos",
-  lembretes: "Lembretes",
-  metas: "Metas",
-  categorias: "Categorias",
-  carteiras: "Carteiras",
-  carteiraMovimentacoes: "Movimentações de carteira",
-  configuracoes: "Configurações",
-};
-const COLECOES_VALIDAS = Object.keys(ROTULOS_COLECAO);
-const COLECOES_ARQUIVO_UNICO = ["configuracoes", "metas", "categorias", "carteiras", "carteiraMovimentacoes"];
-
-// Nome do arquivo de backup automático: "<identificador>__<carimbo>.json",
-// onde identificador é "configuracoes" (arquivo único) ou "<colecao>-<AAAA-MM>"
-// (um mês específico de uma coleção particionada, ex: "gastos-2026-07") —
-// ver `criarBackup` em dados/backup.js.
-function interpretarIdentificadorBackup(identificador) {
-  const partes = identificador.split("-");
-  const colecao = partes[0];
-  const anoValido = /^\d{4}$/.test(partes[1] || "");
-  const mesValido = /^\d{2}$/.test(partes[2] || "");
-  return anoValido && mesValido ? { colecao, anoMes: `${partes[1]}-${partes[2]}` } : { colecao, anoMes: null };
-}
-
-async function restaurarBackupAutomatico(nomeArquivo) {
-  const [identificador] = nomeArquivo.split("__");
-  const { colecao, anoMes } = interpretarIdentificadorBackup(identificador);
-
-  const ehArquivoUnico = COLECOES_ARQUIVO_UNICO.includes(colecao);
-  if (!COLECOES_VALIDAS.includes(colecao) || (!ehArquivoUnico && !anoMes)) {
-    mostrarStatus(`Arquivo de backup não reconhecido: "${nomeArquivo}".`, true);
-    return;
-  }
-
-  const rotulo = ROTULOS_COLECAO[colecao];
-  // Como os dados agora são particionados por mês, restaurar um backup
-  // automático afeta só o mês daquele backup, não a coleção inteira.
-  const descricaoEscopo = anoMes ? ` de ${rotuloMesLongo(anoMes)}` : "";
-
-  const confirmou = confirm(
-    `Restaurar "${nomeArquivo}"?\n\nIsso vai SUBSTITUIR os dados atuais de ${rotulo}${descricaoEscopo} pelos dados desse backup. Um backup do estado atual antes da restauração será criado automaticamente.`
-  );
-  if (!confirmou) return;
-
-  const { fs, path } = window.__TAURI__;
-  const raiz = await path.appLocalDataDir();
-  const caminho = await path.join(raiz, "backups", nomeArquivo);
-  const conteudo = JSON.parse(await fs.readTextFile(caminho));
-
-  if (colecao === "configuracoes") {
-    await armazenamentoAtivo.salvarConfig("configuracoes", conteudo);
-  } else if (ehArquivoUnico) {
-    // metas/categorias/carteiras/carteiraMovimentacoes nunca foram
-    // particionadas — o backup automático é sempre uma foto da coleção
-    // inteira, então substituir tudo é o comportamento certo aqui.
-    await armazenamentoAtivo.substituirTudo(colecao, conteudo[colecao] || []);
-  } else {
-    // Mesma sanitização aplicada em `restaurarDeArquivo` (BUG-02): um backup
-    // automático é normalmente gerado pelo próprio app, mas nada impede o
-    // arquivo de ter sido editado à mão antes de ser restaurado, então passa
-    // pela mesma validação por segurança.
-    const { validos, descartados } = validarESanearItens(colecao, conteudo[colecao] || []);
-    // gastos/ganhos/lembretes: o backup automático é só de UM mês — no
-    // Supabase (tabela única, sem partição por mês) isso precisa ser um
-    // upsert (mescla, sem apagar), não um "substituir tudo", senão apagaria
-    // todos os OUTROS meses da coleção por engano.
-    await armazenamentoAtivo.salvarEmLote(colecao, validos);
-    if (descartados.length > 0) {
-      await recarregarModulo(colecao);
-      await listarBackupsAutomaticos();
-      mostrarStatus(`${rotulo}${descricaoEscopo} restaurado, mas ${descartados.length} item(ns) inválido(s) foram ignorados.`);
-      return;
-    }
-  }
-
-  await recarregarModulo(colecao);
-  await listarBackupsAutomaticos();
-  mostrarStatus(`${rotulo}${descricaoEscopo} restaurado com sucesso a partir de "${nomeArquivo}".`);
-}
 
 async function restaurarDeArquivo() {
   const { dialog, fs } = window.__TAURI__;
@@ -461,21 +291,14 @@ async function restaurarDeArquivo() {
   if (dados.configuracoes) {
     await armazenamentoAtivo.salvarConfig("configuracoes", { configuracoes: dados.configuracoes });
   }
-  // "metas", "categorias", "carteiras" e "carteiraMovimentacoes" são
-  // opcionais na validação acima: exportações feitas antes de cada
-  // funcionalidade existir não têm esses campos, e restaurá-las não deve
-  // apagar os dados atuais do usuário nessas coleções.
+  // "metas" e "categorias" são opcionais na validação acima: exportações
+  // feitas antes de cada funcionalidade existir não têm esses campos, e
+  // restaurá-las não deve apagar os dados atuais do usuário nessas coleções.
   if (Array.isArray(dados.metas)) {
     await armazenamentoAtivo.substituirTudo("metas", dados.metas);
   }
   if (Array.isArray(dados.categorias)) {
     await armazenamentoAtivo.substituirTudo("categorias", dados.categorias);
-  }
-  if (Array.isArray(dados.carteiras)) {
-    await armazenamentoAtivo.substituirTudo("carteiras", dados.carteiras);
-  }
-  if (Array.isArray(dados.carteiraMovimentacoes)) {
-    await armazenamentoAtivo.substituirTudo("carteiraMovimentacoes", dados.carteiraMovimentacoes);
   }
 
   await recarregarGanhos();
@@ -483,8 +306,6 @@ async function restaurarDeArquivo() {
   await recarregarLembretes();
   await recarregarMetas();
   await categoriasService.recarregar();
-  await carteirasService.recarregar();
-  await carteiraEntradasService.recarregar();
 
   mostrarStatus(
     totalDescartados > 0
@@ -495,20 +316,19 @@ async function restaurarDeArquivo() {
 
 // ==================== 5. Apagar todos os dados ====================
 
-// Zera gastos/ganhos/lembretes/metas/movimentações de carteira de benefício
-// no Supabase — mesmo escopo de dados/armazenamento.js#apagarTodosOsDados
-// (a versão local, usada só pela ArmazenamentoLocalService/testes).
-// "configuracoes" e "carteiras" nunca são apagados de propósito (taxonomia/
-// configuração, não dado financeiro do usuário).
+// Zera gastos/ganhos/lembretes/metas no Supabase — mesmo escopo de
+// dados/armazenamento.js#apagarTodosOsDados (a versão local, usada só pela
+// ArmazenamentoLocalService/testes). "configuracoes" nunca é apagado de
+// propósito (não é dado financeiro do usuário, é config).
 async function apagarTodosOsDadosSupabase() {
-  for (const colecao of ["gastos", "ganhos", "lembretes", "metas", "carteiraMovimentacoes"]) {
+  for (const colecao of ["gastos", "ganhos", "lembretes", "metas"]) {
     await armazenamentoAtivo.substituirTudo(colecao, []);
   }
 }
 
 async function tratarApagarTudo() {
   const primeiraConfirmacao = confirm(
-    "Isso vai apagar PERMANENTEMENTE todos os ganhos, gastos, lembretes, metas e movimentações de carteira de benefício cadastrados (de todos os meses). As configurações e as carteiras cadastradas não são afetadas.\n\nEsta ação não pode ser desfeita pela interface — se quiser poder voltar atrás, exporte/faça backup dos dados atuais primeiro (só no Desktop). Deseja continuar?"
+    "Isso vai apagar PERMANENTEMENTE todos os ganhos, gastos, lembretes e metas cadastrados (de todos os meses). As configurações não são afetadas.\n\nEsta ação não pode ser desfeita pela interface — se quiser poder voltar atrás, exporte/faça backup dos dados atuais primeiro (só no Desktop). Deseja continuar?"
   );
   if (!primeiraConfirmacao) return;
 
@@ -521,19 +341,6 @@ async function tratarApagarTudo() {
   await recarregarGastos();
   await recarregarLembretes();
   await recarregarMetas();
-  await carteiraEntradasService.recarregar();
-  await listarBackupsAutomaticos();
 
   mostrarStatus("Todos os dados foram apagados.");
-}
-
-async function recarregarModulo(chave) {
-  if (chave === "ganhos") await recarregarGanhos();
-  else if (chave === "gastos") await recarregarGastos();
-  else if (chave === "lembretes") await recarregarLembretes();
-  else if (chave === "metas") await recarregarMetas();
-  else if (chave === "categorias") await categoriasService.recarregar();
-  else if (chave === "carteiras") await carteirasService.recarregar();
-  else if (chave === "carteiraMovimentacoes") await carteiraEntradasService.recarregar();
-  // "configuracoes" ainda não tem tela própria (Etapa 4 manteve vazio).
 }

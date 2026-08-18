@@ -8,10 +8,9 @@
 // como saber que aquele conteúdo era um diálogo separado da página.
 const SELETOR_FOCAVEL = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-// Elementos dentro de uma linha/seção com `hidden` (ex: os campos de
-// salário/mês de referência do formulário de gasto, escondidos quando a
-// carteira selecionada é um benefício) nunca recebem foco de verdade num
-// navegador — `closest("[hidden]")` reproduz essa mesma regra aqui, para o
+// Elementos dentro de uma linha/seção com `hidden` (ex: campos condicionais
+// escondidos de um formulário) nunca recebem foco de verdade num navegador —
+// `closest("[hidden]")` reproduz essa mesma regra aqui, para o
 // "primeiro"/"último" campo do laço nunca apontar pra um elemento invisível.
 function elementosFocaveis(container) {
   return [...container.querySelectorAll(SELETOR_FOCAVEL)].filter((el) => !el.closest("[hidden]"));

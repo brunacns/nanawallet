@@ -75,17 +75,6 @@
               </button>
             </li>
             <li>
-              <button class="sidebar__item" data-pagina="ticket-alimentacao" aria-label="Ticket Alimentação" title="Ticket Alimentação">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="6" width="18" height="12" rx="2" />
-                  <path d="M3 12h2M19 12h2" stroke-dasharray="0.1 3.2" />
-                  <circle cx="9" cy="12" r="2.2" />
-                  <path d="M14 9.5v5M17 9.5v5" />
-                </svg>
-                <span>Ticket Alimentação</span>
-              </button>
-            </li>
-            <li>
               <button class="sidebar__item" data-pagina="lembretes" aria-label="Lembretes" title="Lembretes">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 4a4.5 4.5 0 0 0-4.5 4.5c0 5-2 6.5-2 6.5h13s-2-1.5-2-6.5A4.5 4.5 0 0 0 12 4z" />
@@ -214,12 +203,6 @@
               <div class="cartao-estatistica__rotulo">Reservado para lembretes</div>
               <div class="cartao-estatistica__valor" id="dash-reservado-lembretes">R$ 0,00</div>
             </div>
-          </div>
-
-          <div class="cartao" id="dash-cartao-beneficios" style="margin-bottom: var(--espaco-lg);" hidden>
-            <div class="cartao__titulo">Benefícios</div>
-            <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">Saldo separado do seu dinheiro principal — não entra em nenhum total acima.</p>
-            <ul class="lista-simples" id="dash-beneficios-conteudo"></ul>
           </div>
 
           <div class="grade-graficos">
@@ -393,155 +376,6 @@
           </div>
         </section>
 
-        <!-- Ticket Alimentação -->
-        <section class="pagina" id="pagina-ticket-alimentacao">
-          <div class="pagina__cabecalho">
-            <div>
-              <h1 class="pagina__titulo">Ticket Alimentação</h1>
-              <p class="pagina__subtitulo">Saldo separado do seu dinheiro principal — nunca somado a salário, renda ou saldo bancário</p>
-            </div>
-            <button class="botao botao--primario" id="botao-novo-gasto-ticket">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-              </svg>
-              Novo gasto
-            </button>
-          </div>
-
-          <div class="seletor-mes">
-            <button type="button" class="botao-icone" id="ticket-mes-anterior" title="Mês anterior" aria-label="Mês anterior">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-            </button>
-            <span class="seletor-mes__rotulo" id="ticket-mes-rotulo">—</span>
-            <button type="button" class="botao-icone" id="ticket-mes-seguinte" title="Próximo mês" aria-label="Próximo mês">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
-            </button>
-            <button type="button" class="botao botao--secundario botao--pequeno" id="ticket-mes-atual">
-              Mês atual
-            </button>
-          </div>
-
-          <div class="grade-estatisticas">
-            <div class="cartao-estatistica cartao-estatistica--destaque-beneficio">
-              <div class="cartao-estatistica__rotulo">Saldo atual</div>
-              <div class="cartao-estatistica__valor" id="ticket-saldo-atual">R$ 0,00</div>
-            </div>
-            <div class="cartao-estatistica">
-              <div class="cartao-estatistica__rotulo">Recebido no mês</div>
-              <div class="cartao-estatistica__valor cartao-estatistica__valor--positivo" id="ticket-recebido-mes">R$ 0,00</div>
-            </div>
-            <div class="cartao-estatistica">
-              <div class="cartao-estatistica__rotulo">Gasto no mês</div>
-              <div class="cartao-estatistica__valor cartao-estatistica__valor--negativo" id="ticket-gasto-mes">R$ 0,00</div>
-            </div>
-            <div class="cartao-estatistica">
-              <div class="cartao-estatistica__rotulo">Percentual utilizado</div>
-              <div class="cartao-estatistica__valor" id="ticket-percentual-utilizado">—</div>
-            </div>
-          </div>
-
-          <div class="cartao" style="margin-bottom: var(--espaco-md);">
-            <div class="cartao__titulo">Utilização do benefício este mês</div>
-            <p class="pagina__subtitulo" id="ticket-composicao-saldo" style="margin-bottom: var(--espaco-sm);" hidden></p>
-            <div class="barra-progresso"><div class="barra-progresso__preenchimento" id="ticket-barra-preenchimento" style="width: 0%;"></div></div>
-            <p class="pagina__subtitulo" id="ticket-barra-legenda" style="margin-top: var(--espaco-sm); margin-bottom: 0;">Nenhum recebimento registrado neste mês ainda.</p>
-          </div>
-
-          <div class="grade-duas-colunas" style="margin-bottom: var(--espaco-md);">
-            <div class="cartao" id="ticket-cartao-proximo" hidden>
-              <div class="cartao__titulo">Próximo recebimento</div>
-              <div class="cartao-estatistica__valor cartao-estatistica__valor--positivo" id="ticket-proximo-valor">R$ 0,00</div>
-              <p class="pagina__subtitulo" id="ticket-proximo-detalhe" style="margin-bottom: 0;">—</p>
-            </div>
-
-            <div class="cartao" id="ticket-cartao-ritmo" hidden>
-              <div class="cartao__titulo">Ritmo de consumo</div>
-              <p id="ticket-ritmo-status" style="font-weight: var(--peso-semi); margin: 0 0 var(--espaco-sm) 0;">—</p>
-              <p class="pagina__subtitulo" id="ticket-ritmo-detalhe" style="margin-bottom: 0;">—</p>
-            </div>
-          </div>
-
-          <div class="grade-duas-colunas" style="margin-bottom: var(--espaco-md);">
-            <div class="cartao">
-              <div class="cartao__titulo">Configuração do benefício</div>
-              <form id="formulario-config-ticket">
-                <div class="campo">
-                  <label for="ticket-config-nome">Nome</label>
-                  <input type="text" id="ticket-config-nome" disabled />
-                </div>
-                <div class="campo">
-                  <label for="ticket-config-valor-mensal">Valor mensal (R$)</label>
-                  <input type="number" id="ticket-config-valor-mensal" step="0.01" min="0" placeholder="0,00" />
-                </div>
-                <div class="campo">
-                  <label for="ticket-config-dia-recebimento">Dia de recebimento</label>
-                  <input type="number" id="ticket-config-dia-recebimento" min="1" max="31" step="1" />
-                </div>
-                <div class="campo-checkbox">
-                  <input type="checkbox" id="ticket-config-recorrente" />
-                  <label for="ticket-config-recorrente" title="Gerar o crédito mensal automaticamente (em breve)">Recorrente</label>
-                </div>
-                <div class="campo-checkbox">
-                  <input type="checkbox" id="ticket-config-acumula-saldo" />
-                  <label for="ticket-config-acumula-saldo" title="Saldo não usado passa para o mês seguinte (em breve)">Acumula saldo entre os meses</label>
-                </div>
-                <div class="campo-checkbox">
-                  <input type="checkbox" id="ticket-config-ativo" />
-                  <label for="ticket-config-ativo">Benefício ativo</label>
-                </div>
-                <button type="submit" class="botao botao--primario">Salvar configuração</button>
-              </form>
-            </div>
-
-            <div class="cartao">
-              <div class="cartao__titulo">Lançar recebimento manualmente</div>
-              <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
-                Use para registrar um crédito avulso — o crédito mensal (se "Recorrente" estiver ligado na configuração acima) já é gerado sozinho.
-              </p>
-              <form id="formulario-recebimento-ticket">
-                <div class="campo">
-                  <label for="ticket-recebimento-valor">Valor (R$)</label>
-                  <input type="number" id="ticket-recebimento-valor" step="0.01" min="0.01" placeholder="0,00" required />
-                </div>
-                <div class="campo">
-                  <label for="ticket-recebimento-data">Data</label>
-                  <input type="date" id="ticket-recebimento-data" required />
-                </div>
-                <div class="campo">
-                  <label for="ticket-recebimento-observacoes">Observações</label>
-                  <textarea id="ticket-recebimento-observacoes" rows="2" placeholder="Opcional"></textarea>
-                </div>
-                <button type="submit" class="botao botao--secundario">Lançar recebimento</button>
-              </form>
-            </div>
-          </div>
-
-          <div class="cartao" style="margin-bottom: var(--espaco-md);">
-            <div class="cartao__titulo">Gastos por categoria este mês</div>
-            <ul class="lista-diagnosticos" id="ticket-gastos-categoria"></ul>
-          </div>
-
-          <div class="cartao">
-            <div class="cartao__titulo">Movimentações deste mês</div>
-            <div class="tabela-scroll">
-              <table class="tabela">
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Descrição</th>
-                    <th>Categoria</th>
-                    <th>Valor</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="ticket-corpo-tabela"></tbody>
-              </table>
-            </div>
-            <p class="estado-vazio" id="ticket-estado-vazio" hidden>Nenhuma movimentação neste mês.</p>
-          </div>
-        </section>
-
         <!-- Lembretes -->
         <section class="pagina" id="pagina-lembretes">
           <div class="pagina__cabecalho">
@@ -681,7 +515,7 @@
             <div class="cartao">
               <div class="cartao__titulo">Exportar em JSON</div>
               <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
-                Gera um único arquivo <code>.json</code> com todos os seus dados (ganhos, gastos, lembretes, metas, categorias, carteiras e configurações). Útil para guardar ou para restaurar depois.
+                Gera um único arquivo <code>.json</code> com todos os seus dados (ganhos, gastos, lembretes, metas, categorias e configurações). Útil para guardar ou para restaurar depois.
               </p>
               <button class="botao botao--primario" id="botao-exportar-json">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -731,19 +565,11 @@
             </button>
           </div>
 
-          <div class="cartao" style="margin-bottom: var(--espaco-md);">
-            <div class="cartao__titulo">Backups automáticos recentes</div>
-            <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
-              Histórico de backups criados sozinhos pelo app quando os dados ainda ficavam só neste computador. Como os dados agora vivem no Supabase, nenhum backup automático novo é criado — use "Backup manual" ou "Exportar" para uma cópia atual. Clique em "Restaurar" para trazer um desses arquivos antigos de volta.
-            </p>
-            <ul class="lista-simples" id="exportacao-backups-conteudo"></ul>
-          </div>
-
           <div class="cartao" style="border-color: var(--cor-negativo);">
             <div class="cartao__titulo">Apagar todos os dados</div>
             <p class="pagina__subtitulo" style="margin-bottom: var(--espaco-md);">
-              Apaga permanentemente todos os ganhos, gastos, lembretes, metas e movimentações de carteira de benefício cadastrados (de todos os meses).
-              As configurações e as carteiras cadastradas não são afetadas. Esta ação não pode ser desfeita — exporte ou faça backup antes, se quiser poder voltar atrás.
+              Apaga permanentemente todos os ganhos, gastos, lembretes e metas cadastrados (de todos os meses).
+              As configurações não são afetadas. Esta ação não pode ser desfeita — exporte ou faça backup antes, se quiser poder voltar atrás.
             </p>
             <button class="botao botao--perigo" id="botao-apagar-tudo">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -883,17 +709,6 @@
         </div>
         <ul class="lista-simples menu-mais">
           <li>
-            <button type="button" class="menu-mais__item" data-pagina="ticket-alimentacao">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="6" width="18" height="12" rx="2" />
-                <path d="M3 12h2M19 12h2" stroke-dasharray="0.1 3.2" />
-                <circle cx="9" cy="12" r="2.2" />
-                <path d="M14 9.5v5M17 9.5v5" />
-              </svg>
-              <span>Ticket Alimentação</span>
-            </button>
-          </li>
-          <li>
             <button type="button" class="menu-mais__item" data-pagina="lembretes">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 4a4.5 4.5 0 0 0-4.5 4.5c0 5-2 6.5-2 6.5h13s-2-1.5-2-6.5A4.5 4.5 0 0 0 12 4z" />
@@ -995,8 +810,8 @@
         </div>
         <form id="formulario-gasto">
           <!-- Campos essenciais primeiro — o que se precisa pra registrar uma
-               compra rapidamente. Carteira/salário/recorrência/observações
-               são administrativos, ficam atrás de "Mais opções". -->
+               compra rapidamente. Salário/recorrência/observações são
+               administrativos, ficam atrás de "Mais opções". -->
           <div class="campo">
             <label for="campo-titulo-gasto">Título</label>
             <input type="text" id="campo-titulo-gasto" placeholder="Ex: Aluguel, Mercado..." required />
@@ -1030,11 +845,6 @@
           <details class="divulgacao" id="gasto-mais-opcoes">
             <summary>Mais opções</summary>
             <div class="divulgacao__conteudo">
-              <div class="campo">
-                <label for="campo-carteira-gasto">Carteira</label>
-                <select id="campo-carteira-gasto"></select>
-                <p class="campo__aviso" id="aviso-carteira-beneficio-gasto" hidden>Este gasto será descontado do saldo do benefício, não do seu dinheiro principal.</p>
-              </div>
               <div class="campo" id="linha-salario-gasto">
                 <label for="campo-salario-gasto">Salário responsável pelo pagamento</label>
                 <select id="campo-salario-gasto">
@@ -1116,13 +926,6 @@
           <details class="divulgacao" id="parcelamento-mais-opcoes">
             <summary>Mais opções</summary>
             <div class="divulgacao__conteudo">
-              <div class="campo">
-                <label for="campo-carteira-parcelamento">Carteira</label>
-                <select id="campo-carteira-parcelamento"></select>
-                <p class="campo__aviso" id="aviso-carteira-beneficio-parcelamento" hidden>
-                  As parcelas serão descontadas do saldo do benefício, não do seu dinheiro principal.
-                </p>
-              </div>
               <div class="campo" id="linha-salario-parcelamento">
                 <label for="campo-salario-parcelamento">Salário responsável pelo pagamento</label>
                 <select id="campo-salario-parcelamento">

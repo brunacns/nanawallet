@@ -2,7 +2,6 @@ import { obterGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, aoAtualizarGastos } from "./gastos.js";
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { chipCategoria, opcoesFiltroCategoria } from "../categorias.js";
-import { filtrarGastosPrincipais } from "../carteiras.js";
 import { debounce } from "../utils/debounce.js";
 
 // Diferente de Dashboard/Gastos/Ganhos (que mostram um mês por vez), o
@@ -81,10 +80,7 @@ function combinarTransacoes() {
     valor: g.valor,
     feito: g.recebido,
   }));
-  // Gastos pagos com uma carteira de benefício (ex: Ticket Alimentação) não
-  // são "financeiro principal" — o Histórico mostra só dinheiro principal; o
-  // benefício tem seu próprio histórico numa página separada.
-  const gastos = filtrarGastosPrincipais(obterGastos()).map((g) => ({
+  const gastos = obterGastos().map((g) => ({
     tipo: "gasto",
     titulo: g.titulo,
     data: g.data,

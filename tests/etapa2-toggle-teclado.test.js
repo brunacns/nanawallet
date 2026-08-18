@@ -135,9 +135,9 @@ describe("Caixa de marcar/desmarcar é acessível por teclado", () => {
 });
 
 describe("Tabelas longas rolam horizontalmente em vez de estourar a página", () => {
-  test("as tabelas de Gastos, Histórico e Ticket Alimentação estão dentro de um wrapper .tabela-scroll", () => {
+  test("as tabelas de Gastos e Histórico estão dentro de um wrapper .tabela-scroll", () => {
     montarDom();
-    const ids = ["gastos-corpo-tabela", "historico-corpo-tabela", "ticket-corpo-tabela"];
+    const ids = ["gastos-corpo-tabela", "historico-corpo-tabela"];
     for (const id of ids) {
       const tbody = document.getElementById(id);
       const wrapper = tbody.closest(".tabela-scroll");

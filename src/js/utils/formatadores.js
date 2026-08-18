@@ -23,8 +23,8 @@ export function formatarDataHora(dataHoraISO) {
 }
 
 // Valida que uma cor é um hex de 6 dígitos antes dela entrar num atributo
-// style="" interpolado (auditoria de segurança 2026-08-16) — categoria.cor e
-// carteira.cor vêm de linhas gravadas pela própria usuária, mas a RLS só
+// style="" interpolado (auditoria de segurança 2026-08-16) — categoria.cor
+// vem de linhas gravadas pela própria usuária, mas a RLS só
 // garante QUEM pode gravar (auth.uid() = user_id), nunca O QUE é gravado no
 // campo: uma chamada direta à API do Supabase (fora da interface, que só
 // oferece um seletor de cores fixo) poderia gravar `cor` como

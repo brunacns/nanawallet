@@ -10,8 +10,6 @@ export const CONFIG = {
     configuracoes: "configuracoes.json",
     metas: "metas.json",
     categorias: "categorias.json",
-    carteiras: "carteiras.json",
-    carteiraMovimentacoes: "carteira_movimentacoes.json",
   },
   // URL e chave publicável do projeto Supabase ("nanawallet"). Não são
   // segredo: a chave publicável é protegida por Row Level Security, feita

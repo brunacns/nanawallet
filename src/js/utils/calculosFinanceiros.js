@@ -15,9 +15,7 @@ export function somarValor(itens, seletor) {
 // pagos ou não. Decisão de negócio da Etapa 13 (histórico do projeto): a
 // maioria das compras é no cartão de crédito, então "quanto eu gastei/vou
 // gastar este mês" precisa incluir o que ainda não foi pago, não só o que já
-// saiu da conta. `gastos` deve já vir filtrado por carteira principal
-// (ver `filtrarGastosPrincipais` em carteiras.js) — esta função não decide
-// isso, só agrupa por mês.
+// saiu da conta.
 export function somarGastosDoMes(gastos, mesReferencia) {
   return somarValor(
     gastos.filter((g) => g.mesReferencia === mesReferencia),

@@ -61,7 +61,7 @@ export async function criarAmbienteTauri() {
   globalThis.window.__TAURI__ = criarMockTauri(raiz);
   // Desde a migração para Supabase (Fase 10), servicos/index.js usa
   // ArmazenamentoSupabaseService por padrão — sem este hook, todo teste que
-  // importa os serviços reais (transacoesGastos, carteirasService etc.)
+  // importa os serviços reais (transacoesGastos, categoriasService etc.)
   // passaria a bater no Supabase de verdade, sem sessão, em vez de usar os
   // arquivos JSON da pasta temporária acima. Só existe em ambiente de teste;
   // o app real nunca define essa variável.

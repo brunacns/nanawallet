@@ -14,7 +14,7 @@ describe("Sidebar: nome acessível independente do CSS + página atual sinalizad
   test("todo item do menu tem aria-label não vazio (funciona mesmo com o <span> escondido)", () => {
     montarDom();
     const itens = document.querySelectorAll(".sidebar__item");
-    assert.equal(itens.length, 9, "esperava 9 itens de navegação");
+    assert.equal(itens.length, 8, "esperava 8 itens de navegação");
     itens.forEach((item) => {
       const rotulo = item.getAttribute("aria-label");
       assert.ok(rotulo && rotulo.trim().length > 0, `item data-pagina="${item.dataset.pagina}" precisa de aria-label`);

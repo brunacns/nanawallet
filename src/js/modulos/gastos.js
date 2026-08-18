@@ -1,11 +1,10 @@
 import { transacoesGastos } from "../servicos/index.js";
 import { formatarMoeda, formatarData, escaparHtml } from "../utils/formatadores.js";
 import { svgEditar, svgExcluir } from "../utils/icones.js";
-import { chaveMesAtual, hojeISO, rotuloMesLongo, mesDeData } from "../utils/datas.js";
+import { chaveMesAtual, hojeISO, rotuloMesLongo, rotuloMesAbreviado, mesDeData } from "../utils/datas.js";
 import { obterMesSelecionado, avancarMes, retrocederMes, irParaMesAtual, aoAtualizarMes } from "../estadoMes.js";
 import { chipCategoria, opcoesFiltroCategoria, criarSeletorCategoria } from "../categorias.js";
 import { perguntarEscopoExclusao } from "../confirmacaoExclusao.js";
-import { opcoesCarteiraGasto, carteiraEhBeneficio, carteiraPrincipalPadraoId, filtrarGastosPrincipais } from "../carteiras.js";
 import { avisarCampoInvalido, limparValidacao } from "../utils/validacaoFormulario.js";
 import { prenderFocoNoModal } from "../utils/focoModal.js";
 import { mostrarToast } from "../utils/toast.js";
@@ -38,21 +37,6 @@ export async function adicionarGastosEmLote(novosGastos) {
   await transacoesGastos.salvarEmLote(novosGastos);
 }
 
-// Reaproveitados pela página do Ticket Alimentação/benefícios — mesmo modal e
-// mesma lógica de editar/excluir (com escolha de escopo para fixo/parcela) da
-// tabela de Gastos, sem duplicar nada.
-export function abrirModalNovoGasto(carteiraIdPreSelecionada = null) {
-  abrirModalNovo(carteiraIdPreSelecionada);
-}
-
-export function abrirModalEdicaoGasto(id) {
-  abrirModalEdicao(id);
-}
-
-export function excluirGastoInterativo(id) {
-  return excluirGasto(id);
-}
-
 export async function iniciarPaginaGastos() {
   document.getElementById("botao-novo-gasto").addEventListener("click", abrirModalNovo);
   document.getElementById("botao-fechar-modal-gasto").addEventListener("click", fecharModal);
@@ -80,9 +64,6 @@ export async function iniciarPaginaGastos() {
     renderizar();
   });
   seletorCategoriaGasto.inicializar();
-
-  atualizarOpcoesCarteira();
-  document.getElementById("campo-carteira-gasto").addEventListener("change", atualizarCamposConformeCarteira);
 
   // O serviço avisa sozinho sempre que os dados mudarem (carregar, salvar,
   // remover, lote) — não precisa mais chamar renderizar() manualmente depois
@@ -114,10 +95,7 @@ function renderizar() {
   const mesSelecionado = obterMesSelecionado();
   document.getElementById("gastos-mes-rotulo").textContent = rotuloMesLongo(mesSelecionado);
 
-  // Gastos pagos com uma carteira de benefício (ex: Ticket Alimentação) não
-  // são "financeiro principal" — esta página (total, tabela, abas) mostra só
-  // o dinheiro principal; o benefício tem seu próprio saldo/histórico.
-  const doMes = aplicarFiltros(filtrarGastosPrincipais(gastos).filter((g) => g.mesReferencia === mesSelecionado));
+  const doMes = aplicarFiltros(gastos.filter((g) => g.mesReferencia === mesSelecionado));
   const total = doMes.reduce((soma, g) => soma + g.valor, 0);
   document.getElementById("gastos-total").textContent = `Total: ${formatarMoeda(total)}`;
 
@@ -195,7 +173,9 @@ function linhaGasto(gasto) {
       <td data-rotulo="Data">${formatarData(gasto.data)}</td>
       <td class="tabela__valor-negativo" data-rotulo="Valor">${formatarMoeda(gasto.valor)}</td>
       <td data-rotulo="Categoria">${chipCategoria(gasto.categoriaId)}</td>
-      <td data-rotulo="Salário responsável">${rotuloSalario} (${rotuloMesLongo(gasto.mesReferencia)})</td>
+      <td data-rotulo="Salário responsável">${rotuloSalario} (<span class="texto-somente-tabela">${rotuloMesLongo(
+    gasto.mesReferencia
+  )}</span><span class="texto-somente-cartao">${rotuloMesAbreviado(gasto.mesReferencia)}</span>)</td>
       <td data-rotulo="Status">${rotuloStatus}</td>
       <td data-rotulo="Tipo">${rotuloTipo}</td>
       <td class="tabela__acoes">
@@ -233,53 +213,18 @@ async function alternarPago(id) {
   await transacoesGastos.salvar(gasto);
 }
 
-// Repopula o <select> de carteiras a cada abertura do modal (em vez de só
-// uma vez, na inicialização da página) — senão, ativar uma carteira nova
-// (ex: o Ticket Alimentação, na página de configuração do benefício) só
-// apareceria como opção depois de reabrir o app. `opcoesCarteiraGasto()` já
-// lê o estado atual de `carteirasService`; o que faltava era regravar o
-// `innerHTML` do próprio `<select>` com essa lista atualizada.
-function atualizarOpcoesCarteira() {
-  document.getElementById("campo-carteira-gasto").innerHTML = opcoesCarteiraGasto();
-}
-
-// Salário responsável, mês de referência e "gasto fixo" não fazem sentido
-// para um gasto pago com uma carteira de benefício (não existe "salário" que
-// paga o Ticket Alimentação) — esconde essas linhas e mostra o aviso de que
-// o valor sai do saldo do benefício, não do dinheiro principal.
-function atualizarCamposConformeCarteira() {
-  const carteiraId = document.getElementById("campo-carteira-gasto").value || null;
-  const ehBeneficio = carteiraEhBeneficio(carteiraId);
-
-  document.getElementById("linha-salario-gasto").hidden = ehBeneficio;
-  document.getElementById("linha-mes-referencia-gasto").hidden = ehBeneficio;
-  document.getElementById("linha-fixo-gasto").hidden = ehBeneficio;
-  document.getElementById("aviso-carteira-beneficio-gasto").hidden = !ehBeneficio;
-
-  if (ehBeneficio) {
-    document.getElementById("campo-fixo-gasto").checked = false;
-    document.getElementById("linha-aplicar-proximas-gasto").hidden = true;
-  }
-}
-
-// `carteiraIdPreSelecionada` permite abrir o modal já com uma carteira
-// escolhida (usado pela página do Ticket Alimentação/benefícios ao clicar em
-// "Novo gasto" — reaproveita este mesmo modal em vez de duplicar o formulário).
-function abrirModalNovo(carteiraIdPreSelecionada = null) {
+function abrirModalNovo() {
   idEmEdicao = null;
   fixoIdOriginalEmEdicao = null;
   document.getElementById("modal-gasto-titulo").textContent = "Novo gasto";
   document.getElementById("formulario-gasto").reset();
   document.getElementById("campo-mes-referencia-gasto").value = obterMesSelecionado();
-  atualizarOpcoesCarteira();
-  document.getElementById("campo-carteira-gasto").value = carteiraIdPreSelecionada || carteiraPrincipalPadraoId() || "";
   document.getElementById("linha-aplicar-proximas-gasto").hidden = true;
   // Um gasto novo começa com "Mais opções" fechado (só os campos essenciais
   // à vista) — só abre sozinho quando EDITANDO algo que já usa um desses
   // campos (ver abrirModalEdicao), pra nada ficar escondido sem querer.
   document.getElementById("gasto-mais-opcoes").open = false;
   seletorCategoriaGasto.definir(null);
-  atualizarCamposConformeCarteira();
   abrirModal();
 }
 
@@ -295,8 +240,6 @@ function abrirModalEdicao(id) {
   document.getElementById("campo-data-gasto").value = gasto.data;
   document.getElementById("campo-mes-referencia-gasto").value = gasto.mesReferencia;
   document.getElementById("campo-salario-gasto").value = gasto.salarioResponsavel;
-  atualizarOpcoesCarteira();
-  document.getElementById("campo-carteira-gasto").value = gasto.carteiraId || carteiraPrincipalPadraoId() || "";
   document.getElementById("campo-fixo-gasto").checked = gasto.fixo;
   document.getElementById("campo-pago-gasto").checked = gasto.pago;
   document.getElementById("campo-observacoes-gasto").value = gasto.observacoes || "";
@@ -305,11 +248,10 @@ function abrirModalEdicao(id) {
   // parte de uma série fixa antes desta edição (senão não há "próximas" ainda).
   document.getElementById("linha-aplicar-proximas-gasto").hidden = !gasto.fixoId;
   document.getElementById("campo-aplicar-proximas-gasto").checked = false;
-  // Editar sempre abre "Mais opções" — o gasto pode já usar carteira/salário/
+  // Editar sempre abre "Mais opções" — o gasto pode já usar salário/
   // recorrência/observações, e essa configuração não deveria ficar escondida
   // atrás de um clique extra justo na hora de revisar/alterar.
   document.getElementById("gasto-mais-opcoes").open = true;
-  atualizarCamposConformeCarteira();
   abrirModal();
 }
 
@@ -337,14 +279,8 @@ async function salvarFormulario(evento) {
   const pago = document.getElementById("campo-pago-gasto").checked;
   const observacoes = document.getElementById("campo-observacoes-gasto").value.trim();
   const categoriaId = seletorCategoriaGasto.obter();
-  const carteiraId = document.getElementById("campo-carteira-gasto").value || null;
-  const ehBeneficio = carteiraEhBeneficio(carteiraId);
-
-  // Carteira de benefício não tem "salário responsável"/"gasto fixo" — mês de
-  // referência é sempre o próprio mês da data (não existe "mês do salário que
-  // paga" para um benefício), e fixo/fixoId nunca são criados por este formulário.
-  const mesReferencia = ehBeneficio ? mesDeData(data) : document.getElementById("campo-mes-referencia-gasto").value;
-  const fixo = ehBeneficio ? false : document.getElementById("campo-fixo-gasto").checked;
+  const mesReferencia = document.getElementById("campo-mes-referencia-gasto").value;
+  const fixo = document.getElementById("campo-fixo-gasto").checked;
   const aplicarProximas = document.getElementById("campo-aplicar-proximas-gasto").checked;
 
   // Correção (auditoria 2026-08-09, BUG-04): um título só com espaços passa
@@ -368,7 +304,6 @@ async function salvarFormulario(evento) {
     gastoSalvo.salarioResponsavel = salarioResponsavel;
     gastoSalvo.pago = pago;
     gastoSalvo.categoriaId = categoriaId;
-    gastoSalvo.carteiraId = carteiraId;
     gastoSalvo.observacoes = observacoes;
     // Ativar "fixo" pela primeira vez cria a série; desativar interrompe
     // a geração de novas ocorrências, mas não apaga as já criadas.
@@ -388,7 +323,6 @@ async function salvarFormulario(evento) {
       pago,
       parcela: null,
       categoriaId,
-      carteiraId,
       observacoes,
     };
   }
@@ -403,7 +337,7 @@ async function salvarFormulario(evento) {
       ? transacoesGastos
           .obterTodos()
           .filter((g) => g.fixoId === fixoIdOriginalEmEdicao && g.id !== gastoSalvo.id && g.data > gastoSalvo.data)
-          .map((g) => ({ ...g, titulo, valor, salarioResponsavel, categoriaId, carteiraId, observacoes }))
+          .map((g) => ({ ...g, titulo, valor, salarioResponsavel, categoriaId, observacoes }))
       : [];
 
   if (futurasAtualizadas.length > 0) {

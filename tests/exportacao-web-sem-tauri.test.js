@@ -25,13 +25,4 @@ describe("Exportação — modo Web (sem window.__TAURI__)", () => {
 
     assert.equal(document.getElementById("botao-apagar-tudo").disabled, false, "'Apagar todos os dados' não depende de arquivo, deve continuar habilitado");
   });
-
-  test("'Backups automáticos recentes' mostra a explicação de Desktop em vez de tentar ler pasta local", async () => {
-    montarDom();
-    const { iniciarExportacao } = await import("../src/js/modulos/exportacao.js");
-    await iniciarExportacao();
-
-    const conteudo = document.getElementById("exportacao-backups-conteudo").textContent;
-    assert.match(conteudo, /Desktop/);
-  });
 });

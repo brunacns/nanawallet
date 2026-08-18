@@ -95,7 +95,6 @@ describe("BUG-01 — Dashboard e gráfico 'Evolução do saldo' devem sempre bat
         pago: false, // ainda não pago — é isso que o gráfico antigo ignorava
         parcela: null,
         categoriaId: null,
-        carteiraId: null,
         observacoes: "",
       });
 

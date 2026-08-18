@@ -3,8 +3,6 @@ import { TransactionService } from "./TransactionService.js";
 import { ReminderService } from "./ReminderService.js";
 import { GoalService } from "./GoalService.js";
 import { CategoryService } from "./CategoryService.js";
-import { CarteiraService } from "./CarteiraService.js";
-import { CarteiraEntradaService } from "./CarteiraEntradaService.js";
 import { mesDeData } from "../utils/datas.js";
 
 // ---------------------------------------------------------------------------
@@ -26,7 +24,7 @@ import { mesDeData } from "../utils/datas.js";
 // Resolvido de forma PREGUIÇOSA (Proxy), não numa constante fixa: este
 // módulo é um singleton ES (avaliado uma única vez por processo) e é
 // importado, de forma transitiva, por módulos que nada têm a ver com teste
-// (ex: src/js/carteiras.js, para usar `carteirasService`). Se um desses
+// (ex: src/js/categorias.js, para usar `categoriasService`). Se um desses
 // imports acontecesse ANTES do primeiro `criarAmbienteTauri()` de uma
 // suíte de testes, `armazenamentoAtivo` ficaria "congelado" na decisão
 // errada para o resto do processo — mesmo bug de fundo que o Proxy de
@@ -52,15 +50,12 @@ export const armazenamentoAtivo = new Proxy(
 // (null = sem categoria, comportamento idêntico ao de antes); gastos salvos
 // antes do campo de observações não tinham `observacoes`; gastos salvos
 // antes da mudança dos dias de salário (10/25 -> 15/30) ainda usam os
-// valores internos antigos ("dia10"/"dia25") e são convertidos aqui; gastos
-// salvos antes do sistema de carteiras não tinham carteiraId (null = carteira
-// principal/dinheiro, comportamento idêntico ao de antes — só entra em
-// "financeiro principal" quando a carteira NÃO é de benefício).
+// valores internos antigos ("dia10"/"dia25") e são convertidos aqui.
 const transacoesGastos = new TransactionService({
   colecao: "gastos",
   storage: armazenamentoAtivo,
   aplicarMigracaoCampos: (g) => {
-    const item = { mesReferencia: mesDeData(g.data), fixoId: null, categoriaId: null, observacoes: "", carteiraId: null, ...g };
+    const item = { mesReferencia: mesDeData(g.data), fixoId: null, categoriaId: null, observacoes: "", ...g };
     if (item.salarioResponsavel === "dia10") item.salarioResponsavel = "dia15";
     else if (item.salarioResponsavel === "dia25") item.salarioResponsavel = "dia30";
     return item;
@@ -77,7 +72,6 @@ const transacoesGastos = new TransactionService({
     fixoId: ultimo.fixoId,
     parcela: null,
     categoriaId: ultimo.categoriaId,
-    carteiraId: ultimo.carteiraId,
     observacoes: ultimo.observacoes,
   }),
 });
@@ -105,15 +99,5 @@ const transacoesGanhos = new TransactionService({
 const lembretesService = new ReminderService(armazenamentoAtivo);
 const metasService = new GoalService(armazenamentoAtivo);
 const categoriasService = new CategoryService(armazenamentoAtivo);
-const carteirasService = new CarteiraService(armazenamentoAtivo);
-const carteiraEntradasService = new CarteiraEntradaService(armazenamentoAtivo);
 
-export {
-  transacoesGastos,
-  transacoesGanhos,
-  lembretesService,
-  metasService,
-  categoriasService,
-  carteirasService,
-  carteiraEntradasService,
-};
+export { transacoesGastos, transacoesGanhos, lembretesService, metasService, categoriasService };

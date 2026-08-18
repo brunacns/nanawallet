@@ -81,6 +81,15 @@ export function rotuloMesLongo(chave) {
   return `${NOMES_MESES_COMPLETOS[mes - 1]} de ${ano}`;
 }
 
+// "jul/2026" — mês abreviado com ano de 4 dígitos (diferente de
+// rotuloMesCurto, que usa ano de 2 dígitos para caber no eixo de um
+// gráfico). Usado nos cards do celular/Web, onde "Dia 15 (julho de 2026)"
+// não cabe numa linha só.
+export function rotuloMesAbreviado(chave) {
+  const [ano, mes] = chave.split("-").map(Number);
+  return `${NOMES_MESES_ABREV[mes - 1]}/${ano}`;
+}
+
 // Diferença em dias inteiros entre duas datas "AAAA-MM-DD" (dataAlvo - dataBase).
 // Positivo = dataAlvo no futuro; negativo = no passado. Usa UTC nos dois lados
 // só para o cálculo (ambas são datas "puras", sem hora), evitando que horário

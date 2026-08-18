@@ -59,7 +59,6 @@ describe("ArmazenamentoSupabaseService", () => {
         parcela_total: null,
         parcelamento_id: null,
         categoria_id: "cat-1",
-        carteira_id: null,
         observacoes: "",
       },
       {
@@ -76,7 +75,6 @@ describe("ArmazenamentoSupabaseService", () => {
         parcela_total: 3,
         parcelamento_id: "compra-1",
         categoria_id: null,
-        carteira_id: null,
         observacoes: "",
       },
     ];
@@ -105,10 +103,9 @@ describe("ArmazenamentoSupabaseService", () => {
       fixoId: null,
       parcela: null,
       categoriaId: "cat-2",
-      carteiraId: "cart-1",
       observacoes: "compra do mês",
     };
-    const chamadas = instalarFetchFalso([[{ ...gasto, mes_referencia: "2026-08", salario_responsavel: "dia15", categoria_id: "cat-2", carteira_id: "cart-1", fixo_id: null, parcela_numero: null, parcela_total: null, parcelamento_id: null }]]);
+    const chamadas = instalarFetchFalso([[{ ...gasto, mes_referencia: "2026-08", salario_responsavel: "dia15", categoria_id: "cat-2", fixo_id: null, parcela_numero: null, parcela_total: null, parcelamento_id: null }]]);
 
     const storage = new ArmazenamentoSupabaseService();
     await storage.salvar("gastos", gasto);
@@ -121,34 +118,6 @@ describe("ArmazenamentoSupabaseService", () => {
     assert.equal(corpo[0].mes_referencia, "2026-08");
     assert.equal(corpo[0].categoria_id, "cat-2");
     assert.ok(!("mesReferencia" in corpo[0]), "não deveria sobrar campo camelCase no corpo enviado");
-  });
-
-  test("carteiras: beneficio vira colunas achatadas e volta como objeto só quando tipo é 'beneficio'", async () => {
-    const carteiraDinheiro = { id: "c1", nome: "Dinheiro", tipo: "dinheiro", emoji: "💵", cor: "#8FD694", ativa: true, beneficio: null };
-    const carteiraBeneficio = {
-      id: "c2",
-      nome: "Ticket Alimentação",
-      tipo: "beneficio",
-      emoji: "🍽️",
-      cor: "#F7C873",
-      ativa: true,
-      beneficio: { valorMensal: 990, diaRecebimento: 1, recorrente: true, acumulaSaldo: true, ativoDesde: "2026-08-01" },
-    };
-
-    const linhasSimuladas = [
-      { id: "c1", nome: "Dinheiro", tipo: "dinheiro", emoji: "💵", cor: "#8FD694", ativa: true, beneficio_valor_mensal: null, beneficio_dia_recebimento: null, beneficio_recorrente: null, beneficio_acumula_saldo: null, beneficio_ativo_desde: null },
-      { id: "c2", nome: "Ticket Alimentação", tipo: "beneficio", emoji: "🍽️", cor: "#F7C873", ativa: true, beneficio_valor_mensal: "990.00", beneficio_dia_recebimento: 1, beneficio_recorrente: true, beneficio_acumula_saldo: true, beneficio_ativo_desde: "2026-08-01" },
-    ];
-    instalarFetchFalso([linhasSimuladas]);
-
-    const storage = new ArmazenamentoSupabaseService();
-    const itens = await storage.listar("carteiras");
-
-    assert.equal(itens[0].beneficio, null);
-    assert.deepEqual(itens[1].beneficio, { valorMensal: 990, diaRecebimento: 1, recorrente: true, acumulaSaldo: true, ativoDesde: "2026-08-01" });
-
-    void carteiraDinheiro;
-    void carteiraBeneficio;
   });
 
   test("remover envia DELETE filtrando por id", async () => {

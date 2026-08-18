@@ -1,10 +1,9 @@
 import { obterGanhos, aoAtualizarGanhos } from "./ganhos.js";
 import { obterGastos, aoAtualizarGastos } from "./gastos.js";
 import { formatarMoeda } from "../utils/formatadores.js";
-import { diaDoMes, mesDeData, chaveMesAtual, rotuloMesCurto, listaMeses } from "../utils/datas.js";
+import { diaDoMes, mesDeData, rotuloMesCurto, listaMeses } from "../utils/datas.js";
 import { obterMesSelecionado, aoAtualizarMes } from "../estadoMes.js";
 import { obterCategoriaPorId } from "../categorias.js";
-import { filtrarGastosPrincipais } from "../carteiras.js";
 import { somarGastosDoMes, calcularSerieSaldoAcumulado } from "../utils/calculosFinanceiros.js";
 
 const NS = "http://www.w3.org/2000/svg";
@@ -23,10 +22,7 @@ export function iniciarGraficos() {
 
 function renderizarTudo() {
   const ganhos = obterGanhos();
-  // Gastos pagos com uma carteira de benefício (ex: Ticket Alimentação) não
-  // são "financeiro principal" — excluídos dos 6 gráficos deste dashboard
-  // (regra de ouro do sistema de carteiras).
-  const gastos = filtrarGastosPrincipais(obterGastos());
+  const gastos = obterGastos();
 
   renderizarEvolucaoGastos(gastos);
   renderizarEvolucaoSaldo(ganhos, gastos);
@@ -261,19 +257,24 @@ function desenharLinha(container, pontos, opcoes) {
 
 function renderizarDinheiroComprometido(ganhos, gastos) {
   const container = document.getElementById("grafico-dinheiro-comprometido");
-  const totalRecebido = somar(ganhos, (g) => g.valor);
+  // Segue o mês visualizado na página (Dashboard/Gastos/Ganhos), não o
+  // histórico inteiro — mesmo critério de "Gastos por categoria" abaixo.
+  const mes = obterMesSelecionado();
+  const ganhosDoMes = ganhos.filter((g) => mesDeData(g.data) === mes);
+  const gastosDoMes = gastos.filter((g) => g.mesReferencia === mes);
+  const totalRecebido = somar(ganhosDoMes, (g) => g.valor);
 
   if (totalRecebido <= 0) {
-    container.innerHTML = vazioHtml("Cadastre ganhos para ver este gráfico.");
+    container.innerHTML = vazioHtml("Cadastre ganhos neste mês para ver este gráfico.");
     return;
   }
 
   const totalPago = somar(
-    gastos.filter((g) => g.pago),
+    gastosDoMes.filter((g) => g.pago),
     (g) => g.valor
   );
   const totalPendente = somar(
-    gastos.filter((g) => !g.pago),
+    gastosDoMes.filter((g) => !g.pago),
     (g) => g.valor
   );
   const totalGasto = totalPago + totalPendente;
@@ -333,25 +334,31 @@ function renderizarDinheiroComprometido(ganhos, gastos) {
 function renderizarComparacaoSalarios(ganhos, gastos) {
   const container = document.getElementById("grafico-comparacao-salarios");
 
+  // Segue o mês visualizado na página, não o histórico inteiro (mesmo
+  // critério de "Gastos por categoria" e "Dinheiro comprometido" acima).
+  const mes = obterMesSelecionado();
+  const ganhosDoMes = ganhos.filter((g) => mesDeData(g.data) === mes);
+  const gastosDoMes = gastos.filter((g) => g.mesReferencia === mes);
+
   const recebidoDia15 = somar(
-    ganhos.filter((g) => diaDoMes(g.data) === 15),
+    ganhosDoMes.filter((g) => diaDoMes(g.data) === 15),
     (g) => g.valor
   );
   const recebidoDia30 = somar(
-    ganhos.filter((g) => diaDoMes(g.data) === 30),
+    ganhosDoMes.filter((g) => diaDoMes(g.data) === 30),
     (g) => g.valor
   );
   const gastoDia15 = somar(
-    gastos.filter((g) => g.salarioResponsavel === "dia15" && g.pago),
+    gastosDoMes.filter((g) => g.salarioResponsavel === "dia15" && g.pago),
     (g) => g.valor
   );
   const gastoDia30 = somar(
-    gastos.filter((g) => g.salarioResponsavel === "dia30" && g.pago),
+    gastosDoMes.filter((g) => g.salarioResponsavel === "dia30" && g.pago),
     (g) => g.valor
   );
 
   if (recebidoDia15 + recebidoDia30 + gastoDia15 + gastoDia30 === 0) {
-    container.innerHTML = vazioHtml("Sem ganhos ou gastos por dia de pagamento ainda.");
+    container.innerHTML = vazioHtml("Sem ganhos ou gastos por dia de pagamento neste mês.");
     return;
   }
 
@@ -430,11 +437,13 @@ function renderizarPrevisoesFuturas(gastos) {
   // Agrupa por `mesReferencia` (mês do salário que vai pagar), não pela data
   // da compra — é isso que "previsão futura" precisa refletir (mesmo
   // critério do Dashboard/página Gastos, ver comentário em renderizarEvolucaoGastos).
-  const mesAtual = chaveMesAtual();
+  // A janela começa no mês visualizado na página (não no mês real de hoje) —
+  // navegar para outro mês desloca também a janela de previsão mostrada aqui.
+  const mesBase = obterMesSelecionado();
   const mesesPendentes = pendentes.map((g) => g.mesReferencia).sort();
   const ultimoMes = mesesPendentes[mesesPendentes.length - 1];
 
-  let meses = listaMeses(mesAtual, ultimoMes > mesAtual ? ultimoMes : mesAtual);
+  let meses = listaMeses(mesBase, ultimoMes > mesBase ? ultimoMes : mesBase);
   if (meses.length > 6) meses = meses.slice(0, 6);
 
   const pontos = meses.map((chave) => ({

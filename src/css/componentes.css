@@ -78,8 +78,8 @@
 }
 
 /* Variante compacta (ex: "Mês atual", ao lado do seletor de mês) — antes
-   repetida como style="" idêntico em 4 páginas (Dashboard, Ganhos, Gastos,
-   Ticket Alimentação); formalizada aqui numa classe só. */
+   repetida como style="" idêntico em 3 páginas (Dashboard, Ganhos, Gastos);
+   formalizada aqui numa classe só. */
 .botao--pequeno {
   padding: 4px var(--espaco-sm);
   font-size: var(--fonte-tamanho-xs);
@@ -146,24 +146,6 @@
 }
 
 .cartao-estatistica--destaque .cartao-estatistica__rotulo {
-  font-size: var(--fonte-tamanho-base);
-}
-
-/* Mesma receita do destaque acima (número grande, superfície elevada), mas
-   com acento rosa em vez de lilás — usado só no "Saldo atual" do Ticket
-   Alimentação/benefícios, pra ficar visualmente óbvio que é um saldo à
-   parte do dinheiro principal (que usa o destaque lilás no Dashboard). */
-.cartao-estatistica--destaque-beneficio {
-  background-color: var(--cor-superficie-elevada);
-  border-color: var(--cor-rosa-fraco);
-}
-
-.cartao-estatistica--destaque-beneficio .cartao-estatistica__valor {
-  font-size: var(--fonte-tamanho-3xl);
-  color: var(--cor-rosa);
-}
-
-.cartao-estatistica--destaque-beneficio .cartao-estatistica__rotulo {
   font-size: var(--fonte-tamanho-base);
 }
 
@@ -270,42 +252,6 @@
   box-shadow: 0 0 6px var(--cor-acento-fraco);
 }
 
-/* Indicador de ritmo de consumo (página Ticket Alimentação/benefícios) */
-.ritmo-status--verde {
-  color: var(--cor-positivo);
-}
-
-.ritmo-status--amarelo {
-  color: var(--cor-alerta);
-}
-
-.ritmo-status--vermelho {
-  color: var(--cor-negativo);
-}
-
-/* Barra de progresso (utilização de carteira de benefício) */
-.barra-progresso {
-  height: 10px;
-  background-color: var(--cor-superficie-alta);
-  border-radius: var(--raio-pilula);
-  overflow: hidden;
-}
-
-/* Rosa em vez do gradiente lilás padrão — só usado na barra de utilização do
-   Ticket Alimentação, de propósito: reforça que aquele saldo é separado do
-   dinheiro principal (que usa --gradiente-acento em todo o resto do app),
-   sem precisar de uma cor nova fora da paleta já estabelecida. */
-.barra-progresso__preenchimento {
-  height: 100%;
-  background: var(--cor-rosa);
-  border-radius: var(--raio-pilula);
-  transition: width var(--transicao-suave);
-}
-
-.barra-progresso__preenchimento--excedido {
-  background: var(--cor-negativo);
-}
-
 /* Grade de duas colunas (dashboard) */
 .grade-duas-colunas {
   display: grid;
@@ -342,7 +288,7 @@
    é uma boa experiência (pedido explícito: cartões em vez de scroll lateral).
    Cada <tr> vira um cartão e cada <td> vira uma linha "rótulo: valor" via
    data-rotulo (atributo já emitido pelos módulos que renderizam essas
-   tabelas — gastos.js, ganhos.js, historico.js, ticketAlimentacao.js). A
+   tabelas — gastos.js, ganhos.js, historico.js). A
    célula de título (.tabela__titulo-celula) vira o cabeçalho do cartão, sem
    rótulo; a de ações (.tabela__acoes, já existente) vira o rodapé, também
    sem rótulo — os ícones + aria-label já são autoexplicativos. */
@@ -419,11 +365,14 @@
     content: none;
   }
 
-  /* Ações: rodapé do cartão — ícones alinhados à direita, sem rótulo. */
+  /* Ações: rodapé do cartão — ícones alinhados à direita, sem rótulo. Sem
+     border-top aqui: o campo logo acima já termina com seu próprio
+     border-bottom (regra geral de "td" abaixo, já que ele não é :last-child)
+     — somar mais uma borda aqui criava duas linhas divisórias bem próximas
+     uma da outra, parecendo duplicadas (achado real reportado pela usuária). */
   .tabela-scroll .tabela td.tabela__acoes {
     justify-content: flex-end;
     border-bottom: none;
-    border-top: 1px solid var(--cor-borda);
     margin-top: var(--espaco-xs);
     padding-top: var(--espaco-sm);
   }
@@ -462,6 +411,29 @@
   background-color: var(--cor-superficie-alta);
 }
 
+/* Alterna texto conforme o layout: tabela normal (desktop/tablet) mostra o
+   formato completo; card de celular/Web (mesmo breakpoint de
+   .tabela-scroll acima, 700px) mostra a versão abreviada — evita que um
+   texto como "Dia 15 (julho de 2026)" fique espremido/quebrado num card
+   estreito. */
+.texto-somente-tabela {
+  display: inline;
+}
+
+.texto-somente-cartao {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .texto-somente-tabela {
+    display: none;
+  }
+
+  .texto-somente-cartao {
+    display: inline;
+  }
+}
+
 .tabela__valor-positivo {
   color: var(--cor-positivo);
   font-weight: var(--peso-semi);
@@ -472,10 +444,16 @@
   font-weight: var(--peso-semi);
 }
 
-/* Badges (selos de status) — com um brilho suave da própria cor */
+/* Badges (selos de status) — com um brilho suave da própria cor. Nunca
+   quebra o texto em duas linhas nem encolhe dentro de um flex container
+   (ex: "Faltam 11 de 12" em .item-parcelamento, num card estreito) — o texto
+   de um selo é sempre curto, então ele deve manter sua largura natural e
+   empurrar o conteúdo ao lado, nunca o contrário. */
 .selo {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 2px var(--espaco-sm);
   border-radius: var(--raio-pilula);
   font-size: var(--fonte-tamanho-xs);
@@ -1074,8 +1052,8 @@
    JavaScript novo: aberto/fechado, foco por teclado e o triângulo indicador
    já vêm de graça do navegador. Usado nos formulários de gasto/ganho para
    separar os campos essenciais (pedidos com frequência) dos administrativos
-   (carteira, recorrência, observações), que ficam escondidos até serem
-   pedidos — "deixar detalhes para uma interação secundária". */
+   (recorrência, observações), que ficam escondidos até serem pedidos —
+   "deixar detalhes para uma interação secundária". */
 .divulgacao {
   margin-bottom: var(--espaco-md);
 }
@@ -1147,6 +1125,14 @@
 
 .item-parcelamento:last-child {
   border-bottom: none;
+}
+
+/* Título/detalhe encolhem primeiro (com min-width:0, sem isso um flex item
+   nunca fica menor que seu conteúdo) para sobrar espaço garantido ao selo de
+   status ("Faltam X de Y") ao lado — que tem flex-shrink:0 (ver .selo) e
+   nunca deveria quebrar em duas linhas num card estreito. */
+.item-parcelamento > div:first-child {
+  min-width: 0;
 }
 
 .item-parcelamento__titulo {
@@ -1353,7 +1339,7 @@
   }
 }
 
-/* Seletor de mês (Dashboard, Gastos, Ganhos, Ticket Alimentação) — flex-wrap
+/* Seletor de mês (Dashboard, Gastos, Ganhos) — flex-wrap
    evita que a fileira (◀ rótulo ▶ "Mês atual") force scroll horizontal da
    página numa janela estreita; o rótulo só encolhe o mínimo abaixo de 560px,
    quando há menos espaço sobrando. */
@@ -1908,6 +1894,7 @@
 
 .item-meta__detalhes {
   display: block;
+  margin-top: var(--espaco-sm);
   font-size: var(--fonte-tamanho-xs);
   color: var(--cor-texto-secundario);
 }

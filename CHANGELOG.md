@@ -12,6 +12,18 @@ A versão exibida no app (Configurações → Sobre o aplicativo) vem de `src-ta
 
 _(as próximas mudanças entram aqui, antes de virar uma versão)_
 
+## [1.15.0] - 2026-08-17
+
+7 ajustes pedidos numa única mensagem: 3 correções de responsividade mobile/Web, os gráficos de período único acompanhando o mês navegado, e a remoção completa de duas funcionalidades (sistema de Carteiras/Ticket Alimentação, e a lista de "Backups automáticos recentes").
+
+- **Gráficos seguem o mês visualizado**: "Dinheiro comprometido", "Comparação entre salários" e "Previsões futuras" (que antes somavam o histórico inteiro, ou — no caso de Previsões futuras — sempre ancoravam no mês real de hoje) agora mostram os dados do mês navegado no Dashboard, mesmo critério que "Gastos por categoria" já usava. Os 2 gráficos de tendência ("Evolução dos gastos"/"Evolução do saldo") continuam mostrando vários meses — não fazem sentido como um "instantâneo" de 1 mês só (confirmado com a usuária antes de implementar).
+- **Corrigido**: o selo "Faltam X de Y" dos parcelamentos quebrava em duas linhas em cards estreitos (mobile/Web) — selos agora nunca encolhem nem quebram texto (`flex-shrink:0`/`white-space:nowrap`), o bloco de título ao lado é quem cede espaço primeiro.
+- **Novo**: nos cards de "Salário responsável" (mobile/Web), o mês aparece abreviado (“set/2026” em vez de “setembro de 2026”) — só nesse layout; a tabela do Desktop/tela larga continua com o nome completo.
+- **Corrigido**: nos cards mobile/Web, o campo antes dos botões de editar/excluir tinha uma borda própria seguida da borda de separação dos botões — duas linhas bem próximas, parecendo duplicadas. Removida a borda redundante.
+- **Corrigido**: na visualização em Lista da Wishlist, o selo de prioridade e a linha "preço • loja" ficavam colados quando o selo quebrava para uma segunda linha. Adicionado espaçamento vertical entre os dois.
+- **Removido por completo**: o sistema de Carteiras/Ticket Alimentação (Conta bancária/Dinheiro/Ticket Alimentação como "carteiras" que dividiam o dinheiro, a página própria do benefício, o card "Benefícios" do Dashboard, o seletor de carteira nos formulários de gasto/parcelamento). A pedido explícito — o app volta a tratar todo gasto como financeiro principal, sem nenhuma divisão. Removidos os arquivos `carteiras.js`, `CarteiraService.js`, `CarteiraEntradaService.js`, `recorrenciaCarteira.js`, `ticketAlimentacao.js`, e toda referência em `gastos.js`, `parcelamentos.js`, `dashboard.js`, `graficos.js`, `historico.js`, `exportacao.js`, `main.js`, `index.html` e `componentes.css`. O campo `gasto.carteiraId` foi removido do modelo de dados; no banco, a coluna `gastos.carteira_id` e as tabelas `carteiras`/`carteira_movimentacoes` foram apagadas (nenhum dado antigo de carteira sobra em lugar nenhum).
+- **Removido**: a seção "Backups automáticos recentes" da página Exportação — fazia sentido quando os dados viviam só no computador (arquivo local com backup automático a cada gravação), mas deixou de ter qualquer dado para mostrar desde que o armazenamento passou a ser 100% Supabase. "Backup manual" e "Exportar" continuam funcionando normalmente, sem mudança.
+
 ## [1.14.2] - 2026-08-16
 
 4 correções na Wishlist, a pedido explícito.
